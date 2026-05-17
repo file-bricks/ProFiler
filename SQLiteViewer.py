@@ -22,13 +22,13 @@ class SqlViewer(tk.Tk):
         self._build_menu()
         self._build_toolbar()
         self._build_table_area()
-        self._set_status("Keine Datenbank geÃ¶ffnet")
+        self._set_status("Keine Datenbank geöffnet")
 
     # ----- UI-Build -----
     def _build_menu(self):
         menubar = tk.Menu(self)
         file_menu = tk.Menu(menubar, tearoff=False)
-        file_menu.add_command(label="Datenbank Ã¶ffnenâ€¦", command=self.open_db, accelerator="Ctrl+O")
+        file_menu.add_command(label="Datenbank öffnen…", command=self.open_db, accelerator="Ctrl+O")
         file_menu.add_separator()
         file_menu.add_command(label="Beenden", command=self.destroy, accelerator="Ctrl+Q")
         menubar.add_cascade(label="Datei", menu=file_menu)
@@ -43,7 +43,7 @@ class SqlViewer(tk.Tk):
         bar.pack(side=tk.TOP, fill=tk.X)
 
         # DB-Pfad
-        self.db_label = ttk.Label(bar, text="DB: â€“", width=50, anchor="w")
+        self.db_label = ttk.Label(bar, text="DB: -", width=50, anchor="w")
         self.db_label.pack(side=tk.LEFT, padx=(0, 10))
 
         # Tabellen-Auswahl
@@ -91,7 +91,7 @@ class SqlViewer(tk.Tk):
     # ----- Actions -----
     def open_db(self):
         path = filedialog.askopenfilename(
-            title="SQLite-Datenbank Ã¶ffnen",
+            title="SQLite-Datenbank öffnen",
             filetypes=[("SQLite DB", "*.db *.sqlite *.sqlite3"), ("Alle Dateien", "*.*")]
         )
         if not path:
@@ -114,7 +114,7 @@ class SqlViewer(tk.Tk):
             self._set_status("Verbunden")
             self._load_tables()
         except Exception as e:
-            messagebox.showerror("Fehler beim Ã–ffnen", str(e))
+            messagebox.showerror("Fehler beim Öffnen", str(e))
             self._set_status("Fehler")
     
     def open_database(self, path):
@@ -181,7 +181,7 @@ class SqlViewer(tk.Tk):
             rows = cur.fetchall()
 
             self._populate_tree(cols, rows)
-            self._set_status(f"Tabelle: {table} â€” Zeilen: {len(rows)} von max. {limit}")
+            self._set_status(f"Tabelle: {table} - Zeilen: {len(rows)} von max. {limit}")
         except Exception as e:
             messagebox.showerror("Fehler beim Laden", str(e))
 
@@ -210,7 +210,7 @@ class SqlViewer(tk.Tk):
             self.tree.insert("", tk.END, values=values)
 
     # ----- Utils -----
-    # Liste gÃ¤ngiger SQLite-Keywords (GroÃŸbuchstaben)
+    # Liste gängiger SQLite-Keywords (Großbuchstaben)
     _SQLITE_KEYWORDS = {
         "ABORT", "ACTION", "ADD", "AFTER", "ALL", "ALTER", "ANALYZE", "AND",
         "AS", "ASC", "ATTACH", "AUTOINCREMENT", "BEFORE", "BEGIN", "BETWEEN",

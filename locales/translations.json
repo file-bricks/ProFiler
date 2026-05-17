@@ -35,10 +35,6 @@
     "de": "Anonymisierungs-Einstellungen",
     "en": "Anonymization Settings"
   },
-  "Ausblenden (Safety-Mode - Keine Dateisystem-nderung)": {
-    "de": "Ausblenden (Safety-Mode - Keine Dateisystem-nderung)",
-    "en": "Hide (Safety Mode - No File System Changes)"
-  },
   "Ausblenden (Safety-Mode - Keine Dateisystem-Änderung)": {
     "de": "Ausblenden (Safety-Mode - Keine Dateisystem-Änderung)",
     "en": "Hide (Safety Mode - No File System Changes)"
@@ -95,10 +91,6 @@
     "de": "Dateitypen:",
     "en": "File Types:"
   },
-  "Einrckungsfehler gefunden": {
-    "de": "Einrckungsfehler gefunden",
-    "en": "Indentation Error Found"
-  },
   "Einrückungsfehler gefunden": {
     "de": "Einrückungsfehler gefunden",
     "en": "Indentation Error Found"
@@ -106,6 +98,74 @@
   "Einstellungen": {
     "de": "Einstellungen",
     "en": "Settings"
+  },
+  "Datei": {
+    "de": "Datei",
+    "en": "File"
+  },
+  "Tools": {
+    "de": "Tools",
+    "en": "Tools"
+  },
+  "Hilfe": {
+    "de": "Hilfe",
+    "en": "Help"
+  },
+  "Anzeigen": {
+    "de": "Anzeigen",
+    "en": "Show"
+  },
+  "Beenden": {
+    "de": "Beenden",
+    "en": "Quit"
+  },
+  "Browser-Favoriten importieren...": {
+    "de": "Browser-Favoriten importieren...",
+    "en": "Import browser favorites..."
+  },
+  "Datenschutzampel starten...": {
+    "de": "Datenschutzampel starten...",
+    "en": "Start privacy light..."
+  },
+  "Über": {
+    "de": "Über",
+    "en": "About"
+  },
+  "Bereit": {
+    "de": "Bereit",
+    "en": "Ready"
+  },
+  "Läuft im Hintergrund. Doppelklick zum öffnen.": {
+    "de": "Läuft im Hintergrund. Doppelklick zum Öffnen.",
+    "en": "Running in the background. Double-click to open."
+  },
+  "Suche & Explorer": {
+    "de": "Suche & Explorer",
+    "en": "Search & Explorer"
+  },
+  "Verbindungen & Themen": {
+    "de": "Verbindungen & Themen",
+    "en": "Connections & Topics"
+  },
+  "Auto-Sync": {
+    "de": "Auto-Sync",
+    "en": "Auto-Sync"
+  },
+  "🌐 Browser-Favoriten importieren...": {
+    "de": "🌐 Browser-Favoriten importieren...",
+    "en": "🌐 Import browser favorites..."
+  },
+  "🚦 Datenschutzampel starten...": {
+    "de": "🚦 Datenschutzampel starten...",
+    "en": "🚦 Start privacy light..."
+  },
+  "FormConstructor öffnen...": {
+    "de": "FormConstructor öffnen...",
+    "en": "Open FormConstructor..."
+  },
+  "❌ Beenden": {
+    "de": "❌ Beenden",
+    "en": "❌ Quit"
   },
   "Erstellen Sie eine neue Prompt-Datei mit Versionsverwaltung:": {
     "de": "Erstellen Sie eine neue Prompt-Datei mit Versionsverwaltung:",
@@ -188,7 +248,7 @@
     "en": "Permanently Delete"
   },
   "Python-Entwicklungsumgebung oeffnen": {
-    "de": "Python-Entwicklungsumgebung oeffnen",
+    "de": "Python-Entwicklungsumgebung öffnen",
     "en": "Open Python Development Environment"
   },
   "Python-Entwicklungsumgebung öffnen": {
@@ -260,20 +320,12 @@
     "en": "[File is empty or content not readable]"
   },
   "oeffnen": {
-    "de": "oeffnen",
+    "de": "öffnen",
     "en": "Open"
-  },
-  "âš™ï¸ Einstellungen": {
-    "de": "âš™ï¸ Einstellungen",
-    "en": "âš™ï¸ Settings"
   },
   "ðŸ'¾ Auszug speichern": {
     "de": "ðŸ'¾ Auszug speichern",
     "en": "ðŸ'¾ Save Excerpt"
-  },
-  "ðŸ" Filter": {
-    "de": "ðŸ" Filter",
-    "en": "ðŸ" Filter"
   },
   "öffnen": {
     "de": "öffnen",
@@ -378,5 +430,9 @@
   "🟢 Auf Grün setzen": {
     "de": "🟢 Auf Grün setzen",
     "en": "🟢 Set to Green"
+  },
+  "Läuft im Hintergrund. Doppelklick zum Öffnen.": {
+    "de": "Läuft im Hintergrund. Doppelklick zum Öffnen.",
+    "en": "Running in the background. Double-click to open."
   }
 }

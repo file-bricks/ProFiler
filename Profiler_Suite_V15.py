@@ -321,10 +321,11 @@ class SettingsManager:
             "delete_mode": "soft",
             "trash_retention_days": 30,
             "auto_cleanup_enabled": True,
-            "pdf_master_password_open": "",  # Masterpasswort zum öffnen
+            "pdf_master_password_open": "",  # Masterpasswort zum Öffnen
             "pdf_master_password_save": "",  # Masterpasswort zum Speichern
             "ocr_language": "deu",  # Tesseract Language
-            "ocr_enabled": True
+            "ocr_enabled": True,
+            "prosync_path": ""
         }
         self.load()
     
@@ -1217,7 +1218,7 @@ class ConnectionDB:
         self.conn.commit()
     
     def safety_hide_version(self, version_id):
-        """Versteckt Version (Safety-Mode - KEINE Dateisystem-nderung!) - NEU V13.2!"""
+        """Versteckt Version (Safety-Mode - KEINE Dateisystem-Änderung!) - NEU V13.2!"""
         ts = datetime.utcnow().isoformat()
         self.conn.execute("UPDATE versions SET is_hidden=1, hidden_at=? WHERE id=?", (ts, version_id))
         self.conn.commit()
@@ -2310,7 +2311,7 @@ def path_to_tags(path, root):
 
 
 def shorten_filename(name, max_len):
-    """Krzt Dateinamen wenn ntig"""
+    """Kürzt Dateinamen wenn nötig"""
     root, ext = os.path.splitext(name)
     if len(name) <= max_len:
         return name
@@ -2603,7 +2604,7 @@ class PDFExcerptDialog(QDialog):
         
         top_layout.addStretch()
         
-        self.lbl_selected = QLabel("Ausgewhlt: 0 Seiten")
+        self.lbl_selected = QLabel("Ausgewählt: 0 Seiten")
         self.lbl_selected.setStyleSheet("color: #90ee90; font-weight: bold;")
         top_layout.addWidget(self.lbl_selected)
         
@@ -2701,12 +2702,12 @@ class PDFExcerptDialog(QDialog):
             self.btn_toggle.setStyleSheet("background-color: #2a82da; font-weight: bold; padding: 10px;")
         
         # Update Selected Count
-        self.lbl_selected.setText(f"Ausgewhlt: {len(self.selected_pages)} Seiten")
+        self.lbl_selected.setText(f"Ausgewählt: {len(self.selected_pages)} Seiten")
         
         # Vereinfachte Vorschau (nur Text)
         try:
             page = self.pdf_reader.pages[self.current_page]
-            text = page.extract_text() or "Keine Textvorschau verfgbar"
+            text = page.extract_text() or "Keine Textvorschau verfügbar"
             
             # Zeige Text in Label
             preview_text = f"<h3>Seite {self.current_page + 1}</h3><pre>{text[:500]}...</pre>"
@@ -3195,7 +3196,7 @@ class MaterialReferenceDialog(QDialog):
         form.addRow("Bezeichnung*:", self.bezeichnung_input)
         
         self.raum_input = QLineEdit()
-        self.raum_input.setPlaceholderText("z.B. Bro, Keller, Raum 204")
+        self.raum_input.setPlaceholderText("z.B. Büro, Keller, Raum 204")
         form.addRow("Raum:", self.raum_input)
         
         self.regal_input = QLineEdit()
@@ -3301,7 +3302,7 @@ class PromptFileDialog(QDialog):
         form.addRow("Version:", version_layout)
         
         self.zweck_input = QTextEdit()
-        self.zweck_input.setPlaceholderText("Wofr ist dieser Prompt gedacht?")
+        self.zweck_input.setPlaceholderText("Wofür ist dieser Prompt gedacht?")
         self.zweck_input.setMaximumHeight(80)
         form.addRow("Zweck/Beschreibung*:", self.zweck_input)
         
@@ -3483,7 +3484,7 @@ class LiteratureReferenceDialog(QDialog):
         form = QFormLayout()
         
         self.titel_input = QLineEdit()
-        self.titel_input.setPlaceholderText("z.B. Knstliche Intelligenz - Eine Einführung")
+        self.titel_input.setPlaceholderText("z.B. Künstliche Intelligenz - Eine Einführung")
         form.addRow("Titel*:", self.titel_input)
         
         self.jahr_input = QLineEdit()
@@ -3616,7 +3617,7 @@ class AnonymizationSettingsDialog(QDialog):
         btn_import_bl.clicked.connect(lambda: self.import_list("blacklist"))
         btn_export_bl = QPushButton("Exportieren...")
         btn_export_bl.clicked.connect(lambda: self.export_list("blacklist"))
-        btn_remove_bl = QPushButton("Ausgewhlte entfernen")
+        btn_remove_bl = QPushButton("Ausgewählte entfernen")
         btn_remove_bl.clicked.connect(self.remove_from_blacklist)
         btn_clear_bl = QPushButton(" Liste leeren")
         btn_clear_bl.clicked.connect(lambda: self.clear_list("blacklist"))
@@ -3656,7 +3657,7 @@ class AnonymizationSettingsDialog(QDialog):
         btn_import_wl.clicked.connect(lambda: self.import_list("whitelist"))
         btn_export_wl = QPushButton("Exportieren...")
         btn_export_wl.clicked.connect(lambda: self.export_list("whitelist"))
-        btn_remove_wl = QPushButton("Ausgewhlte entfernen")
+        btn_remove_wl = QPushButton("Ausgewählte entfernen")
         btn_remove_wl.clicked.connect(self.remove_from_whitelist)
         btn_clear_wl = QPushButton(" Liste leeren")
         btn_clear_wl.clicked.connect(lambda: self.clear_list("whitelist"))
@@ -3780,7 +3781,7 @@ class AnonymizationSettingsDialog(QDialog):
                     QMessageBox.warning(self, "Fehler", "PyPDF2 nicht installiert")
                     return
             
-            # Fge Wrter hinzu
+            # Füge Wörter hinzu
             target_list = self.blacklist if list_type == "blacklist" else self.whitelist
             count = 0
             for word in words:
@@ -3793,7 +3794,7 @@ class AnonymizationSettingsDialog(QDialog):
             else:
                 self.update_whitelist_display()
             
-            QMessageBox.information(self, "Erfolg", f"{count} Wrter importiert")
+            QMessageBox.information(self, "Erfolg", f"{count} Wörter importiert")
         
         except Exception as e:
             QMessageBox.critical(self, "Fehler", f"Import fehlgeschlagen: {str(e)}")
@@ -3815,7 +3816,7 @@ class AnonymizationSettingsDialog(QDialog):
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write('\n'.join(sorted(target_list)))
             
-            QMessageBox.information(self, "Erfolg", f"{len(target_list)} Wrter exportiert")
+            QMessageBox.information(self, "Erfolg", f"{len(target_list)} Wörter exportiert")
         
         except Exception as e:
             QMessageBox.critical(self, "Fehler", f"Export fehlgeschlagen: {str(e)}")
@@ -3931,7 +3932,7 @@ def encoding_fix_file(filepath, use_ftfy=False):
     
     Args:
         filepath: Pfad zur .py Datei
-        use_ftfy: ftfy verwenden wenn verfgbar
+        use_ftfy: ftfy verwenden wenn verfügbar
     
     Returns:
         Tuple (success, backup_path, error_message)
@@ -4558,7 +4559,7 @@ class SearchWidgetHybrid(QWidget):
         # Buttons
         btn_layout = QHBoxLayout()
         
-        self.btn_open = QPushButton(" öffnen")
+        self.btn_open = QPushButton(" Öffnen")
         self.btn_open.clicked.connect(self.open_selected_file)
         btn_layout.addWidget(self.btn_open)
         
@@ -4646,7 +4647,7 @@ class SearchWidgetHybrid(QWidget):
         self.perform_search()
     
     def perform_search(self):
-        """Fhrt Suche durch"""
+        """Führt Suche durch"""
         term = self.search_input.text().strip()
         
         # Aktive Dateitypen
@@ -4873,7 +4874,7 @@ class SearchWidgetHybrid(QWidget):
                         content = f.read(500)
                         preview += f"<pre>{content}...</pre>"
         except (IOError, OSError):
-            preview += "<i>Vorschau nicht verfgbar</i>"
+            preview += "<i>Vorschau nicht verfügbar</i>"
         
         self.preview_text.setHtml(preview)
     
@@ -4915,7 +4916,7 @@ class SearchWidgetHybrid(QWidget):
         
         elif not is_deleted:
             # Standard-Aktionen
-            menu.addAction(" öffnen", self.open_selected_file)
+            menu.addAction(" Öffnen", self.open_selected_file)
             menu.addAction(" Im Explorer anzeigen", self.show_in_explorer)
             
             menu.addSeparator()
@@ -5733,9 +5734,9 @@ class SearchWidgetHybrid(QWidget):
         
         mode = self.settings.get("delete_mode", "soft")
         
-        # Angepasste Besttigungsmeldung
+        # Angepasste Bestätigungsmeldung
         if mode == "safety":
-            mode_text = "Ausblenden (Safety-Mode - Keine Dateisystem-nderung)"
+            mode_text = "Ausblenden (Safety-Mode - Keine Dateisystem-Änderung)"
         elif mode == "soft":
             mode_text = "Soft-Delete (Papierkorb)"
         else:
@@ -6372,7 +6373,7 @@ class SearchWidgetHybrid(QWidget):
             reply = QMessageBox.question(
                 self,
                 "Blacklist leer",
-                "Die Blacklist ist leer. Mchten Sie jetzt Begriffe hinzufügen?",
+                "Die Blacklist ist leer. Möchten Sie jetzt Begriffe hinzufügen?",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
             )
             if reply == QMessageBox.StandardButton.Yes:
@@ -6417,7 +6418,7 @@ class SearchWidgetHybrid(QWidget):
             reply = QMessageBox.question(
                 self,
                 "Blacklist leer",
-                "Die Blacklist ist leer. Mchten Sie jetzt Begriffe hinzufügen?",
+                "Die Blacklist ist leer. Möchten Sie jetzt Begriffe hinzufügen?",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
             )
             if reply == QMessageBox.StandardButton.Yes:
@@ -6571,7 +6572,7 @@ class SearchWidgetHybrid(QWidget):
         
         path = result['path']
         
-        # Prfe ob ftfy verfgbar ist
+        # Prüfe ob ftfy verfügbar ist
         try:
             from ftfy import fix_text
         except ImportError:
@@ -6796,7 +6797,7 @@ class SearchWidgetHybrid(QWidget):
                 self,
                 "PythonBox nicht gefunden",
                 "PythonBox.py wurde nicht gefunden.\n\n"
-                "Mchten Sie den Pfad jetzt in den Einstellungen festlegen?",
+                "Möchten Sie den Pfad jetzt in den Einstellungen festlegen?",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
             )
             
@@ -6832,7 +6833,7 @@ class SearchWidgetHybrid(QWidget):
             
             # Dateiname generieren
             filename = f"Materialverweis_{data['bezeichnung']}.material.txt"
-            # Ungltige Zeichen entfernen
+            # Ungültige Zeichen entfernen
             filename = "".join(c for c in filename if c.isalnum() or c in (' ', '.', '_', '-'))
             
             # Speicherpfad wählen
@@ -6889,7 +6890,7 @@ Beschreibung:
             
             # Dateiname generieren
             filename = f"{data['name']}.prompt"
-            # Ungltige Zeichen entfernen
+            # Ungültige Zeichen entfernen
             filename = "".join(c for c in filename if c.isalnum() or c in (' ', '.', '_', '-'))
             
             # Speicherpfad wählen
@@ -6944,7 +6945,7 @@ Beschreibung:
             
             # Dateiname generieren
             filename = f"{data['bezeichnung']}.url"
-            # Ungltige Zeichen entfernen
+            # Ungültige Zeichen entfernen
             filename = "".join(c for c in filename if c.isalnum() or c in (' ', '.', '_', '-'))
             
             # Speicherpfad wählen
@@ -6995,7 +6996,7 @@ Erstellt={datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
             
             # Dateiname generieren
             filename = f"Literaturverweis_{data['titel']}.txt"
-            # Ungltige Zeichen entfernen
+            # Ungültige Zeichen entfernen
             filename = "".join(c for c in filename if c.isalnum() or c in (' ', '.', '_', '-'))
             
             # Speicherpfad wählen
@@ -7101,7 +7102,7 @@ Beschreibung/Notizen:
                     
                     # Dateiname generieren
                     filename = f"{title}.url"
-                    # Ungltige Zeichen entfernen
+                    # Ungültige Zeichen entfernen
                     filename = "".join(c for c in filename if c.isalnum() or c in (' ', '.', '_', '-'))
                     
                     # Pfad
@@ -7632,7 +7633,7 @@ Quelle=Browser-Favoriten
         btn_copy = QPushButton(" Alle kopieren")
         btn_copy.clicked.connect(lambda: self.copy_remembered_files() or dialog.accept())
         
-        btn_pool = QPushButton(" Zusammenfhren")
+        btn_pool = QPushButton(" Zusammenführen")
         btn_pool.clicked.connect(lambda: self.pool_remembered_files() or dialog.accept())
         
         btn_clear = QPushButton("Leeren")
@@ -7670,10 +7671,10 @@ Quelle=Browser-Favoriten
             f"{success_count} Datei(en) nach\n{target_dir}")
     
     def pool_remembered_files(self):
-        """Fhrt gemerkte Dateien zusammen"""
+        """Führt gemerkte Dateien zusammen"""
         if len(self.remembered_files) < 2:
             QMessageBox.warning(self, "Zu wenige Dateien",
-                "Mindestens 2 Dateien zum Pooling ntig")
+                "Mindestens 2 Dateien zum Pooling nötig")
             return
         
         # Nimm erste Datei als Target
@@ -8392,6 +8393,7 @@ class UnifiedMainWindow(QMainWindow):
         tools_menu = menubar.addMenu("Tools")
         tools_menu.addAction("🚦 Datenschutzampel starten...", self.start_datenschutzampel)
         tools_menu.addAction("FormConstructor öffnen...", self.launch_form_constructor)
+        tools_menu.addAction("ProSync öffnen...", self.launch_prosync)
 
         help_menu = menubar.addMenu("Hilfe")
         help_menu.addAction("über", self.show_about)
@@ -8421,7 +8423,7 @@ class UnifiedMainWindow(QMainWindow):
         self.hide()
         self.tray_icon.showMessage(
             "ProFiler Suite",
-            "Luft im Hintergrund. Doppelklick zum öffnen.",
+            "Läuft im Hintergrund. Doppelklick zum Öffnen.",
             QSystemTrayIcon.MessageIcon.Information,
             2000
         )
@@ -8473,7 +8475,7 @@ class UnifiedMainWindow(QMainWindow):
                 self,
                 "FormConstructor nicht gefunden",
                 "FormConstructor_V1_5.py wurde nicht gefunden.\n\n"
-                "Mchten Sie den Pfad jetzt in den Einstellungen festlegen?",
+                "Möchten Sie den Pfad jetzt in den Einstellungen festlegen?",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
             )
             
@@ -8490,7 +8492,84 @@ class UnifiedMainWindow(QMainWindow):
             )
         except Exception as e:
             QMessageBox.critical(self, "Fehler", f"Start fehlgeschlagen:\n{str(e)}")
-    
+
+    def _launch_tool_process(self, tool_path):
+        """Startet eine externe Python-, Batch- oder EXE-Datei."""
+        tool_path = Path(tool_path).expanduser()
+        if tool_path.suffix.lower() == ".py":
+            subprocess.Popen([sys.executable, str(tool_path)], cwd=str(tool_path.parent))
+        elif tool_path.suffix.lower() == ".bat":
+            subprocess.Popen(["cmd", "/c", str(tool_path)], cwd=str(tool_path.parent))
+        else:
+            subprocess.Popen([str(tool_path)], cwd=str(tool_path.parent))
+
+    def launch_prosync(self):
+        """Startet ProSync als optionale Companion-App."""
+        current_dir = Path(__file__).resolve().parent
+        sibling_root = current_dir.parent / "REL-PUB_ProSync"
+
+        configured_path = self.settings.get("prosync_path", "")
+        candidates = []
+
+        if configured_path:
+            configured = Path(configured_path).expanduser()
+            if configured.is_dir():
+                candidates.extend([
+                    configured / "ProSync.exe",
+                    configured / "ProSyncStart_V3.1.py",
+                    configured / "START.bat",
+                    configured / "dist" / "ProSync" / "ProSync.exe",
+                ])
+            else:
+                candidates.append(configured)
+
+        candidates.extend([
+            current_dir / "ProSync.exe",
+            current_dir / "ProSyncStart_V3.1.py",
+            current_dir / "START.bat",
+            sibling_root / "ProSync.exe",
+            sibling_root / "ProSyncStart_V3.1.py",
+            sibling_root / "START.bat",
+            sibling_root / "dist" / "ProSync" / "ProSync.exe",
+        ])
+
+        prosync_path = None
+        seen = set()
+        for candidate in candidates:
+            candidate = Path(candidate).expanduser()
+            resolved = str(candidate)
+            if resolved in seen:
+                continue
+            seen.add(resolved)
+            if candidate.exists():
+                prosync_path = candidate
+                break
+
+        if not prosync_path:
+            QMessageBox.warning(
+                self,
+                "ProSync nicht gefunden",
+                "ProSync konnte nicht automatisch gefunden werden.\n\n"
+                "Bitte lege den Pfad in profiler_settings.json unter 'prosync_path' fest\n"
+                "oder platziere ProSync neben ProFiler im gemeinsamen Software-Baum."
+            )
+            return
+
+        try:
+            self._launch_tool_process(prosync_path)
+            QMessageBox.information(
+                self,
+                "ProSync gestartet",
+                "ProSync wurde als optionale Companion-App gestartet.\n\n"
+                "ProFiler bleibt geöffnet, beide Werkzeuge laufen unabhängig."
+            )
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Fehler",
+                f"Konnte ProSync nicht starten:\n{str(e)}"
+            )
+
     def start_datenschutzampel(self):
         """Startet die Datenschutzampel als separate Anwendung"""
         # 1. Suche im aktuellen Verzeichnis
@@ -8531,7 +8610,7 @@ class UnifiedMainWindow(QMainWindow):
     
 
     def perform_auto_cleanup(self):
-        """Automatisches Aufrumen"""
+        """Automatisches Aufräumen"""
         days = self.settings.get("trash_retention_days", 30)
         
         if days <= 0:
@@ -8601,7 +8680,7 @@ def main():
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Icon.Warning)
         msg.setWindowTitle("Fehlende Abhängigkeiten")
-        msg.setText("Einige Features sind nicht verfgbar:\n\n" + "\n".join(warnings))
+        msg.setText("Einige Features sind nicht verfügbar:\n\n" + "\n".join(warnings))
         msg.setInformativeText("Installation:\npip install PyPDF2 pytesseract pdf2image python-docx Pillow")
         msg.exec()
     

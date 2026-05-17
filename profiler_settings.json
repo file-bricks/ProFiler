@@ -8,7 +8,8 @@
   "ocr_enabled": true,
   "pythonbox_path": "",
   "sqlite_viewer_path": "",
-  "formconstructor_path": "C:/Users/User/OneDrive/Desktop/.SOFTWARE/Data Tools/_ProFiler/FormConstructor V1.5.py",
+  "formconstructor_path": "",
+  "prosync_path": "",
   "default_spawn_format": "txt",
   "rename_in_filesystem": true
 }

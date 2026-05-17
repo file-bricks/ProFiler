@@ -5,13 +5,14 @@ Professionelle Dateiverwaltung mit Volltextsuche, OCR und PDF-Bearbeitung.
 ## Features
 
 - **Datei-Indexierung** mit SQLite-basiertem Index
-- **Volltextsuche** ueber Dokumente (PDF, DOCX, TXT)
-- **OCR** fuer gescannte Dokumente (Tesseract)
+- **Volltextsuche** über Dokumente (PDF, DOCX, TXT)
+- **OCR** für gescannte Dokumente (Tesseract)
 - **PDF-Viewer und -Editor** (PyMuPDF)
-- **Dateiueberwachung** mit Watchdog (Auto-Sync)
+- **Dateiüberwachung** mit Watchdog (Auto-Sync)
 - **Datenschutzampel** -- Erkennung sensibler Dateien
-- **System-Tray-Integration** fuer Hintergrundbetrieb
-- **Excel-Import** fuer bestehende Dateilisten
+- **ProSync-Companion** -- optionaler Start des Sync-Werkzeugs aus dem Tools-Menü
+- **System-Tray-Integration** für Hintergrundbetrieb
+- **Excel-Import** für bestehende Dateilisten
 - **Berichterstellung** (PDF)
 
 ## Screenshots
@@ -25,7 +26,7 @@ Professionelle Dateiverwaltung mit Volltextsuche, OCR und PDF-Bearbeitung.
 - Python >= 3.8
 - Tesseract OCR (separat installieren oder portable Version verwenden)
 
-### Python-Abhaengigkeiten
+### Python-Abhängigkeiten
 
 ```bash
 pip install -r requirements.txt
@@ -33,7 +34,7 @@ pip install -r requirements.txt
 
 ### Tesseract OCR
 
-Die OCR-Funktionalitaet erfordert [Tesseract](https://github.com/tesseract-ocr/tesseract).
+Die OCR-Funktionalität erfordert [Tesseract](https://github.com/tesseract-ocr/tesseract).
 Der Pfad kann in `profiler_config.json` konfiguriert werden.
 
 ## Nutzung
@@ -42,7 +43,7 @@ Der Pfad kann in `profiler_config.json` konfiguriert werden.
 python Profiler_Suite_V15.py
 ```
 
-Oder ueber die Batch-Datei:
+Oder über die Batch-Datei:
 
 ```bash
 START.bat
@@ -53,7 +54,7 @@ START.bat
 | Datei | Zweck |
 |-------|-------|
 | `profiler_config.json` | Hauptkonfiguration (Pfade, OCR, Index) |
-| `profiler_settings.json` | Benutzereinstellungen (UI, Theme) |
+| `profiler_settings.json` | Benutzereinstellungen (UI, Theme, `prosync_path`) |
 | `search_config.json` | Suchoptionen und Filter |
 
 ## Enthaltene Tools
@@ -61,12 +62,12 @@ START.bat
 | Tool | Beschreibung |
 |------|--------------|
 | `Profiler_Suite_V15.py` | Hauptanwendung |
-| `ProFiler_Datenschutzampel.py` | Eigenstaendiger Datenschutz-Check |
-| `SQLiteViewer.py` | Datenbank-Viewer fuer den Index |
+| `ProFiler_Datenschutzampel.py` | Eigenständiger Datenschutz-Check |
+| `SQLiteViewer.py` | Datenbank-Viewer für den Index |
 | `import_excel_to_profiler.py` | Excel-Import in den Profiler-Index |
-| `indent_gui_checker.py` | GUI-Einrueckungspruefer |
+| `indent_gui_checker.py` | GUI-Einrückungsprüfer |
 
-## Unterstuetzte Formate
+## Unterstützte Formate
 
 | Kategorie | Formate |
 |-----------|---------|
@@ -98,7 +99,7 @@ Dieses Projekt verwendet PySide6 (LGPL) und PyMuPDF (AGPL).
 
 **Version:** 15
 **Autor:** Lukas Geiger
-**Zuletzt aktualisiert:** Maerz 2026
+**Zuletzt aktualisiert:** Mai 2026
 
 ---
 
@@ -157,7 +158,7 @@ START.bat
 | File | Purpose |
 |------|---------|
 | `profiler_config.json` | Main configuration (paths, OCR, index) |
-| `profiler_settings.json` | User settings (UI, theme) |
+| `profiler_settings.json` | User settings (UI, theme, `prosync_path`) |
 | `search_config.json` | Search options and filters |
 
 ### Included Tools
