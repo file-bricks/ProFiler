@@ -5,6 +5,7 @@ import os
 import json
 import uuid
 import hashlib
+import re
 import shutil
 import sqlite3
 import time
@@ -120,6 +121,71 @@ PDF_TEXT_MIN_CHARS = 20  # Minimale Zeichenanzahl für Text-Erkennung
 PDF_PAGES_TO_CHECK = 3   # Anzahl zu prüfender Seiten in PDFs
 FILE_ATTR_CLOUD_PLACEHOLDER = 0x1000  # Windows File-Attribut für Cloud-Placeholder
 FILE_ATTR_RECALL_ON_ACCESS = 0x400    # Windows File-Attribut für Recall-on-Access
+WINDOWS_ENV_VAR_PATTERN = re.compile(r"%([^%]+)%")
+
+
+def app_base_dir():
+    """Liefert den Laufzeitpfad für lokale und eingefrorene Builds."""
+    if getattr(sys, "frozen", False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
+
+def normalize_configured_tool_path(base_dir, configured_path):
+    """Expandiert einen konfigurierten Tool-Pfad und verankert relative Pfade am App-Root."""
+    raw_path = str(configured_path).strip()
+    if not raw_path:
+        return None
+
+    expanded_raw_path = WINDOWS_ENV_VAR_PATTERN.sub(
+        lambda match: os.environ.get(match.group(1), match.group(0)),
+        raw_path,
+    )
+    expanded_path = Path(os.path.expandvars(expanded_raw_path)).expanduser()
+    if not expanded_path.is_absolute():
+        expanded_path = Path(base_dir).expanduser() / expanded_path
+    return expanded_path
+
+
+def resolve_prosync_launch_path(base_dir, configured_path=""):
+    """Ermittelt den besten verfügbaren ProSync-Einstiegspunkt."""
+    base_dir = Path(base_dir).expanduser()
+    sibling_root = base_dir.parent / "REL-PUB_ProSync"
+
+    candidates = []
+    if configured_path:
+        configured = normalize_configured_tool_path(base_dir, configured_path)
+        if configured.is_dir():
+            candidates.extend([
+                configured / "ProSync.exe",
+                configured / "ProSyncStart_V3.1.py",
+                configured / "START.bat",
+                configured / "dist" / "ProSync" / "ProSync.exe",
+            ])
+        else:
+            candidates.append(configured)
+
+    candidates.extend([
+        base_dir / "ProSync.exe",
+        base_dir / "ProSyncStart_V3.1.py",
+        base_dir / "START.bat",
+        sibling_root / "ProSync.exe",
+        sibling_root / "ProSyncStart_V3.1.py",
+        sibling_root / "START.bat",
+        sibling_root / "dist" / "ProSync" / "ProSync.exe",
+    ])
+
+    seen = set()
+    for candidate in candidates:
+        candidate = Path(candidate).expanduser()
+        resolved = str(candidate)
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        if candidate.exists():
+            return candidate
+
+    return None
 
 def sha256_file(path, chunk_size=DEFAULT_CHUNK_SIZE):
     """Berechnet den SHA256 Hash. Robust gegen leere Dateien."""
@@ -8505,45 +8571,10 @@ class UnifiedMainWindow(QMainWindow):
 
     def launch_prosync(self):
         """Startet ProSync als optionale Companion-App."""
-        current_dir = Path(__file__).resolve().parent
-        sibling_root = current_dir.parent / "REL-PUB_ProSync"
-
-        configured_path = self.settings.get("prosync_path", "")
-        candidates = []
-
-        if configured_path:
-            configured = Path(configured_path).expanduser()
-            if configured.is_dir():
-                candidates.extend([
-                    configured / "ProSync.exe",
-                    configured / "ProSyncStart_V3.1.py",
-                    configured / "START.bat",
-                    configured / "dist" / "ProSync" / "ProSync.exe",
-                ])
-            else:
-                candidates.append(configured)
-
-        candidates.extend([
-            current_dir / "ProSync.exe",
-            current_dir / "ProSyncStart_V3.1.py",
-            current_dir / "START.bat",
-            sibling_root / "ProSync.exe",
-            sibling_root / "ProSyncStart_V3.1.py",
-            sibling_root / "START.bat",
-            sibling_root / "dist" / "ProSync" / "ProSync.exe",
-        ])
-
-        prosync_path = None
-        seen = set()
-        for candidate in candidates:
-            candidate = Path(candidate).expanduser()
-            resolved = str(candidate)
-            if resolved in seen:
-                continue
-            seen.add(resolved)
-            if candidate.exists():
-                prosync_path = candidate
-                break
+        prosync_path = resolve_prosync_launch_path(
+            app_base_dir(),
+            self.settings.get("prosync_path", ""),
+        )
 
         if not prosync_path:
             QMessageBox.warning(
