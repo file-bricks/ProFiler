@@ -1,208 +1,113 @@
 # ProFiler Suite
 
-Professionelle Dateiverwaltung mit Volltextsuche, OCR und PDF-Bearbeitung.
+[Deutsch](README_de.md) | [GitHub](https://github.com/file-bricks/ProFiler)
 
-## Features
+ProFiler Suite is a local-first desktop file manager for private document collections. It combines full-text file indexing, OCR, PDF tools, duplicate detection, privacy checks, and optional ProSync integration in one Windows-oriented PySide6 app.
 
-- **Datei-Indexierung** mit SQLite-basiertem Index
-- **Volltextsuche** über Dokumente (PDF, DOCX, TXT)
-- **OCR** für gescannte Dokumente (Tesseract)
-- **PDF-Viewer und -Editor** (PyMuPDF)
-- **Dateiüberwachung** mit Watchdog (Auto-Sync)
-- **Datenschutzampel** -- Erkennung sensibler Dateien
-- **ProSync-Companion** -- optionaler Start des Sync-Werkzeugs aus dem Tools-Menü
-- **System-Tray-Integration** für Hintergrundbetrieb
-- **Excel-Import** für bestehende Dateilisten
-- **Berichterstellung** (PDF)
+It is built for users who manage many local documents and want search, preview, PDF processing, and privacy workflows without uploading files to a cloud service.
 
-## Screenshots
+## Highlights
 
-![Hauptfenster](screenshots/main.png)
+- Local SQLite file index for folders, document collections, and versioned file entries
+- Full-text search across PDF, DOCX, TXT, RTF, images, spreadsheets, and code files
+- OCR workflow for scanned PDFs and image documents via Tesseract
+- PDF utilities for encryption, decryption, page extraction, OCR, text removal, and export
+- Duplicate and version handling with SHA-256 based file fingerprints
+- Privacy traffic light for finding potentially sensitive files before sharing or archiving
+- Cloud-placeholder awareness for OneDrive-style local file libraries
+- Optional ProSync companion launcher for folder synchronization workflows
+- Desktop GUI with dark/light theme support and system tray integration
+- Included helper tools for SQLite inspection and Excel import
 
-## Installation
+## Screenshot
 
-### Voraussetzungen
+![ProFiler Suite desktop file manager with filters, file search, collections and preview panes](screenshots/main.png)
 
-- Python >= 3.8
-- Tesseract OCR (separat installieren oder portable Version verwenden)
+## When To Use ProFiler
 
-### Python-Abhängigkeiten
+ProFiler is useful when you need a private document management tool for:
+
+- searchable local archives of PDFs, Office documents, text files, and scanned paperwork
+- OCR-assisted document indexing without a hosted SaaS service
+- file cleanup, duplicate detection, and version review across folders
+- PDF handling for small office workflows
+- privacy review before forwarding, exporting, or publishing document bundles
+- a companion desktop hub next to tools such as ProSync and SQLiteViewer
+
+## Quick Start
 
 ```bash
 pip install -r requirements.txt
-```
-
-### Tesseract OCR
-
-Die OCR-Funktionalität erfordert [Tesseract](https://github.com/tesseract-ocr/tesseract).
-Der Pfad kann in `profiler_config.json` konfiguriert werden.
-
-## Nutzung
-
-```bash
 python Profiler_Suite_V15.py
 ```
 
-Oder über die Batch-Datei:
+On Windows you can also start the app with:
 
-```bash
+```bat
 START.bat
 ```
 
-## Konfiguration
+## Requirements
 
-| Datei | Zweck |
-|-------|-------|
-| `profiler_config.json` | Hauptkonfiguration (Pfade, OCR, Index) |
-| `profiler_settings.json` | Benutzereinstellungen (UI, Theme, `prosync_path`) |
-| `search_config.json` | Suchoptionen und Filter |
+- Python 3.8+
+- PySide6
+- Tesseract OCR for OCR features
+- Optional PDF/OCR libraries listed in `requirements.txt`
 
-## Enthaltene Tools
+OCR requires [Tesseract](https://github.com/tesseract-ocr/tesseract). Configure the executable path in `profiler_config.json` if the portable copy or system installation is not auto-detected.
 
-| Tool | Beschreibung |
-|------|--------------|
-| `Profiler_Suite_V15.py` | Hauptanwendung |
-| `ProFiler_Datenschutzampel.py` | Eigenständiger Datenschutz-Check |
-| `SQLiteViewer.py` | Datenbank-Viewer für den Index |
-| `import_excel_to_profiler.py` | Excel-Import in den Profiler-Index |
-| `indent_gui_checker.py` | GUI-Einrückungsprüfer |
+## Configuration
 
-## Unterstützte Formate
+| File | Purpose |
+|---|---|
+| `profiler_config.json` | Main paths, OCR settings, and index configuration |
+| `profiler_settings.json` | UI settings, theme, and optional `prosync_path` |
+| `search_config.json` | Search databases, filters, and search options |
 
-| Kategorie | Formate |
-|-----------|---------|
-| **Dokumente** | PDF, DOCX, TXT, RTF |
-| **Bilder** | PNG, JPG, TIFF (mit OCR) |
-| **Tabellen** | XLSX, XLS, CSV |
+## Included Tools
 
-## See Also: KnowledgeDigest
+| Tool | Purpose |
+|---|---|
+| `Profiler_Suite_V15.py` | Main desktop application |
+| `ProFiler_Datenschutzampel.py` | Standalone privacy traffic-light check |
+| `SQLiteViewer.py` | SQLite database viewer for index inspection |
+| `import_excel_to_profiler.py` | Excel import for existing file lists |
+| `indent_gui_checker.py` | GUI indentation checker for development maintenance |
 
-Looking for full-text search with BM25 ranking, LLM summarization, or a web viewer for your documents? Check out [KnowledgeDigest](https://github.com/file-bricks/knowledgedigest) -- a portable knowledge database from the same author.
+## Supported Formats
+
+| Category | Formats |
+|---|---|
+| Documents | PDF, DOCX, TXT, RTF |
+| Images | PNG, JPG, TIFF with OCR support |
+| Spreadsheets | XLSX, XLS, CSV |
+| Other files | Indexed by metadata and file category |
+
+## ProFiler And KnowledgeDigest
+
+Looking for full-text search with BM25 ranking, LLM summarization, or a web viewer for your documents? See [KnowledgeDigest](https://github.com/file-bricks/knowledgedigest), a portable knowledge database from the same author.
 
 | | ProFiler | KnowledgeDigest |
 |---|---|---|
-| **Focus** | File management, PDF tools, OCR, privacy | Knowledge search, chunking, LLM summaries |
-| **Search** | Multi-DB, type/size/date filters | FTS5 with BM25 ranking, snippet highlighting |
-| **PDF** | Encrypt, decrypt, extract, redact, OCR | Read-only (text extraction) |
-| **Privacy** | Anonymization, redaction, clipboard guard | -- |
-| **AI** | -- | LLM summarization (Haiku), keyword extraction |
-| **Interfaces** | Desktop GUI, System Tray | Desktop GUI, Web Viewer, CLI, Python API |
-| **License** | AGPL v3 | MIT |
+| Focus | File management, PDF tools, OCR, privacy | Knowledge search, chunking, LLM summaries |
+| Search | Multi-DB, type/size/date filters | FTS5 with BM25 ranking and snippets |
+| PDF | Encrypt, decrypt, extract, redact, OCR | Read-only text extraction |
+| Privacy | Anonymization, redaction, clipboard guard | Not the focus |
+| AI | Not the focus | LLM summarization and keyword extraction |
+| Interfaces | Desktop GUI, system tray | Desktop GUI, web viewer, CLI, Python API |
+| License | AGPL-3.0 | MIT |
 
-## Lizenz
+## Privacy And Redaction Notice
 
-AGPL v3 -- Siehe [LICENSE](LICENSE)
+ProFiler supports privacy workflows, redaction, and anonymization, but it does not guarantee complete removal of sensitive information. Always review generated files manually before sharing or publishing them.
 
-Dieses Projekt verwendet PySide6 (LGPL) und PyMuPDF (AGPL).
+## License
 
----
+ProFiler Suite is licensed under AGPL-3.0. See [LICENSE](LICENSE).
 
-**Version:** 15
-**Autor:** Lukas Geiger
-**Zuletzt aktualisiert:** Mai 2026
+This project uses PySide6 and PyMuPDF among other dependencies; see `requirements.txt` and `THIRD_PARTY_LICENSES.txt`.
 
----
+## Discoverability Keywords
 
-## English
-
-Professional file management with full-text search, OCR, and PDF editing.
-
-### Features
-
-- **File Indexing** with SQLite-based index
-- **Full-Text Search** across documents (PDF, DOCX, TXT)
-- **OCR** for scanned documents (Tesseract)
-- **PDF Viewer and Editor** (PyMuPDF)
-- **File Monitoring** with Watchdog (Auto-Sync)
-- **Privacy Traffic Light** -- detection of sensitive files
-- **System Tray Integration** for background operation
-- **Excel Import** for existing file lists
-- **Report Generation** (PDF)
-
-### Screenshots
-
-![Main Window](screenshots/main.png)
-
-### Installation
-
-#### Prerequisites
-
-- Python >= 3.8
-- Tesseract OCR (install separately or use the portable version)
-
-#### Python Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-#### Tesseract OCR
-
-OCR functionality requires [Tesseract](https://github.com/tesseract-ocr/tesseract).
-The path can be configured in `profiler_config.json`.
-
-### Usage
-
-```bash
-python Profiler_Suite_V15.py
-```
-
-Or via the batch file:
-
-```bash
-START.bat
-```
-
-### Configuration
-
-| File | Purpose |
-|------|---------|
-| `profiler_config.json` | Main configuration (paths, OCR, index) |
-| `profiler_settings.json` | User settings (UI, theme, `prosync_path`) |
-| `search_config.json` | Search options and filters |
-
-### Included Tools
-
-| Tool | Description |
-|------|-------------|
-| `Profiler_Suite_V15.py` | Main application |
-| `ProFiler_Datenschutzampel.py` | Standalone privacy check |
-| `SQLiteViewer.py` | Database viewer for the index |
-| `import_excel_to_profiler.py` | Excel import into the Profiler index |
-| `indent_gui_checker.py` | GUI indentation checker |
-
-### Supported Formats
-
-| Category | Formats |
-|----------|---------|
-| **Documents** | PDF, DOCX, TXT, RTF |
-| **Images** | PNG, JPG, TIFF (with OCR) |
-| **Spreadsheets** | XLSX, XLS, CSV |
-
-### License
-
-AGPL v3 -- See [LICENSE](LICENSE)
-
-This project uses PySide6 (LGPL) and PyMuPDF (AGPL).
-
----
-
-**Version:** 15
-**Author:** Lukas Geiger
-**Last Updated:** March 2026
-
-> **Keine Garantie vollständiger Schwärzung/Anonymisierung.** Dieses Werkzeug unterstützt Privacy-Prozesse, kann sie aber nicht vollständig automatisieren. Manuelle Nachkontrolle ist Pflicht.
->
-> **No guarantee of complete redaction/anonymization.** This tool supports privacy processes but cannot fully automate them. Manual review is required.
-
-
----
-
-## Haftung / Liability
-
-Dieses Projekt ist eine **unentgeltliche Open-Source-Schenkung** im Sinne der §§ 516 ff. BGB. Die Haftung des Urhebers ist gemäß **§ 521 BGB** auf **Vorsatz und grobe Fahrlässigkeit** beschränkt. Ergänzend gelten die Haftungsausschlüsse aus GPL-3.0 / MIT / Apache-2.0 §§ 15–16 (je nach gewählter Lizenz).
-
-Nutzung auf eigenes Risiko. Keine Wartungszusage, keine Verfügbarkeitsgarantie, keine Gewähr für Fehlerfreiheit oder Eignung für einen bestimmten Zweck.
-
-This project is an unpaid open-source donation. Liability is limited to intent and gross negligence (§ 521 German Civil Code). Use at your own risk. No warranty, no maintenance guarantee, no fitness-for-purpose assumed.
+`local-first file manager`, `desktop document manager`, `private document archive`, `OCR desktop app`, `PDF OCR tool`, `PDF redaction`, `document privacy checker`, `PySide6 file management`, `SQLite document index`, `Windows file organizer`.
 

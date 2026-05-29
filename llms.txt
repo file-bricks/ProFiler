@@ -1,0 +1,43 @@
+# ProFiler Suite
+
+Canonical repository: https://github.com/file-bricks/ProFiler
+
+ProFiler Suite is a local-first desktop file manager for private document collections. It is a Windows-oriented PySide6 application for indexing local folders, searching documents, running OCR, handling PDF workflows, detecting duplicates, and reviewing files for privacy risks before sharing.
+
+Core files:
+
+- `Profiler_Suite_V15.py`: main desktop app
+- `ProFiler_Datenschutzampel.py`: standalone privacy traffic-light helper
+- `SQLiteViewer.py`: local SQLite index viewer
+- `import_excel_to_profiler.py`: imports existing file lists
+- `README.md`: English user-facing overview
+- `README_de.md`: German user-facing overview
+- `requirements.txt`: Python dependencies
+
+Important capabilities:
+
+- local SQLite file index
+- full-text document search
+- OCR via Tesseract
+- PDF encryption, decryption, extraction, OCR, text removal, and export
+- duplicate and version review via SHA-256 fingerprints
+- privacy review and redaction/anonymization assistance
+- optional ProSync companion launcher
+
+Privacy note:
+
+The app supports redaction and anonymization workflows but does not guarantee complete removal of sensitive information. Manual review remains required before publishing or sharing generated files.
+
+Search phrases:
+
+- local-first file manager
+- desktop document manager
+- private document archive
+- OCR desktop app
+- PDF OCR tool
+- PDF redaction
+- document privacy checker
+- PySide6 file management
+- SQLite document index
+- Windows file organizer
+
