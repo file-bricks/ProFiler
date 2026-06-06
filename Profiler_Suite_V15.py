@@ -2490,32 +2490,21 @@ class SyncWorker(QThread):
                     
                     file_id = db.upsert_file(content_hash, size)
                 
-                # Tags aus Pfad
-                if self.cfg.get("structure_handling", {}).get("tags_from_path", True):
-                    for tag in path_to_tags(path, source_root):
-                        db.add_tag(file_id, tag)
-                
-                # Version hinzufügen
+                # Version hinzufügen (upsert: update bei bekanntem Pfad, sonst insert)
                 if not content_hash:
                     if is_cloud:
                         content_hash = f"CLOUD:{size}:{mtime_iso}"
                     else:
                         content_hash = sha256_file(path)
-                
-                existing = db.get_versions_by_hash(content_hash)
-                v_idx = (existing[0][4] + 1) if existing else 1
-                
-                db.add_version(file_id, name, path, mtime_iso, ctime_iso, v_idx, "source")
-                
+
+                db.upsert_version(file_id, name, path, mtime_iso, ctime_iso, 1, "source")
+
                 done += 1
                 pct = int(done * 100 / max(1, total))
                 self.signals.progress.emit(pct, f"{done}/{total} Dateien")
-                
-            except Exception as e:
-                try:
-                    db.add_event(file_id if file_id else -1, "error", str(e))
-                except sqlite3.Error:
-                    pass
+
+            except Exception:
+                pass  # Datei überspringen, nächste verarbeiten
         
         self.signals.status.emit(f"Indizierung abgeschlossen! {done} Dateien verarbeitet.")
         self.signals.progress.emit(100, "Fertig")
