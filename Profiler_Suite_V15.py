@@ -28,6 +28,12 @@ from PySide6.QtCore import (
 )
 from PySide6.QtGui import QAction, QPalette, QColor, QFont, QPixmap, QIcon, QImage
 
+from workspace_exchange import (
+    WorkspaceFormatError,
+    export_workspace as export_redacted_workspace,
+    import_workspace as import_redacted_workspace,
+)
+
 # Optionale Bibliotheken
 try:
     import PyPDF2
@@ -1617,7 +1623,7 @@ class SearchWorker(QThread):
                     sql += " AND v.is_deleted = 0"
                 
                 if not show_hidden:
-                    sql += " AND v.is_deleted = 0"
+                    sql += " AND v.is_hidden = 0"
                 
                 if only_fav: 
                     sql += " AND v.is_favorite = 1"
@@ -8449,6 +8455,8 @@ class UnifiedMainWindow(QMainWindow):
         menubar = self.menuBar()
         
         file_menu = menubar.addMenu("Datei")
+        file_menu.addAction("Arbeitsstand exportieren...", self.export_workspace_snapshot)
+        file_menu.addAction("Arbeitsstand importieren...", self.import_workspace_snapshot)
         file_menu.addAction("🌐 Browser-Favoriten importieren...", self.import_browser_favorites)
         file_menu.addSeparator()
         file_menu.addAction("⚙️ Einstellungen", self.show_settings)
@@ -8497,7 +8505,66 @@ class UnifiedMainWindow(QMainWindow):
     def import_browser_favorites(self):
         """Delegiert Browser-Favoriten Import an SearchWidget"""
         self.search_widget.import_browser_favorites()
-    
+
+    def export_workspace_snapshot(self):
+        """Exportiert einen redigierten Workspace-Snapshot als JSON."""
+        default_name = f"profiler-workspace-v1-{datetime.now().strftime('%Y%m%d-%H%M%S')}.json"
+        output_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Arbeitsstand exportieren",
+            default_name,
+            "JSON-Dateien (*.json)",
+        )
+        if not output_path:
+            return
+
+        try:
+            payload = export_redacted_workspace(
+                output_path,
+                self.search_config,
+                self.settings,
+                self.connections_widget.cfg,
+            )
+            self.statusBar().showMessage("Arbeitsstand exportiert", 5000)
+            QMessageBox.information(
+                self,
+                "Export erfolgreich",
+                "Arbeitsstand exportiert.\n\n"
+                f"Datei: {output_path}\n"
+                f"Indizes: {len(payload.get('indexes', []))}",
+            )
+        except (OSError, ValueError, sqlite3.Error) as exc:
+            QMessageBox.critical(self, "Fehler", f"Export fehlgeschlagen:\n{exc}")
+
+    def import_workspace_snapshot(self):
+        """Importiert einen redigierten Workspace-Snapshot und uebernimmt sichere Einstellungen."""
+        input_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Arbeitsstand importieren",
+            "",
+            "JSON-Dateien (*.json)",
+        )
+        if not input_path:
+            return
+
+        try:
+            result = import_redacted_workspace(input_path, self.settings)
+            applied = ", ".join(result["applied_settings"]) if result["applied_settings"] else "keine"
+            self.statusBar().showMessage("Arbeitsstand importiert", 5000)
+            QMessageBox.information(
+                self,
+                "Import erfolgreich",
+                "Arbeitsstand importiert.\n\n"
+                f"Workspace: {result['workspace_name']}\n"
+                f"Indizes im Snapshot: {result['indexes_count']}\n"
+                f"Uebernommene Einstellungen: {applied}\n"
+                "Lokale Datenbankpfade wurden bewusst nicht uebernommen.",
+            )
+        except WorkspaceFormatError as exc:
+            QMessageBox.warning(self, "Ungueltiger Export", str(exc))
+        except OSError as exc:
+            QMessageBox.critical(self, "Fehler", f"Import fehlgeschlagen:\n{exc}")
+
     def show_settings(self):
         """Zeigt Einstellungen"""
         dialog = SettingsDialog(self.settings, self)
