@@ -1,0 +1,38 @@
+name: source-platform-smoke
+
+on:
+  push:
+    branches: ["master", "main"]
+  pull_request:
+    branches: ["master", "main"]
+
+jobs:
+  smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: System-Abhängigkeiten (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            libgl1 libglib2.0-0 libegl1 libxkbcommon0
+
+      - name: PySide6 installieren
+        run: pip install "PySide6>=6.5.0"
+
+      - name: Source-Platform-Smoke
+        run: PYTHONIOENCODING=utf-8 python source_platform_smoke.py
+        env:
+          QT_QPA_PLATFORM: offscreen
