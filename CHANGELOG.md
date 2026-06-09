@@ -11,6 +11,7 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - ProSync kann aus dem Tools-Menü optional gestartet werden.
 - `README_de.md` als separate deutsche README und `llms.txt` als maschinenlesbarer Projektkontext ergänzt.
 - Redigierter Workspace-Austausch über `profiler-workspace-v1.json` mit Menüaktionen für Export und Import ergänzt.
+- `pyproject.toml` zur Standardisierung der Paketmetadaten und Abhängigkeiten angelegt.
 
 ### Geändert / Changed
 - `profiler_settings.json` um `prosync_path` erweitert.

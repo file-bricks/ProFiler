@@ -23,6 +23,7 @@ Important capabilities:
 - duplicate and version review via SHA-256 fingerprints
 - privacy review and redaction/anonymization assistance
 - optional ProSync companion launcher
+- redacted workspace export/import for reviews and handoffs
 
 Privacy note:
 
@@ -40,4 +41,3 @@ Search phrases:
 - PySide6 file management
 - SQLite document index
 - Windows file organizer
-

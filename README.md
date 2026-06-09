@@ -16,6 +16,7 @@ It is built for users who manage many local documents and want search, preview, 
 - Privacy traffic light for finding potentially sensitive files before sharing or archiving
 - Cloud-placeholder awareness for OneDrive-style local file libraries
 - Optional ProSync companion launcher for folder synchronization workflows
+- Redacted workspace export/import for reviews, handoffs, and cross-platform smoke preparation
 - Desktop GUI with dark/light theme support and system tray integration
 - Included helper tools for SQLite inspection and Excel import
 
@@ -110,4 +111,3 @@ This project uses PySide6 and PyMuPDF among other dependencies; see `requirement
 ## Discoverability Keywords
 
 `local-first file manager`, `desktop document manager`, `private document archive`, `OCR desktop app`, `PDF OCR tool`, `PDF redaction`, `document privacy checker`, `PySide6 file management`, `SQLite document index`, `Windows file organizer`.
-

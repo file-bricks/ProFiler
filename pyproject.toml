@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "profiler-suite"
+version = "15.0.0"
+description = "Local-first desktop file and document manager with search, preview, and privacy inspection."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "AGPL-3.0"}
+authors = [
+    {name = "file-bricks Contributors"}
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Operating System :: Microsoft :: Windows",
+    "Topic :: Desktop Environment :: File Managers",
+]
+dependencies = [
+    "PySide6>=6.5.0",
+    "PyPDF2>=3.0.0",
+    "pikepdf>=8.0.0",
+    "PyMuPDF>=1.23.0",
+    "pdf2image>=1.16.0",
+    "python-docx>=1.0.0",
+    "pytesseract>=0.3.10",
+    "Pillow>=10.0.0",
+    "watchdog>=3.0.0",
+    "reportlab>=4.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/file-bricks/ProFiler"

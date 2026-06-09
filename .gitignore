@@ -1,4 +1,4 @@
-# =============================================================================
+﻿# =============================================================================
 # .gitignore Template fuer Software Entwicklung Projekte
 # Kopieren und als .gitignore im Projektroot ablegen
 # Projektspezifische Eintraege am Ende anfuegen
@@ -100,3 +100,7 @@ Profiler.txt
 Integration aller Tools prompt.txt
 import_daten.xlsx
 indent_log.txt
+DECISIONS.md
+PORTIERUNGSPLAN.md
+TODO.md
+DONE.md

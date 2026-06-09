@@ -16,6 +16,7 @@ ProFiler richtet sich an Menschen, die viele lokale Dokumente verwalten und Such
 - Datenschutzampel zum Auffinden potenziell sensibler Dateien vor Weitergabe oder Archivierung
 - Erkennung von Cloud-Platzhaltern für OneDrive-ähnliche lokale Bibliotheken
 - Optionaler ProSync-Companion für Ordner-Synchronisationsworkflows
+- Redigierter Arbeitsstand-Export/-Import für Review, Übergabe und Cross-Platform-Smokes
 - Desktop-GUI mit Dark-/Light-Theme und System-Tray-Integration
 - Enthaltene Hilfswerkzeuge für SQLite-Prüfung und Excel-Import
 
@@ -106,4 +107,3 @@ ProFiler unterstützt Datenschutz-Workflows, Schwärzung und Anonymisierung, gar
 ProFiler Suite steht unter AGPL-3.0. Siehe [LICENSE](LICENSE).
 
 Dieses Projekt verwendet unter anderem PySide6 und PyMuPDF; siehe `requirements.txt` und `THIRD_PARTY_LICENSES.txt`.
-

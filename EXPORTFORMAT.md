@@ -1,62 +1,95 @@
 # Exportformat - ProFiler Suite
 
-Stand: 2026-06-01
+Stand: 2026-06-03
 
 ## Zweck
 
-`profiler-workspace-v1.json` ist ein geplantes dateibasiertes Austauschformat für ProFiler. Es dient dem Wechsel zwischen Desktop-Installationen, macOS-/Linux-Smokes und optionalen redigierten Review-Situationen. Es ist kein Synchronisationsprotokoll und kein Rohdokument-Archiv.
+`profiler-workspace-v1.json` ist ein redigiertes Austauschformat für ProFiler. Es dient der Übergabe zwischen Desktop-Installationen, der Vorbereitung von macOS-/Linux-Smokes und sicheren Review-Situationen. Es ist kein Rohdokument-Archiv und kein Synchronisationsprotokoll.
 
 ## Grundsätze
 
 - keine Rohdokumente
 - keine Secrets, Tokens, Passwörter oder OAuth-Daten
 - keine ungefragten absoluten Benutzerpfade
-- Datenschutzfunde nur als redigierte Zusammenfassung
-- Schema-Version immer explizit führen
+- Indexe nur als Zusammenfassung mit redigierten Wurzelreferenzen
+- Datenschutzampel nur als Regel-/Status-Zusammenfassung
+- sichere Einstellungen dürfen importiert werden; lokale Pfade bewusst nicht
 
-## Geplante Struktur
+## Aktuelle Struktur
 
 ```json
 {
   "schema": "profiler-workspace-v1",
-  "exported_at": "2026-06-01T00:00:00+02:00",
+  "schema_version": 1,
+  "exported_at": "2026-06-03T12:00:00Z",
   "app": {
     "name": "ProFiler Suite",
     "version": "15"
   },
   "workspace": {
-    "name": "Beispielarchiv",
-    "notes": "Redigierter Export ohne Rohdokumente"
+    "name": "ProFiler Workspace (2 Verbindungen)",
+    "notes": "Redigierter Export ohne Rohdokumente und ohne lokale Benutzerpfade.",
+    "connection_count": 2,
+    "enabled_connection_count": 2
   },
   "settings": {
-    "ui_language": "de",
     "theme": "dark",
-    "ocr_languages": ["deu", "eng"]
+    "delete_mode": "soft",
+    "ocr_enabled": true,
+    "ocr_language": "deu",
+    "ocr_languages": ["deu"]
   },
   "indexes": [
     {
-      "id": "local-documents",
+      "id": "local-docs",
       "label": "Dokumente",
       "file_count": 1240,
-      "redacted_root": "[LOCAL_ARCHIVE]",
-      "formats": ["pdf", "docx", "txt", "png"]
+      "redacted_root": "[source-root-1]/Dokumente",
+      "formats": ["docx", "pdf", "txt"],
+      "enabled": true,
+      "sources_count": 1,
+      "status": "ready"
     }
   ],
   "privacy_summary": {
-    "status": "needs_review",
-    "sensitive_hit_count": 12,
-    "categories": ["personenbezogen", "finanzen"]
+    "status": "rules_configured",
+    "sensitive_hit_count": 0,
+    "categories": [],
+    "blacklist_terms_count": 12,
+    "whitelist_terms_count": 4,
+    "clipboard_lock": true,
+    "whole_words": true,
+    "case_sensitive": false
   },
   "tool_links": {
     "prosync": {
       "enabled": true,
       "configured": false
+    },
+    "sqlite_viewer": {
+      "configured": false
+    },
+    "formconstructor": {
+      "configured": false
+    },
+    "datenschutzampel": {
+      "configured": true
     }
+  },
+  "redactions": {
+    "paths": true,
+    "secrets": true,
+    "raw_documents": false
   }
 }
 ```
 
+## Importverhalten
+
+- übernommen werden nur sichere Einstellungen wie OCR-Sprache, Löschmodus oder UI-bezogene Optionen
+- nicht übernommen werden lokale Datenbankpfade, Companion-Pfade, PDF-Masterpasswörter und sonstige Secrets
+- der importierte Snapshot wird lokal als Vorschau gespeichert, damit Review-Daten sichtbar bleiben, ohne produktive Indexe umzubiegen
+
 ## Abgrenzung
 
 Das Format ersetzt keine Datenbankmigration und keine Dateisynchronisation. Für echte Dokumentübertragung nutzt der Anwender normale Dateiwege wie lokale Kopie, Backup, USB, Netzlaufwerk oder bewusst gewählte Cloud-Ordner.
-
