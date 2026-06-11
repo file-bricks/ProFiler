@@ -776,7 +776,7 @@ class AnonymizationWorker(QThread):
                         self.log_message.emit(f"✅ Anonymisiert: {os.path.basename(output_path)}")
                     
                     elif ext == '.pdf':
-                        output_path = os.path.join(folder, f"{basename}_geschwrzt.pdf")
+                        output_path = os.path.join(folder, f"{basename}_geschwärzt.pdf")
                         self.redact_pdf(file_path, output_path)
                         self.log_message.emit(f"✅ Geschwärzt: {os.path.basename(output_path)}")
                     
@@ -789,16 +789,16 @@ class AnonymizationWorker(QThread):
                         # Konvertiere zu PDF zuerst
                         temp_pdf = self.convert_to_pdf(file_path)
                         if temp_pdf:
-                            output_path = os.path.join(folder, f"{basename}_geschwrzt.pdf")
+                            output_path = os.path.join(folder, f"{basename}_geschwärzt.pdf")
                             self.redact_pdf(temp_pdf, output_path)
                             os.remove(temp_pdf)
                             self.log_message.emit(f"✅ Geschwärzt: {os.path.basename(output_path)}")
                         else:
                             self.log_message.emit(f"❌ Konvertierung fehlgeschlagen: {os.path.basename(file_path)}")
                     else:
-                        output_path = os.path.join(folder, f"{basename}_geschwrzt.pdf")
+                        output_path = os.path.join(folder, f"{basename}_geschwärzt.pdf")
                         self.redact_pdf(file_path, output_path)
-                        self.log_message.emit(f" Geschwrzt: {os.path.basename(output_path)}")
+                        self.log_message.emit(f"✅ Geschwärzt: {os.path.basename(output_path)}")
             
             except Exception as e:
                 self.log_message.emit(f"❌ Fehler bei {os.path.basename(file_path)}: {str(e)}")
@@ -6734,15 +6734,12 @@ class SearchWidgetHybrid(QWidget):
         
         # Prfe ob Tool existiert
         if not os.path.exists(analyzer_path):
-            # Versuche im Projektordner
-            analyzer_path = "/mnt/project/MethodenAnalyser3.py"
-            if not os.path.exists(analyzer_path):
-                QMessageBox.warning(
-                    self,
-                    "Tool nicht gefunden",
-                    "MethodenAnalyser3.py wurde nicht gefunden.\n\nLegen Sie es neben die Hauptdatei."
-                )
-                return
+            QMessageBox.warning(
+                self,
+                "Tool nicht gefunden",
+                "MethodenAnalyser3.py wurde nicht gefunden.\n\nLegen Sie es neben die Hauptdatei."
+            )
+            return
         
         try:
             # Starte als separater Prozess
@@ -6770,14 +6767,12 @@ class SearchWidgetHybrid(QWidget):
         
         # Prfe ob Tool existiert
         if not os.path.exists(compiler_path):
-            compiler_path = "/mnt/project/Kompilator.py"
-            if not os.path.exists(compiler_path):
-                QMessageBox.warning(
-                    self,
-                    "Tool nicht gefunden",
-                    "Kompilator.py wurde nicht gefunden.\n\nLegen Sie es neben die Hauptdatei."
-                )
-                return
+            QMessageBox.warning(
+                self,
+                "Tool nicht gefunden",
+                "Kompilator.py wurde nicht gefunden.\n\nLegen Sie es neben die Hauptdatei."
+            )
+            return
         
         try:
             # Starte als separater Prozess
@@ -6805,14 +6800,12 @@ class SearchWidgetHybrid(QWidget):
         
         # Prfe ob Tool existiert
         if not os.path.exists(viewer_path):
-            viewer_path = "/mnt/project/SQLiteViewer.py"
-            if not os.path.exists(viewer_path):
-                QMessageBox.warning(
-                    self,
-                    "Tool nicht gefunden",
-                    "SQLiteViewer.py wurde nicht gefunden.\n\nLegen Sie es neben die Hauptdatei."
-                )
-                return
+            QMessageBox.warning(
+                self,
+                "Tool nicht gefunden",
+                "SQLiteViewer.py wurde nicht gefunden.\n\nLegen Sie es neben die Hauptdatei."
+            )
+            return
         
         try:
             # Starte als separater Prozess
@@ -6844,7 +6837,6 @@ class SearchWidgetHybrid(QWidget):
         if not pythonbox_path or not os.path.exists(pythonbox_path):
             possible_paths = [
                 os.path.join(os.path.dirname(__file__), "PythonBox.py"),
-                "/mnt/project/PythonBox.py",
                 os.path.join(os.path.expanduser("~"), "PythonBox.py")
             ]
             

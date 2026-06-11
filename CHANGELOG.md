@@ -20,6 +20,8 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - Workspace-Import übernimmt bewusst nur sichere Einstellungen; lokale DB-Pfade bleiben redigiert und werden nicht automatisch reaktiviert.
 
 ### Behoben / Fixed
+- `Profiler_Suite_V15.py` (Anonymisierungs-Worker): Ausgabedateinamen `_geschwrzt` → `_geschwärzt` korrigiert (3 Stellen); Log-Meldung ergänzt um fehlendes ✅-Emoji und korrekten Umlaut.
+- `Profiler_Suite_V15.py` (SearchWidgetHybrid): Hardcodierte Linux-Fallbackpfade `/mnt/project/MethodenAnalyser3.py`, `/mnt/project/Kompilator.py`, `/mnt/project/SQLiteViewer.py` und `/mnt/project/PythonBox.py` entfernt; Tool-nicht-gefunden-Dialog ist jetzt der einzige Fehlerpfad.
 - ProSync wird über Autodetektion, konfigurierte Pfade oder den gemeinsamen Software-Baum gefunden.
 
 ## [1.0.0] - YYYY-MM-DD

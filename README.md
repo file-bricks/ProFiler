@@ -106,7 +106,7 @@ ProFiler supports privacy workflows, redaction, and anonymization, but it does n
 
 ProFiler Suite is licensed under AGPL-3.0. See [LICENSE](LICENSE).
 
-This project uses PySide6 and PyMuPDF among other dependencies; see `requirements.txt` and `THIRD_PARTY_LICENSES.txt`.
+This project uses PySide6 and PyMuPDF among other dependencies; see `requirements.txt` and `THIRD_PARTY_LICENSES.txt` for the full dependency list.
 
 ## Discoverability Keywords
 
