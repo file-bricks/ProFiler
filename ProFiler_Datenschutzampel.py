@@ -21,11 +21,13 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QAction, QColor, QPixmap, QPainter, QBrush, QIcon
 
+from app_paths import config_path, resolve_read_path
+
 # ============================================================================
 # KONFIGURATION
 # ============================================================================
 
-CONFIG_PATH = Path.home() / ".profiler_suite" / "datenschutzampel.json"
+CONFIG_PATH = config_path("datenschutzampel.json")
 HISTORY_LIMIT = 15
 
 STYLESHEET = """
@@ -483,9 +485,10 @@ class DatenschutzAmpel(QMainWindow):
     
     def load_config(self):
         """Lädt Konfiguration"""
-        if CONFIG_PATH.exists():
+        read_path = resolve_read_path(CONFIG_PATH.name)
+        if read_path.exists():
             try:
-                with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
+                with open(read_path, 'r', encoding='utf-8') as f:
                     data = json.load(f)
                 
                 self.sensitive = data.get('blacklist', [])

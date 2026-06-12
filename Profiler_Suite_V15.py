@@ -33,6 +33,7 @@ from workspace_exchange import (
     export_workspace as export_redacted_workspace,
     import_workspace as import_redacted_workspace,
 )
+from app_paths import app_data_dir, config_path, resolve_read_path
 
 # Optionale Bibliotheken
 try:
@@ -116,10 +117,10 @@ print("Encoding Check:", sys.stdout.encoding)
 # 1. SHARED UTILS & CONFIG
 # ============================================================================
 
-_CONFIG_DIR = Path.home() / ".profiler_suite"
-SEARCH_CONFIG_PATH = str(_CONFIG_DIR / "search_config.json")
-SYNC_CONFIG_PATH = str(_CONFIG_DIR / "profiler_config.json")
-SETTINGS_PATH = str(_CONFIG_DIR / "profiler_settings.json")
+_CONFIG_DIR = app_data_dir()
+SEARCH_CONFIG_PATH = str(config_path("search_config.json"))
+SYNC_CONFIG_PATH = str(config_path("profiler_config.json"))
+SETTINGS_PATH = str(config_path("profiler_settings.json"))
 
 # Konstanten für File Processing
 DEFAULT_CHUNK_SIZE = 1024 * 1024  # 1 MB für Hash-Berechnung
@@ -339,9 +340,10 @@ class SearchConfigManager:
         self.dbs = []
         self.load()
     def load(self):
-        if os.path.exists(SEARCH_CONFIG_PATH):
+        load_path = resolve_read_path(Path(SEARCH_CONFIG_PATH).name)
+        if load_path.exists():
             try:
-                with open(SEARCH_CONFIG_PATH, "r", encoding="utf-8") as f:
+                with open(load_path, "r", encoding="utf-8") as f:
                     self.dbs = json.load(f).get("databases", [])
             except (OSError, json.JSONDecodeError, KeyError):
                 self.save()
@@ -362,9 +364,10 @@ class SyncConfigManager:
         self.data = {"connections": []}
         self.load()
     def load(self):
-        if os.path.exists(self.path):
+        load_path = resolve_read_path(Path(self.path).name)
+        if load_path.exists():
             try:
-                with open(self.path, "r", encoding="utf-8") as f:
+                with open(load_path, "r", encoding="utf-8") as f:
                     self.data = json.load(f)
             except (OSError, json.JSONDecodeError):
                 self.save()
@@ -402,9 +405,10 @@ class SettingsManager:
         self.load()
     
     def load(self):
-        if os.path.exists(SETTINGS_PATH):
+        load_path = resolve_read_path(Path(SETTINGS_PATH).name)
+        if load_path.exists():
             try:
-                with open(SETTINGS_PATH, "r", encoding="utf-8") as f:
+                with open(load_path, "r", encoding="utf-8") as f:
                     loaded = json.load(f)
                     self.data.update(loaded)
             except (OSError, json.JSONDecodeError):
@@ -2250,9 +2254,10 @@ class ConnectionConfigManager:
         self.sync_all_to_search()
     
     def load(self):
-        if os.path.exists(self.path):
+        load_path = resolve_read_path(Path(self.path).name)
+        if load_path.exists():
             try:
-                with open(self.path, "r", encoding="utf-8") as f:
+                with open(load_path, "r", encoding="utf-8") as f:
                     self.data = json.load(f)
             except (OSError, json.JSONDecodeError):
                 self.save()
@@ -7756,12 +7761,7 @@ class ConnectionsWidget(QWidget):
         super().__init__(parent)
         
         # Config Manager
-        config_path = os.path.join(
-            os.path.expanduser("~"),
-            ".profiler_suite",
-            "connections.json"
-        )
-        self.cfg = ConnectionConfigManager(config_path)
+        self.cfg = ConnectionConfigManager(str(config_path("connections.json")))
         self.worker = None
         
         self.init_ui()

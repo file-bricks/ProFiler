@@ -57,6 +57,8 @@ START.bat
 
 OCR requires [Tesseract](https://github.com/tesseract-ocr/tesseract). Configure the executable path in `profiler_config.json` if the portable copy or system installation is not auto-detected.
 
+On Windows, local app data and settings are stored under `%LOCALAPPDATA%\ProFilerSuite`. Legacy reads from `~/.profiler_suite` are still accepted for existing local installs.
+
 ## Configuration
 
 | File | Purpose |
@@ -107,6 +109,8 @@ ProFiler supports privacy workflows, redaction, and anonymization, but it does n
 ProFiler Suite is licensed under AGPL-3.0. See [LICENSE](LICENSE).
 
 This project uses PySide6 and PyMuPDF among other dependencies; see `requirements.txt` and `THIRD_PARTY_LICENSES.txt` for the full dependency list.
+
+Windows Store preparation materials live in `store_package.json`, `STORE_LISTING.md`, `PRIVACY_POLICY.md`, `SUPPORT.md`, and `WINDOWS_STORE_PREP.md`.
 
 ## Discoverability Keywords
 

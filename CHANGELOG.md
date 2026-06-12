@@ -12,12 +12,15 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - `README_de.md` als separate deutsche README und `llms.txt` als maschinenlesbarer Projektkontext ergänzt.
 - Redigierter Workspace-Austausch über `profiler-workspace-v1.json` mit Menüaktionen für Export und Import ergänzt.
 - `pyproject.toml` zur Standardisierung der Paketmetadaten und Abhängigkeiten angelegt.
+- Windows-Store-Basismaterialien ergänzt: `store_package.json`, `STORE_LISTING.md`, `PRIVACY_POLICY.md`, `SUPPORT.md`, `WINDOWS_STORE_PREP.md` und `scripts/check_store_readiness.py`.
+- Neue Tests `tests/test_app_paths.py` und `tests/test_store_materials.py` für App-Datenpfade und Store-Materialien.
 
 ### Geändert / Changed
 - `profiler_settings.json` um `prosync_path` erweitert.
 - Getrackte Beispielkonfigurationen enthalten keine lokalen Benutzerpfade mehr.
 - `README.md` auf English-first GitHub-SEO, klare Usecases, PySide6-Positionierung und Discovery-Keywords umgestellt.
 - Workspace-Import übernimmt bewusst nur sichere Einstellungen; lokale DB-Pfade bleiben redigiert und werden nicht automatisch reaktiviert.
+- Windows-Konfigurationsdateien und Datenschutzampel nutzen für neue Installationen `%LOCALAPPDATA%\ProFilerSuite`; bestehende `~/.profiler_suite`-Dateien bleiben lesbar.
 
 ### Behoben / Fixed
 - `Profiler_Suite_V15.py` (Anonymisierungs-Worker): Ausgabedateinamen `_geschwrzt` → `_geschwärzt` korrigiert (3 Stellen); Log-Meldung ergänzt um fehlendes ✅-Emoji und korrekten Umlaut.

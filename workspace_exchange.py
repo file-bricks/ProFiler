@@ -10,13 +10,15 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
+from app_paths import app_data_dir, config_path, resolve_read_path
+
 APP_NAME = "ProFiler Suite"
 SCHEMA_NAME = "profiler-workspace-v1"
 SCHEMA_VERSION = 1
 APP_VERSION = "15"
-CONFIG_DIR = Path.home() / ".profiler_suite"
-PRIVACY_CONFIG_PATH = CONFIG_DIR / "datenschutzampel.json"
-IMPORTED_WORKSPACE_PATH = CONFIG_DIR / "imported_workspace_preview.json"
+CONFIG_DIR = app_data_dir()
+PRIVACY_CONFIG_PATH = config_path("datenschutzampel.json")
+IMPORTED_WORKSPACE_PATH = config_path("imported_workspace_preview.json")
 WINDOWS_ABS_PATTERN = re.compile(r"^[A-Za-z]:[\\/]")
 PATH_HINT_PATTERN = re.compile(r"[\\/]|^[A-Za-z]:")
 SAFE_EXPORT_SETTINGS = (
@@ -336,10 +338,11 @@ def _apply_imported_settings(settings_manager: Any, imported_settings: Dict[str,
 
 
 def _load_json_file(path: Path) -> Dict[str, Any]:
-    if not path.exists():
+    read_path = resolve_read_path(path.name)
+    if not read_path.exists():
         return {}
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        return json.loads(read_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return {}
 
