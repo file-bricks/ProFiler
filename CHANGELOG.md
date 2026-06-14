@@ -6,6 +6,10 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Hinzugefügt / Added
+- `module_registry.py`: `ModuleRegistry`-Klasse erkennt alle 5 ProFiler-Suite-Begleitmodule (ProSync, SQLiteViewer, Datenschutzampel, FormConstructor, PythonBox) über konfigurierte Pfade, gleiches Verzeichnis, Geschwisterordner und Breit-Scan. `get_by_filename()` ermöglicht Dateiname-Lookup.
+- `MODULE_STRATEGY.md`: Dokumentiert Erkennungsprinzip, Installations-/Aktualisierungswege (manuell, Sibling-Konvention, GitHub-Installer-Roadmap) und Erweiterungs-Anleitung für neue Module.
+- Einstellungen → Externe Tools: neue „Modul-Status"-Gruppe zeigt Ampelindikator (✓/✗) für jedes Begleitmodul mit Pfadangabe oder Hilfehinweis.
+- `tests/test_module_registry.py`: 12 Tests für `ModuleInfo`, `ModuleRegistry` und `get_by_filename()`.
 - `source_platform_smoke.py`: 6-Check-Smoke (stdlib, PySide6, workspace_exchange, SQLite CRUD, Umlaut-Roundtrip, headless UnifiedMainWindow offscreen) für macOS/Linux-CI.
 - `.github/workflows/source-platform-smoke.yml`: CI-Job auf ubuntu-latest und macos-latest.
 - ProSync kann aus dem Tools-Menü optional gestartet werden.
@@ -16,6 +20,7 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - Neue Tests `tests/test_app_paths.py` und `tests/test_store_materials.py` für App-Datenpfade und Store-Materialien.
 
 ### Geändert / Changed
+- `find_tool_path()`: Delegiert für bekannte Dateinamen an `ModuleRegistry` statt einfacher same-dir/parent-dir-Prüfung; Fallback bleibt für unbekannte Tool-Namen erhalten.
 - `profiler_settings.json` um `prosync_path` erweitert.
 - Getrackte Beispielkonfigurationen enthalten keine lokalen Benutzerpfade mehr.
 - `README.md` auf English-first GitHub-SEO, klare Usecases, PySide6-Positionierung und Discovery-Keywords umgestellt.
