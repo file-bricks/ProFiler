@@ -91,6 +91,12 @@ try:
 except ImportError:
     HAS_PIKEPDF = False
 
+try:
+    from module_registry import ModuleRegistry
+    _MODULE_REGISTRY_AVAILABLE = True
+except ImportError:
+    _MODULE_REGISTRY_AVAILABLE = False
+
 # ============================================================================
 # ENCODING SETUP
 # ============================================================================
@@ -317,20 +323,28 @@ def has_pdf_text(filepath):
 
 
 def find_tool_path(tool_name):
-    """Sucht nach einem Tool im Projekt-Verzeichnis"""
-    # 1. Im selben Verzeichnis wie das Hauptskript
+    """Sucht nach einem Tool im Projekt-Verzeichnis.
+
+    Delegiert an ModuleRegistry wenn verfügbar (kennt alle Begleitmodule +
+    konfigurierte Pfade). Fallback: einfache same-dir/parent-dir-Prüfung für
+    unbekannte tool_name-Werte.
+    """
+    if _MODULE_REGISTRY_AVAILABLE:
+        script_dir = Path(os.path.abspath(__file__)).parent
+        reg = ModuleRegistry(base_dir=script_dir)
+        info = reg.get_by_filename(tool_name)
+        if info is not None:
+            return str(info.resolved_path) if info.available else None
+
+    # Fallback für unbekannte Dateinamen
     script_dir = os.path.dirname(os.path.abspath(__file__))
     tool_path = os.path.join(script_dir, tool_name)
     if os.path.exists(tool_path):
         return tool_path
-
-    # 2. Im Parent-Verzeichnis
     parent_dir = os.path.dirname(script_dir)
     parent_path = os.path.join(parent_dir, tool_name)
     if os.path.exists(parent_path):
         return parent_path
-
-    # Nicht gefunden
     return None
 
 # --- CONFIG MANAGERS ---
@@ -3159,10 +3173,45 @@ class SettingsDialog(QDialog):
         form_layout.addRow("FormConstructor Pfad:", path_layout3)
         form_group.setLayout(form_layout)
         layout.addWidget(form_group)
-        
+
+        # Modul-Status (auto-detection via ModuleRegistry)
+        if _MODULE_REGISTRY_AVAILABLE:
+            status_group = QGroupBox(" Modul-Status (automatische Erkennung)")
+            status_layout = QFormLayout()
+            status_layout.setHorizontalSpacing(12)
+
+            base_dir = Path(__file__).parent
+            configured_paths = {
+                "prosync": self.settings.get("prosync_path", ""),
+                "sqliteviewer": self.settings.get("sqlite_viewer_path", ""),
+                "formconstructor": self.settings.get("formconstructor_path", ""),
+                "pythonbox": self.settings.get("pythonbox_path", ""),
+            }
+            registry = ModuleRegistry(base_dir=base_dir, configured_paths=configured_paths)
+
+            for module in registry.all_modules():
+                if module.available:
+                    icon = "✓"
+                    color = "#4caf50"
+                    detail = str(module.resolved_path)
+                else:
+                    icon = "✗"
+                    color = "#f44336"
+                    detail = "Nicht gefunden — Pfad in Einstellungen eintragen oder neben diesen Ordner legen"
+
+                row_label = QLabel(f'<span style="color:{color}; font-weight:bold;">{icon}</span> {module.display_name}')
+                row_label.setTextFormat(Qt.TextFormat.RichText)
+                detail_label = QLabel(detail)
+                detail_label.setStyleSheet("color: #888; font-size: 10px;")
+                detail_label.setWordWrap(True)
+                status_layout.addRow(row_label, detail_label)
+
+            status_group.setLayout(status_layout)
+            layout.addWidget(status_group)
+
         layout.addStretch()
         return widget
-    
+
     def browse_pythonbox(self):
         """Durchsuche nach PythonBox.py"""
         path, _ = QFileDialog.getOpenFileName(
