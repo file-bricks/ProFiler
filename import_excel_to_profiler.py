@@ -3,7 +3,7 @@ import sqlite3
 import pandas as pd
 import hashlib
 import shutil
-from datetime import datetime
+from datetime import datetime, timezone
 
 # ================= KONFIGURATION =================
 INPUT_FILE = "import_daten.xlsx" 
@@ -84,7 +84,7 @@ class ProfilerAutismoImporter:
         self.cursor.execute("SELECT id FROM collections WHERE name = ?", (name,))
         res = self.cursor.fetchone()
         if res: return res[0]
-        ts = datetime.utcnow().isoformat()
+        ts = datetime.now(timezone.utc).isoformat()
         self.cursor.execute("INSERT INTO collections (name, description, created_at) VALUES (?, ?, ?)", 
                             (name, "Importiert aus Excel", ts))
         self.conn.commit()
@@ -100,7 +100,7 @@ class ProfilerAutismoImporter:
         if not os.path.exists(file_path): return
         file_path = os.path.abspath(file_path)
         stat = os.stat(file_path)
-        mtime = datetime.utcfromtimestamp(stat.st_mtime).isoformat()
+        mtime = datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat()
         content_hash = sha256_file(file_path)
         
         self.cursor.execute("SELECT id FROM files WHERE content_hash = ?", (content_hash,))
@@ -120,7 +120,7 @@ class ProfilerAutismoImporter:
         version_id = self.cursor.lastrowid
 
         if category_id:
-            ts = datetime.utcnow().isoformat()
+            ts = datetime.now(timezone.utc).isoformat()
             self.cursor.execute("INSERT OR IGNORE INTO collection_items (collection_id, version_id, added_at) VALUES (?, ?, ?)", (category_id, version_id, ts))
         
         self.add_tags(file_id, tags_list)

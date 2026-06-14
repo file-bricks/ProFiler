@@ -11,7 +11,7 @@ import sqlite3
 import time
 import subprocess
 import traceback
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from PySide6.QtWidgets import (
@@ -1213,7 +1213,7 @@ class ConnectionDB:
                 pass
             return fid
         
-        ts = datetime.utcnow().isoformat()
+        ts = datetime.now(timezone.utc).isoformat()
         try:
             cur = self.conn.cursor()
             # Try with PDF columns
@@ -1268,7 +1268,7 @@ class ConnectionDB:
 
     # SOFT/HARD DELETE
     def soft_delete_version(self, version_id):
-        ts = datetime.utcnow().isoformat()
+        ts = datetime.now(timezone.utc).isoformat()
         self.conn.execute("UPDATE versions SET is_deleted=1, deleted_at=? WHERE id=?", (ts, version_id))
         self.conn.commit()
     
@@ -1295,7 +1295,7 @@ class ConnectionDB:
     
     def safety_hide_version(self, version_id):
         """Versteckt Version (Safety-Mode - KEINE Dateisystem-Änderung!) - NEU V13.2!"""
-        ts = datetime.utcnow().isoformat()
+        ts = datetime.now(timezone.utc).isoformat()
         self.conn.execute("UPDATE versions SET is_hidden=1, hidden_at=? WHERE id=?", (ts, version_id))
         self.conn.commit()
     
@@ -1308,7 +1308,7 @@ class ConnectionDB:
         if days <= 0:
             return 0
         
-        cutoff = (datetime.utcnow() - timedelta(days=days)).isoformat()
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
         cur = self.conn.cursor()
         cur.execute("SELECT id FROM versions WHERE is_deleted=1 AND deleted_at < ?", (cutoff,))
         old_ids = [row[0] for row in cur.fetchall()]
@@ -1334,7 +1334,7 @@ class ConnectionDB:
             cur.execute(query, [source_root] + list(active_version_ids))
             to_delete = [row[0] for row in cur.fetchall()]
             
-            ts = datetime.utcnow().isoformat()
+            ts = datetime.now(timezone.utc).isoformat()
             for vid in to_delete:
                 self.conn.execute("UPDATE versions SET is_deleted=1, deleted_at=? WHERE id=?", (ts, vid))
             
@@ -1381,7 +1381,7 @@ class ConnectionDB:
         return cur.fetchall()
     
     def add_collection(self, name, description=""):
-        ts = datetime.utcnow().isoformat()
+        ts = datetime.now(timezone.utc).isoformat()
         try:
             self.conn.execute("INSERT INTO collections(name, description, created_at) VALUES (?,?,?)", 
                             (name, description, ts))
@@ -1396,7 +1396,7 @@ class ConnectionDB:
         self.conn.commit()
 
     def add_to_collection(self, col_id, version_id):
-        ts = datetime.utcnow().isoformat()
+        ts = datetime.now(timezone.utc).isoformat()
         try:
             self.conn.execute("INSERT OR IGNORE INTO collection_items(collection_id, version_id, added_at) VALUES (?,?,?)",
                             (col_id, version_id, ts))
@@ -1492,8 +1492,8 @@ class SyncWorker(QThread):
                 except FileNotFoundError: 
                     continue 
 
-                mtime_iso = datetime.utcfromtimestamp(stat.st_mtime).isoformat()
-                ctime = datetime.utcfromtimestamp(stat.st_ctime).isoformat()
+                mtime_iso = datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat()
+                ctime = datetime.fromtimestamp(stat.st_ctime, tz=timezone.utc).isoformat()
                 size = stat.st_size
                 name = os.path.basename(path)
                 is_cloud = is_cloud_placeholder(path)
@@ -1712,25 +1712,26 @@ class DuplicateWorker(QThread):
             
             self.progress.emit(int((idx / total_dbs) * 50), f"Analysiere Datenbank {idx+1}/{total_dbs}...")
             
+            conn = None
             try:
                 conn = sqlite3.connect(db_path)
                 conn.row_factory = sqlite3.Row
-                
+
                 sql = """
                     SELECT v.id, v.name, v.path, COALESCE(v.display_name, v.name) as display_name, v.mtime, v.ctime, f.content_hash, f.size
-                    FROM versions v 
+                    FROM versions v
                     JOIN files f ON v.file_id = f.id
                     WHERE v.is_deleted = 0
                     AND f.content_hash NOT LIKE 'CLOUD:%'
                 """
-                
+
                 rows = conn.execute(sql).fetchall()
-                
+
                 for row in rows:
                     h = row['content_hash']
                     if not h:
                         continue
-                    
+
                     file_info = {
                         'id': row['id'],
                         'name': row['name'],
@@ -1741,16 +1742,17 @@ class DuplicateWorker(QThread):
                         'hash': h,
                         'db': db_path
                     }
-                    
+
                     if h not in all_files:
                         all_files[h] = []
-                    
+
                     all_files[h].append(file_info)
-                
-                conn.close()
-                
+
             except Exception as e:
                 print(f"Error scanning {db_path}: {e}")
+            finally:
+                if conn:
+                    conn.close()
         
         self.progress.emit(60, "Analysiere Duplikate...")
         
@@ -2471,8 +2473,8 @@ class SyncWorker(QThread):
             
             try:
                 stat = os.stat(path)
-                mtime_iso = datetime.utcfromtimestamp(stat.st_mtime).isoformat()
-                ctime_iso = datetime.utcfromtimestamp(stat.st_ctime).isoformat()
+                mtime_iso = datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat()
+                ctime_iso = datetime.fromtimestamp(stat.st_ctime, tz=timezone.utc).isoformat()
                 size = stat.st_size
                 name = os.path.basename(path)
                 
@@ -4388,11 +4390,11 @@ class IndexWorker(QThread):
             try:
                 # Get file metadata
                 stat = os.stat(filepath)
-                mtime_iso = datetime.fromtimestamp(stat.st_mtime).isoformat()
-                ctime_iso = datetime.fromtimestamp(stat.st_ctime).isoformat()
+                mtime_iso = datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat()
+                ctime_iso = datetime.fromtimestamp(stat.st_ctime, tz=timezone.utc).isoformat()
                 size = stat.st_size
                 name = os.path.basename(filepath)
-                
+
                 # Check if already indexed with same mtime
                 latest = db.get_latest_version_by_path(filepath)
                 
@@ -5668,19 +5670,19 @@ class SearchWidgetHybrid(QWidget):
             if sys.platform == 'win32':
                 os.startfile(path)
             elif sys.platform == 'darwin':
-                subprocess.run(['open', path])
+                subprocess.run(['open', path], timeout=10)
             else:
-                subprocess.run(['xdg-open', path])
+                subprocess.run(['xdg-open', path], timeout=10)
         except Exception as e:
             QMessageBox.warning(self, "Fehler", f"Datei konnte nicht geöffnet werden:\n{str(e)}")
-    
+
     def open_on_double_click(self, item, column):
         """Öffnet Datei bei Doppelklick (NEU V13.1!)"""
         # Wenn Gruppen-Header -> Aufklappen/Zuklappen statt öffnen
         if item.childCount() > 0:
             item.setExpanded(not item.isExpanded())
             return
-        
+
         # Datei öffnen
         result = item.data(0, Qt.ItemDataRole.UserRole)
         if result and 'path' in result:
@@ -5689,9 +5691,9 @@ class SearchWidgetHybrid(QWidget):
                 if sys.platform == 'win32':
                     os.startfile(path)
                 elif sys.platform == 'darwin':
-                    subprocess.run(['open', path])
+                    subprocess.run(['open', path], timeout=10)
                 else:
-                    subprocess.run(['xdg-open', path])
+                    subprocess.run(['xdg-open', path], timeout=10)
             except Exception as e:
                 QMessageBox.warning(self, "Fehler", f"Datei konnte nicht geöffnet werden:\n{str(e)}")
     
@@ -5705,11 +5707,11 @@ class SearchWidgetHybrid(QWidget):
         
         try:
             if sys.platform == 'win32':
-                subprocess.run(['explorer', '/select,', path])
+                subprocess.run(['explorer', '/select,', path], timeout=10)
             elif sys.platform == 'darwin':
-                subprocess.run(['open', '-R', path])
+                subprocess.run(['open', '-R', path], timeout=10)
             else:
-                subprocess.run(['xdg-open', os.path.dirname(path)])
+                subprocess.run(['xdg-open', os.path.dirname(path)], timeout=10)
         except Exception as e:
             QMessageBox.warning(self, "Fehler", f"Explorer konnte nicht geöffnet werden:\n{str(e)}")
     
@@ -6293,9 +6295,8 @@ class SearchWidgetHybrid(QWidget):
             if not os.path.exists(db_path):
                 continue
             
+            conn = None
             try:
-                db = ConnectionDB(db_path)
-                
                 # Hole Dateien der Collection
                 query = """
                     SELECT v.path, v.name, v.mtime, f.size, f.category
@@ -6305,18 +6306,18 @@ class SearchWidgetHybrid(QWidget):
                     WHERE ft.collection_id = ? AND v.is_deleted = 0
                     ORDER BY v.path
                 """
-                
+
                 conn = sqlite3.connect(db_path)
                 conn.row_factory = sqlite3.Row
                 rows = conn.execute(query, (coll_id,)).fetchall()
-                conn.close()
-                
                 all_files.extend(rows)
-                db.close()
-                
+
             except Exception as e:
                 print(f"Fehler beim Lesen von {db_path}: {e}")
                 continue
+            finally:
+                if conn:
+                    conn.close()
         
         if not all_files:
             QMessageBox.information(
@@ -8043,17 +8044,17 @@ class ConnectionsWidget(QWidget):
                 # Daten aus DB laden
                 db_conn = sqlite3.connect(db_path)
                 db_conn.row_factory = sqlite3.Row
-                
-                query = """
-                    SELECT v.path, v.name, v.mtime, f.size
-                    FROM versions v
-                    JOIN files f ON v.file_id = f.id
-                    WHERE v.is_deleted = 0
-                    ORDER BY v.path
-                """
-                
-                rows = db_conn.execute(query).fetchall()
-                db_conn.close()
+                try:
+                    query = """
+                        SELECT v.path, v.name, v.mtime, f.size
+                        FROM versions v
+                        JOIN files f ON v.file_id = f.id
+                        WHERE v.is_deleted = 0
+                        ORDER BY v.path
+                    """
+                    rows = db_conn.execute(query).fetchall()
+                finally:
+                    db_conn.close()
                 
                 # PDF erstellen
                 doc = SimpleDocTemplate(pdf_path, pagesize=A4)

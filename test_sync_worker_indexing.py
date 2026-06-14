@@ -88,7 +88,7 @@ class _FakeConnectionDB:
 def _build_indexing_logic(cfg, db, is_killed_ref, is_paused_ref):
     """Repliziert exakt die _run_indexing-Logik nach Fix (ohne QThread)."""
     import hashlib, time as _time
-    from datetime import datetime
+    from datetime import datetime, timezone
 
     def _sha256(path):
         h = hashlib.sha256()
@@ -118,8 +118,8 @@ def _build_indexing_logic(cfg, db, is_killed_ref, is_paused_ref):
 
         try:
             stat = os.stat(path)
-            mtime_iso = datetime.utcfromtimestamp(stat.st_mtime).isoformat()
-            ctime_iso = datetime.utcfromtimestamp(stat.st_ctime).isoformat()
+            mtime_iso = datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat()
+            ctime_iso = datetime.fromtimestamp(stat.st_ctime, tz=timezone.utc).isoformat()
             size = stat.st_size
             name = os.path.basename(path)
 

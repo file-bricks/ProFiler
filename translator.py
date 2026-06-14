@@ -33,7 +33,7 @@ class TranslationSystem:
         self.current_lang = default_lang
 
         if app_dir is None:
-            app_dir = Path.cwd()
+            app_dir = Path(__file__).parent
         self.app_dir = Path(app_dir)
 
         self.translations_file = self.app_dir / "locales" / "translations.json"
@@ -144,7 +144,7 @@ class TranslationSystem:
         return german_strings
 
     def _is_german(self, text: str) -> bool:
-        if any(ch in text for ch in "aeoeueAeOeUess"):
+        if any(ch in text for ch in "äöüÄÖÜß"):
             return True
         text_lower = text.lower()
         return any(hint in text_lower for hint in self.german_hints)
