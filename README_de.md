@@ -1,6 +1,15 @@
+<img src="assets/banner.svg" width="100%" alt="ProFiler Banner">
+
 # ProFiler Suite
 
-[English](README.md) | [GitHub](https://github.com/file-bricks/ProFiler)
+[English](README.md) | **[Deutsch](README_de.md)** | [GitHub](https://github.com/file-bricks/ProFiler)
+
+[![Lizenz: AGPL v3](https://img.shields.io/badge/Lizenz-AGPL%20v3-blue.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
+[![Plattform: Windows](https://img.shields.io/badge/Plattform-Windows-lightgrey.svg)]()
+[![Offline-first](https://img.shields.io/badge/offline--first-ja-green.svg)]()
+
+> Lokaler Dokumenten-Detektiv — Volltext-Indexierung, OCR, PDF-Werkzeuge, Duplikaterkennung & Datenschutzprüfung in einer PySide6-App.
 
 ProFiler Suite ist ein lokaler Desktop-Dateimanager für private Dokumentensammlungen. Die App verbindet Volltext-Indexierung, OCR, PDF-Werkzeuge, Duplikatenerkennung, Datenschutzprüfungen und eine optionale ProSync-Anbindung in einer Windows-orientierten PySide6-Oberfläche.
 
