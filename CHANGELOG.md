@@ -6,6 +6,8 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Hinzugefügt / Added
+- `github_installer.py`: GitHub-Release-Installer für ProFiler-Suite-Module (Abschnitt C aus `MODULE_STRATEGY.md`). CLI (`list`, `install <key>`, `install-all`) und Library-API. Lädt Releases via GitHub-API (`urllib.request`, stdlib-only), findet ZIP-Asset oder fällt auf `zipball_url` zurück, entpackt mit Präfix-Bereinigung in die Sibling-Verzeichnisstruktur. Optionaler `token`-Parameter für höhere Rate-Limits. Graceful Handling wenn kein GitHub-Repo oder kein Release vorhanden.
+- `tests/test_github_installer.py`: 19 Unit-Tests (Mock-basiert, netzwerkfrei): `fetch_latest_release` Success/404/500/Auth-Header, `find_zip_asset` explicit-ZIP/zipball-Fallback, `extract_zip_to_sibling` mit/ohne GitHub-Präfix + Verzeichnisanlage, `install_module` Error-Handling, Strukturtests GITHUB_REPOS vs. `_KNOWN`.
 - `module_registry.py`: `ModuleRegistry`-Klasse erkennt alle 5 ProFiler-Suite-Begleitmodule (ProSync, SQLiteViewer, Datenschutzampel, FormConstructor, PythonBox) über konfigurierte Pfade, gleiches Verzeichnis, Geschwisterordner und Breit-Scan. `get_by_filename()` ermöglicht Dateiname-Lookup.
 - `MODULE_STRATEGY.md`: Dokumentiert Erkennungsprinzip, Installations-/Aktualisierungswege (manuell, Sibling-Konvention, GitHub-Installer-Roadmap) und Erweiterungs-Anleitung für neue Module.
 - Einstellungen → Externe Tools: neue „Modul-Status"-Gruppe zeigt Ampelindikator (✓/✗) für jedes Begleitmodul mit Pfadangabe oder Hilfehinweis.
