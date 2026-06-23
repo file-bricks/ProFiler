@@ -24,7 +24,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import (
     Qt, QThread, Signal, QObject, QTimer, 
-    QSize, QFileInfo
+    QSize, QFileInfo, QMimeData
 )
 from PySide6.QtGui import QAction, QPalette, QColor, QFont, QPixmap, QIcon, QImage
 
@@ -346,6 +346,13 @@ def find_tool_path(tool_name):
     if os.path.exists(parent_path):
         return parent_path
     return None
+
+
+def configure_compact_picker_button(button, *, tooltip, accessible_name, accessible_description):
+    """Ergänzt Icon-/Kurzbuttons um sprechende A11y- und Tooltip-Texte."""
+    button.setToolTip(tooltip)
+    button.setAccessibleName(accessible_name)
+    button.setAccessibleDescription(accessible_description)
 
 # --- CONFIG MANAGERS ---
 
@@ -2777,7 +2784,7 @@ class PDFExcerptDialog(QDialog):
         
         # Update Toggle Button
         if self.current_page in self.selected_pages:
-            self.btn_toggle.setText(" Abwhlen [SPACE]")
+            self.btn_toggle.setText(" Abwählen [SPACE]")
             self.btn_toggle.setStyleSheet("background-color: #c9302c; font-weight: bold; padding: 10px;")
         else:
             self.btn_toggle.setText(" Auswählen [SPACE]")
@@ -4255,6 +4262,12 @@ class ConnectionDialog(QDialog):
         self.target.setPlaceholderText("Optional: Backup/Sync-Ziel")
         btn_tgt = QPushButton("...")
         btn_tgt.clicked.connect(lambda: self.pick_folder(self.target))
+        configure_compact_picker_button(
+            btn_tgt,
+            tooltip="Zielordner auswählen",
+            accessible_name="Zielordner auswählen",
+            accessible_description="Öffnet den Dialog zur Auswahl des optionalen Zielordners.",
+        )
         h_tgt = QHBoxLayout()
         h_tgt.addWidget(self.target)
         h_tgt.addWidget(btn_tgt)
@@ -4283,6 +4296,12 @@ class ConnectionDialog(QDialog):
         self.db_path.setPlaceholderText("Wird automatisch generiert, falls leer")
         btn_db = QPushButton("...")
         btn_db.clicked.connect(lambda: self.pick_db_file())
+        configure_compact_picker_button(
+            btn_db,
+            tooltip="Datenbankdatei auswählen",
+            accessible_name="Datenbankdatei auswählen",
+            accessible_description="Öffnet den Dialog zur Auswahl der Datenbankdatei.",
+        )
         h_db = QHBoxLayout()
         h_db.addWidget(self.db_path)
         h_db.addWidget(btn_db)
@@ -5094,12 +5113,12 @@ class SearchWidgetHybrid(QWidget):
             
             menu.addSeparator()
             
-            # Loeschen
+            # Löschen
             delete_mode = self.settings.get("delete_mode", "soft")
             if delete_mode == "soft":
-                menu.addAction(" Loeschen (Papierkorb)", self.delete_selected)
+                menu.addAction(" Löschen (Papierkorb)", self.delete_selected)
             elif delete_mode == "hard":
-                menu.addAction(" Loeschen (Permanent)", self.delete_selected)
+                menu.addAction(" Löschen (Permanent)", self.delete_selected)
             else:  # safety
                 menu.addAction(" Ausblenden (Safety-Mode)", self.delete_selected)
             
@@ -5857,11 +5876,11 @@ class SearchWidgetHybrid(QWidget):
         elif mode == "soft":
             mode_text = "Soft-Delete (Papierkorb)"
         else:
-            mode_text = "Permanent Loeschen"
+            mode_text = "Permanent löschen"
         
         reply = QMessageBox.question(
             self,
-            "Loeschen bestätigen",
+            "Löschen bestätigen",
             f"{mode_text}: {len(results)} Datei(en)?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )
@@ -5916,19 +5935,8 @@ class SearchWidgetHybrid(QWidget):
             f"{len(results)} Datei(en) wieder sichtbar gemacht."
         )
         self.perform_search()
-        """Stellt gelschte Dateien wieder her"""
-        results = self.get_selected_results()
-        for result in results:
-            vid = result['id']
-            db_path = result['db']
-            
-            db = ConnectionDB(db_path)
-            db.restore_version(vid)
-            db.close()
-        
-        self.perform_search()
     def copy_selected(self):
-        """Kopiert ausgewaehlte Dateien in System-Zwischenablage (NEU V13.2!)"""
+        """Kopiert ausgewählte Dateien in System-Zwischenablage (NEU V13.2!)"""
         results = self.get_selected_results()
         if not results:
             return
@@ -5954,7 +5962,7 @@ class SearchWidgetHybrid(QWidget):
                 QMessageBox.information(
                     self,
                     "Kopiert",
-                    f"{len(paths)} Datei(en) in Zwischenablage kopiert.\nKann jetzt eingefgt werden."
+                    f"{len(paths)} Datei(en) in Zwischenablage kopiert.\nKann jetzt eingefügt werden."
                 )
             except ImportError:
                 # Fallback: Pfade als Text
@@ -5983,14 +5991,11 @@ class SearchWidgetHybrid(QWidget):
             QMessageBox.information(
                 self,
                 "Kopiert",
-                f"{len(paths)} Datei(en) in Zwischenablage kopiert.\nKann jetzt eingefgt werden."
+                f"{len(paths)} Datei(en) in Zwischenablage kopiert.\nKann jetzt eingefügt werden."
             )
-            vid = result['id']
-            db_path = result['db']
-            
     
     def rename_selected(self):
-        """Benennt ausgewaehlte Datei um (NEU V13.2!)"""
+        """Benennt ausgewählte Datei um (NEU V13.2!)"""
         results = self.get_selected_results()
         if not results or len(results) != 1:
             QMessageBox.information(
@@ -6296,7 +6301,7 @@ class SearchWidgetHybrid(QWidget):
         menu = QMenu(self)
         menu.addAction(" Als PDF exportieren", lambda: self.export_collection_list(item))
         menu.addSeparator()
-        menu.addAction(" Loeschen", lambda: self.delete_collection(item))
+        menu.addAction(" Löschen", lambda: self.delete_collection(item))
         menu.exec(self.collection_list.mapToGlobal(pos))
     
     def delete_collection(self, item):
@@ -6372,7 +6377,7 @@ class SearchWidgetHybrid(QWidget):
             QMessageBox.information(
                 self,
                 "Keine Dateien",
-                f"Sammlung '{coll_name}' enthaelt keine Dateien."
+                f"Sammlung '{coll_name}' enthält keine Dateien."
             )
             return
         
@@ -7691,7 +7696,7 @@ Quelle=Browser-Favoriten
                     'soffice', '--headless', '--convert-to', 'pdf',
                     '--outdir', os.path.dirname(filepath),
                     filepath
-                ], check=True)
+                ], check=True, timeout=120)
                 
                 QMessageBox.information(self, "Erfolgreich",
                     f"PDF erstellt:\n{os.path.basename(output_file)}")
@@ -7921,8 +7926,8 @@ class ConnectionsWidget(QWidget):
         if not item:
             return
         
-        menu = QMenu()
-        
+        menu = QMenu(self.list_widget)
+
         conn = item.data(Qt.ItemDataRole.UserRole)
         enabled = conn.get("enabled", True)
         auto_update = conn.get("auto_update", False)
@@ -8318,6 +8323,12 @@ class AutoSyncWidget(QWidget):
         source_btn = QPushButton("📁")
         source_btn.setFixedWidth(40)
         source_btn.clicked.connect(self.select_source)
+        configure_compact_picker_button(
+            source_btn,
+            tooltip="Quellordner auswählen",
+            accessible_name="Quellordner auswählen",
+            accessible_description="Öffnet den Dialog zur Auswahl des überwachten Quellordners.",
+        )
         source_row.addWidget(self.source_edit)
         source_row.addWidget(source_btn)
         folder_layout.addRow("Quelle:", source_row)
@@ -8329,6 +8340,12 @@ class AutoSyncWidget(QWidget):
         target_btn = QPushButton("📁")
         target_btn.setFixedWidth(40)
         target_btn.clicked.connect(self.select_target)
+        configure_compact_picker_button(
+            target_btn,
+            tooltip="Zielordner auswählen",
+            accessible_name="Zielordner auswählen",
+            accessible_description="Öffnet den Dialog zur Auswahl des Synchronisationsziels.",
+        )
         target_row.addWidget(self.target_edit)
         target_row.addWidget(target_btn)
         folder_layout.addRow("Ziel:", target_row)
@@ -8508,7 +8525,7 @@ class UnifiedMainWindow(QMainWindow):
         self.tray_icon = QSystemTrayIcon(self)
         self.tray_icon.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_FileIcon))
         
-        tray_menu = QMenu()
+        tray_menu = QMenu(self)
         tray_menu.addAction("Anzeigen", self.show)
         tray_menu.addAction("❌ Beenden", QApplication.quit)
         
@@ -8568,7 +8585,7 @@ class UnifiedMainWindow(QMainWindow):
             QMessageBox.critical(self, "Fehler", f"Export fehlgeschlagen:\n{exc}")
 
     def import_workspace_snapshot(self):
-        """Importiert einen redigierten Workspace-Snapshot und uebernimmt sichere Einstellungen."""
+        """Importiert einen redigierten Workspace-Snapshot und übernimmt sichere Einstellungen."""
         input_path, _ = QFileDialog.getOpenFileName(
             self,
             "Arbeitsstand importieren",
@@ -8588,11 +8605,11 @@ class UnifiedMainWindow(QMainWindow):
                 "Arbeitsstand importiert.\n\n"
                 f"Workspace: {result['workspace_name']}\n"
                 f"Indizes im Snapshot: {result['indexes_count']}\n"
-                f"Uebernommene Einstellungen: {applied}\n"
-                "Lokale Datenbankpfade wurden bewusst nicht uebernommen.",
+                f"Übernommene Einstellungen: {applied}\n"
+                "Lokale Datenbankpfade wurden bewusst nicht übernommen.",
             )
         except WorkspaceFormatError as exc:
-            QMessageBox.warning(self, "Ungueltiger Export", str(exc))
+            QMessageBox.warning(self, "Ungültiger Export", str(exc))
         except OSError as exc:
             QMessageBox.critical(self, "Fehler", f"Import fehlgeschlagen:\n{exc}")
 

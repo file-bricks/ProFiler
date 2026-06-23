@@ -265,7 +265,7 @@ class DatenschutzAmpel(QMainWindow):
         self.tray_icon = QSystemTrayIcon(self)
         self.update_tray_icon()
         
-        tray_menu = QMenu()
+        tray_menu = QMenu(self)
         action_show = tray_menu.addAction("📂 Öffnen")
         action_show.triggered.connect(self.show)
         

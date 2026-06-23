@@ -26,8 +26,7 @@ def sha256_file(path):
     return h.hexdigest()
 
 def ensure_folder(path):
-    if not os.path.exists(path):
-        os.makedirs(path)
+    os.makedirs(path, exist_ok=True)
 
 def sanitize_filename(name):
     if pd.isna(name): return "Unbenannt"
