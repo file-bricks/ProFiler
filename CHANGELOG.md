@@ -6,6 +6,8 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Hinzugefügt / Added
+- `sibling_launcher.py`: Modulares Modul zum Auffinden und Starten von ProFiler-Geschwister-Anwendungen. Kapselt `normalize_configured_tool_path`, `resolve_prosync_launch_path`, `launch_tool_process`, `launch_prosync` und das generische `launch_sibling`. Keine PySide6-Abhängigkeit; ProFiler läuft vollständig weiter wenn ProSync nicht vorhanden ist. Ergebnis-API über `LaunchOutcome`/`LaunchResult`.
+- `tests/test_sibling_launcher.py`: 26 Unit-Tests für alle öffentlichen Funktionen von `sibling_launcher.py` (Mock-basiert, kein echter Subprozess, kein PySide6-Import nötig).
 - `github_installer.py`: GitHub-Release-Installer für ProFiler-Suite-Module (Abschnitt C aus `MODULE_STRATEGY.md`). CLI (`list`, `install <key>`, `install-all`) und Library-API. Lädt Releases via GitHub-API (`urllib.request`, stdlib-only), findet ZIP-Asset oder fällt auf `zipball_url` zurück, entpackt mit Präfix-Bereinigung in die Sibling-Verzeichnisstruktur. Optionaler `token`-Parameter für höhere Rate-Limits. Graceful Handling wenn kein GitHub-Repo oder kein Release vorhanden.
 - `tests/test_github_installer.py`: 19 Unit-Tests (Mock-basiert, netzwerkfrei): `fetch_latest_release` Success/404/500/Auth-Header, `find_zip_asset` explicit-ZIP/zipball-Fallback, `extract_zip_to_sibling` mit/ohne GitHub-Präfix + Verzeichnisanlage, `install_module` Error-Handling, Strukturtests GITHUB_REPOS vs. `_KNOWN`.
 - `module_registry.py`: `ModuleRegistry`-Klasse erkennt alle 5 ProFiler-Suite-Begleitmodule (ProSync, SQLiteViewer, Datenschutzampel, FormConstructor, PythonBox) über konfigurierte Pfade, gleiches Verzeichnis, Geschwisterordner und Breit-Scan. `get_by_filename()` ermöglicht Dateiname-Lookup.
@@ -23,6 +25,7 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ### Geändert / Changed
 - `find_tool_path()`: Delegiert für bekannte Dateinamen an `ModuleRegistry` statt einfacher same-dir/parent-dir-Prüfung; Fallback bleibt für unbekannte Tool-Namen erhalten.
+- `Profiler_Suite_V15.py`: `normalize_configured_tool_path` und `resolve_prosync_launch_path` aus dem Hauptfile nach `sibling_launcher.py` verlagert (kanonische Implementierung dort). GUI-Methode `launch_prosync()` delegiert an `sibling_launcher.launch_prosync()` und wertet `LaunchOutcome` aus. `WINDOWS_ENV_VAR_PATTERN`-Konstante entfernt (in `sibling_launcher` intern).
 - `profiler_settings.json` um `prosync_path` erweitert.
 - Getrackte Beispielkonfigurationen enthalten keine lokalen Benutzerpfade mehr.
 - `README.md` auf English-first GitHub-SEO, klare Usecases, PySide6-Positionierung und Discovery-Keywords umgestellt.

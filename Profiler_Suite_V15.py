@@ -34,6 +34,12 @@ from workspace_exchange import (
     import_workspace as import_redacted_workspace,
 )
 from app_paths import app_data_dir, config_path, resolve_read_path
+from sibling_launcher import (
+    normalize_configured_tool_path,
+    resolve_prosync_launch_path,
+    launch_prosync as _sibling_launch_prosync,
+    LaunchResult as _LaunchResult,
+)
 
 # Optionale Bibliotheken
 try:
@@ -134,7 +140,7 @@ PDF_TEXT_MIN_CHARS = 20  # Minimale Zeichenanzahl für Text-Erkennung
 PDF_PAGES_TO_CHECK = 3   # Anzahl zu prüfender Seiten in PDFs
 FILE_ATTR_CLOUD_PLACEHOLDER = 0x1000  # Windows File-Attribut für Cloud-Placeholder
 FILE_ATTR_RECALL_ON_ACCESS = 0x400    # Windows File-Attribut für Recall-on-Access
-WINDOWS_ENV_VAR_PATTERN = re.compile(r"%([^%]+)%")
+# WINDOWS_ENV_VAR_PATTERN: nach sibling_launcher.py verschoben
 
 
 def app_base_dir():
@@ -144,61 +150,8 @@ def app_base_dir():
     return os.path.dirname(os.path.abspath(__file__))
 
 
-def normalize_configured_tool_path(base_dir, configured_path):
-    """Expandiert einen konfigurierten Tool-Pfad und verankert relative Pfade am App-Root."""
-    raw_path = str(configured_path).strip()
-    if not raw_path:
-        return None
-
-    expanded_raw_path = WINDOWS_ENV_VAR_PATTERN.sub(
-        lambda match: os.environ.get(match.group(1), match.group(0)),
-        raw_path,
-    )
-    expanded_path = Path(os.path.expandvars(expanded_raw_path)).expanduser()
-    if not expanded_path.is_absolute():
-        expanded_path = Path(base_dir).expanduser() / expanded_path
-    return expanded_path
-
-
-def resolve_prosync_launch_path(base_dir, configured_path=""):
-    """Ermittelt den besten verfügbaren ProSync-Einstiegspunkt."""
-    base_dir = Path(base_dir).expanduser()
-    sibling_root = base_dir.parent / "REL-PUB_ProSync"
-
-    candidates = []
-    if configured_path:
-        configured = normalize_configured_tool_path(base_dir, configured_path)
-        if configured.is_dir():
-            candidates.extend([
-                configured / "ProSync.exe",
-                configured / "ProSyncStart_V3.1.py",
-                configured / "START.bat",
-                configured / "dist" / "ProSync" / "ProSync.exe",
-            ])
-        else:
-            candidates.append(configured)
-
-    candidates.extend([
-        base_dir / "ProSync.exe",
-        base_dir / "ProSyncStart_V3.1.py",
-        base_dir / "START.bat",
-        sibling_root / "ProSync.exe",
-        sibling_root / "ProSyncStart_V3.1.py",
-        sibling_root / "START.bat",
-        sibling_root / "dist" / "ProSync" / "ProSync.exe",
-    ])
-
-    seen = set()
-    for candidate in candidates:
-        candidate = Path(candidate).expanduser()
-        resolved = str(candidate)
-        if resolved in seen:
-            continue
-        seen.add(resolved)
-        if candidate.exists():
-            return candidate
-
-    return None
+# normalize_configured_tool_path und resolve_prosync_launch_path sind
+# aus sibling_launcher importiert (kanonische Implementierung dort).
 
 def sha256_file(path, chunk_size=DEFAULT_CHUNK_SIZE):
     """Berechnet den SHA256 Hash. Robust gegen leere Dateien."""
@@ -8685,36 +8638,17 @@ class UnifiedMainWindow(QMainWindow):
             subprocess.Popen([str(tool_path)], cwd=str(tool_path.parent))
 
     def launch_prosync(self):
-        """Startet ProSync als optionale Companion-App."""
-        prosync_path = resolve_prosync_launch_path(
+        """Startet ProSync als optionale Companion-App (via sibling_launcher)."""
+        outcome = _sibling_launch_prosync(
             app_base_dir(),
             self.settings.get("prosync_path", ""),
         )
-
-        if not prosync_path:
-            QMessageBox.warning(
-                self,
-                "ProSync nicht gefunden",
-                "ProSync konnte nicht automatisch gefunden werden.\n\n"
-                "Bitte lege den Pfad in profiler_settings.json unter 'prosync_path' fest\n"
-                "oder platziere ProSync neben ProFiler im gemeinsamen Software-Baum."
-            )
-            return
-
-        try:
-            self._launch_tool_process(prosync_path)
-            QMessageBox.information(
-                self,
-                "ProSync gestartet",
-                "ProSync wurde als optionale Companion-App gestartet.\n\n"
-                "ProFiler bleibt geöffnet, beide Werkzeuge laufen unabhängig."
-            )
-        except Exception as e:
-            QMessageBox.critical(
-                self,
-                "Fehler",
-                f"Konnte ProSync nicht starten:\n{str(e)}"
-            )
+        if outcome.result == _LaunchResult.NOT_FOUND:
+            QMessageBox.warning(self, "ProSync nicht gefunden", outcome.message)
+        elif outcome.result == _LaunchResult.SUCCESS:
+            QMessageBox.information(self, "ProSync gestartet", outcome.message)
+        else:
+            QMessageBox.critical(self, "Fehler", outcome.message)
 
     def start_datenschutzampel(self):
         """Startet die Datenschutzampel als separate Anwendung"""
