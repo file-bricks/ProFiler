@@ -42,10 +42,13 @@ private document archive SQLite search
 OCR desktop application Tesseract Windows
 file deduplication SHA-256 local
 document privacy checker PySide6
+desktop document search offline-first
+PySide6 file manager Tesseract OCR
+local file index database SQLite
 ```
 
 ## Disambiguation
 
 ProFiler is not a cloud service, not a hosted SaaS document manager, not a web app, and not a general bookmark manager. It is a local Windows desktop app that keeps all data on-device in SQLite.
 
-## Last-checked: 2026-06-11
+## Last-checked: 2026-07-06
