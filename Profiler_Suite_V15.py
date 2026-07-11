@@ -2045,6 +2045,12 @@ class BatchDialog(QDialog):
             self.target_dir_btn = QPushButton("...")
             self.target_dir_btn.setMaximumWidth(30)
             self.target_dir_btn.clicked.connect(self._select_target_dir)
+            configure_compact_picker_button(
+                self.target_dir_btn,
+                tooltip="Zielordner auswählen",
+                accessible_name="Zielordner auswählen",
+                accessible_description="Öffnet den Dialog zur Auswahl des Zielordners für die Batch-Kopie.",
+            )
             
             dir_layout = QHBoxLayout()
             dir_layout.addWidget(self.target_dir_edit)
@@ -2058,6 +2064,11 @@ class BatchDialog(QDialog):
             
             self.show_pw_btn = QPushButton("👁")
             self.show_pw_btn.setMaximumWidth(30)
+            self.show_pw_btn.setToolTip("Passwort anzeigen, solange gedrückt")
+            self.show_pw_btn.setAccessibleName("Passwort anzeigen")
+            self.show_pw_btn.setAccessibleDescription(
+                "Zeigt das Passwort nur solange an, wie die Taste gedrückt bleibt."
+            )
             self.show_pw_btn.pressed.connect(lambda: self.password_edit.setEchoMode(QLineEdit.EchoMode.Normal))
             self.show_pw_btn.released.connect(lambda: self.password_edit.setEchoMode(QLineEdit.EchoMode.Password))
             
@@ -2082,6 +2093,12 @@ class BatchDialog(QDialog):
             self.output_dir_btn = QPushButton("...")
             self.output_dir_btn.setMaximumWidth(30)
             self.output_dir_btn.clicked.connect(self._select_output_dir)
+            configure_compact_picker_button(
+                self.output_dir_btn,
+                tooltip="Ausgabeordner auswählen",
+                accessible_name="Ausgabeordner auswählen",
+                accessible_description="Öffnet den Dialog zur Auswahl des Ausgabeordners für die Textextraktion.",
+            )
             
             dir_layout = QHBoxLayout()
             dir_layout.addWidget(self.output_dir_edit)

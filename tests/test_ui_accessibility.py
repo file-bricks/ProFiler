@@ -50,3 +50,30 @@ def test_compact_picker_buttons_expose_accessible_context():
     dialog.close()
     autosync.close()
     app.quit()
+
+
+def test_batch_dialog_compact_action_buttons_expose_accessible_context():
+    app = QApplication.instance() or QApplication([])
+
+    copy_dialog = profiler.BatchDialog(["demo.pdf"], "copy", "Dateien kopieren")
+    copy_button = _button_by_accessible_name(copy_dialog, "Zielordner auswählen")
+    assert copy_button.text() == "..."
+    assert copy_button.toolTip() == "Zielordner auswählen"
+    assert "Batch-Kopie" in copy_button.accessibleDescription()
+
+    encrypt_dialog = profiler.BatchDialog(["demo.pdf"], "pdf_encrypt", "PDF verschlüsseln")
+    show_password_button = _button_by_accessible_name(encrypt_dialog, "Passwort anzeigen")
+    assert show_password_button.text() == "👁"
+    assert show_password_button.toolTip() == "Passwort anzeigen, solange gedrückt"
+    assert "solange" in show_password_button.accessibleDescription()
+
+    extract_dialog = profiler.BatchDialog(["demo.pdf"], "pdf_extract_text", "Text extrahieren")
+    output_button = _button_by_accessible_name(extract_dialog, "Ausgabeordner auswählen")
+    assert output_button.text() == "..."
+    assert output_button.toolTip() == "Ausgabeordner auswählen"
+    assert "Textextraktion" in output_button.accessibleDescription()
+
+    copy_dialog.close()
+    encrypt_dialog.close()
+    extract_dialog.close()
+    app.quit()
