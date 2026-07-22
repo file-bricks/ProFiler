@@ -5541,8 +5541,10 @@ class SearchWidgetHybrid(QWidget):
                         db = ConnectionDB(db_path)
                         if delete_mode == "soft":
                             db.soft_delete_version(vid)
-                        else:
+                        elif delete_mode == "hard":
                             db.hard_delete_version(vid)
+                        else:  # safety und unbekannte Altwerte: niemals permanent löschen
+                            db.safety_hide_version(vid)
                         db.close()
                 
                 self.perform_search()

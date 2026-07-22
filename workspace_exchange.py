@@ -287,6 +287,11 @@ def _validate_import_settings(settings: Dict[str, Any]) -> None:
             raise WorkspaceFormatError(f"Einstellung '{key}' muss eine Ganzzahl sein")
         if key in string_keys and not isinstance(value, str):
             raise WorkspaceFormatError(f"Einstellung '{key}' muss Text sein")
+    delete_mode = settings.get("delete_mode")
+    if delete_mode is not None and delete_mode not in {"soft", "safety"}:
+        raise WorkspaceFormatError(
+            "Workspace darf nur die Löschmodi 'soft' oder 'safety' übernehmen"
+        )
     languages = settings.get("ocr_languages")
     if languages is not None and (
         not isinstance(languages, list)

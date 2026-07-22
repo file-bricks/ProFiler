@@ -142,6 +142,15 @@ class TestD5FileActionControlFlow(unittest.TestCase):
         self.assertNotIn("result['id']", block)
         self.assertNotIn("result['db']", block)
 
+    def test_delete_old_versions_preserves_safety_mode(self):
+        """Safety-Mode darf im Gruppen-Cleanup niemals permanent löschen."""
+        src = (Path(__file__).parent.parent / "Profiler_Suite_V15.py").read_text(encoding="utf-8")
+        start = src.index("def delete_old_versions")
+        end = src.index('menu.addAction("Alte Versionen löschen"', start)
+        block = src[start:end]
+        self.assertIn('elif delete_mode == "hard"', block)
+        self.assertIn("db.safety_hide_version(vid)", block)
+
 
 if __name__ == "__main__":
     unittest.main()

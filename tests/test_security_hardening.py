@@ -144,6 +144,7 @@ def test_workspace_import_rejects_wrong_version_paths_and_secret_keys(tmp_path: 
         {"schema_version": 2},
         {"workspace": {"name": r"C:\\Users\\Alice\\Secret"}},
         {"settings": {"api_token": "should-not-enter-preview"}},
+        {"settings": {"delete_mode": "hard"}},
     ):
         payload = dict(base)
         payload.update(mutation)
