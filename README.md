@@ -31,7 +31,7 @@ It is built for users who manage many local documents and want search, preview, 
 
 ## Screenshot
 
-![ProFiler Suite desktop file manager with filters, file search, collections and preview panes](screenshots/main.png)
+![ProFiler Suite desktop file manager with filters, file search, collections and preview panes](README/screenshots/main.png)
 
 ## When To Use ProFiler
 
@@ -57,14 +57,35 @@ On Windows you can also start the app with:
 START.bat
 ```
 
+## Windows launcher EXE
+
+For local Windows desktop use you can build a fresh launcher EXE with:
+
+```bat
+build_exe.bat
+```
+
+The build requires a clean Git checkout, runs outside OneDrive in
+`C:\_Local_DEV\codex_build\profiler`, uses pinned build dependencies and the
+repository-local exclude scanner, and creates:
+
+- `release/ProFiler-15.0.0-win64.exe`
+- `release/SHA256SUMS.txt`
+- `release/BUILD-PROVENANCE.json`
+
+The build never copies into this checkout, OneDrive, GitHub Releases, or a
+Store package. `START.bat` launches a local EXE only when the adjacent
+`ProFiler.exe.sha256` matches; otherwise a source checkout uses
+`Profiler_Suite_V15.py`.
+
 ## Requirements
 
-- Python 3.8+
+- Python 3.10+
 - PySide6
 - Tesseract OCR for OCR features
 - Optional PDF/OCR libraries listed in `requirements.txt`
 
-OCR requires [Tesseract](https://github.com/tesseract-ocr/tesseract). Configure the executable path in `profiler_config.json` if the portable copy or system installation is not auto-detected.
+OCR requires [Tesseract](https://github.com/tesseract-ocr/tesseract) and PDF-to-image conversion requires Poppler. They must currently be available on the host system; the local PyInstaller build does not bundle them. Store OCR support therefore remains blocked until package bundling and a real install smoke are verified.
 
 On Windows, local app data and settings are stored under `%LOCALAPPDATA%\ProFilerSuite`. Legacy reads from `~/.profiler_suite` are still accepted for existing local installs.
 
@@ -72,9 +93,20 @@ On Windows, local app data and settings are stored under `%LOCALAPPDATA%\ProFile
 
 | File | Purpose |
 |---|---|
-| `profiler_config.json` | Main paths, OCR settings, and index configuration |
-| `profiler_settings.json` | UI settings, theme, and optional `prosync_path` |
-| `search_config.json` | Search databases, filters, and search options |
+| `%LOCALAPPDATA%\ProFilerSuite\profiler_config.json` | Runtime connections and index configuration |
+| `%LOCALAPPDATA%\ProFilerSuite\profiler_settings.json` | Runtime UI settings and optional tool paths |
+| `%LOCALAPPDATA%\ProFilerSuite\search_config.json` | Runtime search databases |
+| `*.example.json` | Public, path-free examples; never runtime data |
+
+PDF passwords are session-only and are deliberately removed from persisted
+settings. The Excel importer is an optional administrative tool and requires
+explicit `--input`, `--database`, and `--output` paths. Cleanup additionally
+requires `--cleanup --yes` and a matching importer ownership marker.
+
+```bash
+python -m pip install -e ".[excel]"
+python import_excel_to_profiler.py --input INPUT.xlsx --database profiler.db --output imported
+```
 
 ## Included Tools
 

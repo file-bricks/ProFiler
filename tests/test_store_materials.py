@@ -39,8 +39,8 @@ def test_store_documents_reference_local_data_and_license_notes() -> None:
     assert "PyMuPDF" in listing
     assert "Tesseract" in listing
     assert "AGPL-3.0" in listing
-    assert "https://github.com/file-bricks/ProFiler/blob/main/PRIVACY_POLICY.md" in listing
-    assert "https://github.com/file-bricks/ProFiler/blob/main/SUPPORT.md" in listing
+    assert "https://github.com/file-bricks/ProFiler/blob/master/PRIVACY_POLICY.md" in listing
+    assert "https://github.com/file-bricks/ProFiler/blob/master/SUPPORT.md" in listing
     assert "PyMuPDF" in privacy
     assert "Tesseract" in privacy
     assert "https://github.com/file-bricks/ProFiler/issues" in support
@@ -50,6 +50,31 @@ def test_store_documents_reference_local_data_and_license_notes() -> None:
 
 def test_existing_main_screenshot_is_present() -> None:
     assert (PROJECT_ROOT / "screenshots" / "main.png").exists()
+    assert (PROJECT_ROOT / "README" / "screenshots" / "main.png").exists()
+
+
+def test_readmes_reference_policy_screenshot_path() -> None:
+    readme = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    readme_de = (PROJECT_ROOT / "README_de.md").read_text(encoding="utf-8")
+
+    assert "README/screenshots/main.png" in readme
+    assert "README/screenshots/main.png" in readme_de
+
+
+def test_desktop_release_materials_point_to_local_build_flow() -> None:
+    build_script = (PROJECT_ROOT / "build_exe.bat").read_text(encoding="utf-8")
+    start_script = (PROJECT_ROOT / "START.bat").read_text(encoding="utf-8")
+    gitignore = (PROJECT_ROOT / ".gitignore").read_text(encoding="utf-8")
+
+    assert r"C:\_Local_DEV\codex_build\profiler" in build_script
+    assert "build_exclude_scanner.py" in build_script
+    assert "from version import APP_VERSION" in (PROJECT_ROOT / "scripts" / "write_build_provenance.py").read_text(encoding="utf-8")
+    assert "BUILD-PROVENANCE.json" in build_script
+    assert "Profiler_Suite_V15.py" in start_script
+    assert "ProFiler.exe" in start_script
+    assert "LOCK*.txt" in gitignore
+    assert "LOCK.permissions.json" in gitignore
+    assert "*.bak" in gitignore
 
 
 def test_store_readiness_script_reports_clean_state() -> None:

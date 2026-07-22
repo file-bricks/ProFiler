@@ -20,7 +20,10 @@ Die Klasse `ModuleRegistry` erkennt jedes Modul nach folgendem Prioritätsprinzi
 1. **Konfigurierter Pfad** — vom Benutzer in den Einstellungen eingetragen (höchste Priorität)
 2. **Gleiches Verzeichnis** — Modul liegt neben `Profiler_Suite_V15.py`
 3. **Geschwister-Verzeichnis** — `../REL-PUB_<Modul>/`
-4. **Alle Geschwister** — Breit-Scan aller Ordner neben dem ProFiler-Verzeichnis
+
+Beliebige Geschwisterordner werden bewusst nicht durchsucht: Ein zufällig oder
+böswillig abgelegter bekannter Dateiname darf nicht automatisch ausführbar
+werden.
 
 ```python
 from module_registry import ModuleRegistry
@@ -65,11 +68,14 @@ Alle Module in Geschwister-Ordner mit Namensschema `REL-PUB_<Modul>` ablegen:
 
 Bei dieser Anordnung erkennt `ModuleRegistry` alle Module ohne manuelle Pfadkonfiguration.
 
-### C) GitHub-Release (zukünftiger Installer)
+### C) GitHub-Release (fail-closed Verwaltungswerkzeug)
 
-Geplant: Ein einfacher Launcher/Installer, der fehlende Module direkt aus
-`github.com/file-bricks/<Repo>` herunterlädt und in die Sibling-Struktur entpackt.
-Voraussetzung: Releases als ZIP/Installer auf GitHub bereitgestellt.
+`github_installer.py` kann ein fehlendes Modul aus einem fest erlaubten
+GitHub-Repository installieren. Der Vorgang verlangt einen verifizierten
+SHA-256 (oder einen GitHub-Asset-Digest), begrenzt Download und Archiv, entpackt
+zuerst in Staging und verweigert Traversal, Sonderdateien, Kollisionen sowie ein
+bereits vorhandenes Ziel. Updates werden nicht über bestehende Ordner gemergt;
+sie bleiben ein getrennt zu prüfender Vorgang.
 
 ## Modul-Status in der GUI
 

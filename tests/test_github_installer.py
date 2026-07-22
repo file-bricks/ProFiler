@@ -1,11 +1,12 @@
 """Unit-Tests für github_installer.py (alle netzwerkfrei via Mock)."""
 
 import io
+import hashlib
 import json
 import sys
 import zipfile
 from pathlib import Path
-from unittest import TestCase, mock
+from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -18,7 +19,6 @@ from github_installer import (
     extract_zip_to_sibling,
     fetch_latest_release,
     find_zip_asset,
-    install_all,
     install_module,
     parse_release,
 )
@@ -221,6 +221,8 @@ class TestInstallModule(TestCase):
             with zipfile.ZipFile(zip_bytes, "w") as zf:
                 zf.writestr("repo-v1/ProSyncStart_V3.1.py", "# prosync")
             zip_bytes.seek(0)
+            archive_bytes = zip_bytes.getvalue()
+            expected_sha256 = hashlib.sha256(archive_bytes).hexdigest()
 
             mock_resp = MagicMock()
             mock_resp.read.side_effect = [
@@ -233,15 +235,18 @@ class TestInstallModule(TestCase):
             def fake_urlopen(req, timeout=None):
                 return mock_resp
 
-            def fake_copyfileobj(src, dst):
-                zip_bytes.seek(0)
-                dst.write(zip_bytes.read())
+            def fake_download(_url, destination, token=None):
+                destination.write_bytes(archive_bytes)
 
             with patch("urllib.request.urlopen", side_effect=fake_urlopen):
                 with patch("github_installer.fetch_latest_release", return_value=release_data):
-                    with patch("github_installer.download_file"):
+                    with patch("github_installer.download_file", side_effect=fake_download):
                         with patch("github_installer.extract_zip_to_sibling") as mock_extract:
-                            result = install_module("prosync", parent_dir=parent)
+                            result = install_module(
+                                "prosync",
+                                parent_dir=parent,
+                                expected_sha256=expected_sha256,
+                            )
 
             self.assertTrue(result.success, result.error)
             mock_extract.assert_called_once()

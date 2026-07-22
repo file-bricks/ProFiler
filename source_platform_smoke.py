@@ -1,7 +1,8 @@
 """
-Source-Platform-Smoke für ProFiler Suite V15.
+Enger Basis-Source-Smoke für ProFiler Suite V15.
 Läuft auf Linux/macOS (offscreen) und Windows ohne Anzeige.
 6 Checks: stdlib, PySide6, workspace_exchange, SQLite, Umlaut, headless Window.
+Kein Nachweis für Tesseract, Poppler, PDF-Funktionen, Tray, Packaging oder Store.
 """
 import sys
 import os

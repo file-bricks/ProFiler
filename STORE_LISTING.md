@@ -31,10 +31,10 @@ Cloud-Pflicht oder Upload-Zwang.
   nur ein Distributionsweg für dieselbe lokale Windows-App
 
 ### Datenschutz
-https://github.com/file-bricks/ProFiler/blob/main/PRIVACY_POLICY.md
+https://github.com/file-bricks/ProFiler/blob/master/PRIVACY_POLICY.md
 
 ### Support
-https://github.com/file-bricks/ProFiler/blob/main/SUPPORT.md
+https://github.com/file-bricks/ProFiler/blob/master/SUPPORT.md
 
 ### Schlüsselwörter
 Dokumentverwaltung, OCR, PDF, Datenschutz, Suche, lokal, Offline, Dateimanager, Produktivität
@@ -76,7 +76,7 @@ cloud account or forced upload path.
   only a distribution path for the same local Windows application
 
 ### Privacy Policy
-https://github.com/file-bricks/ProFiler/blob/main/PRIVACY_POLICY.md
+https://github.com/file-bricks/ProFiler/blob/master/PRIVACY_POLICY.md
 
 ### Support
-https://github.com/file-bricks/ProFiler/blob/main/SUPPORT.md
+https://github.com/file-bricks/ProFiler/blob/master/SUPPORT.md

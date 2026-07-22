@@ -28,6 +28,8 @@ TESTERGEBNISSE.txt
 BUGREPORT.md
 DIAGNOSE_REPORT.md
 SKILL.md
+LOCK*.txt
+LOCK.permissions.json
 
 # ---- Persoenliche / Sensible Daten ----
 _USER/
@@ -79,6 +81,7 @@ _alt/
 
 # ---- Logs ----
 *.log
+*.bak
 
 # ---- Projektspezifisch ----
 
@@ -90,6 +93,9 @@ tesseract_portable/
 *.xlsx
 *.xls
 *.csv
+profiler_config.json
+profiler_settings.json
+search_config.json
 
 # Generierte Dokumente
 *.pdf
@@ -107,3 +113,4 @@ DONE.md
 Feature_Analyse_ProFiler.md
 Konzept_AutoSync_Watchdog.md
 UI_Konzept_Batch.md
+docs/superpowers/

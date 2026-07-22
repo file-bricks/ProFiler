@@ -57,11 +57,12 @@ class TestU1MakedirsExistOk(unittest.TestCase):
     def test_ensure_folder_uses_exist_ok(self):
         """import_excel_to_profiler.py: ensure_folder muss exist_ok=True nutzen."""
         src = (Path(__file__).parent.parent / "import_excel_to_profiler.py").read_text(encoding="utf-8")
-        idx = src.find("makedirs")
-        self.assertGreater(idx, 0, "makedirs-Aufruf nicht gefunden")
-        snippet = src[idx:idx + 60]
+        idx = src.find("def ensure_folder")
+        self.assertGreater(idx, 0, "ensure_folder nicht gefunden")
+        snippet = src[idx:idx + 180]
         self.assertIn("exist_ok", snippet,
-                      "makedirs ohne exist_ok=True — BUG-U1 in import_excel_to_profiler.py")
+                      "Ordneranlage ohne exist_ok=True — BUG-U1 in import_excel_to_profiler.py")
+        self.assertIn("parents=True", snippet)
 
 
 class TestU2ManageTranslations(unittest.TestCase):

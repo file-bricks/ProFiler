@@ -1,6 +1,6 @@
 # Exportformat - ProFiler Suite
 
-Stand: 2026-06-03
+Stand: 2026-07-22
 
 ## Zweck
 
@@ -24,7 +24,7 @@ Stand: 2026-06-03
   "exported_at": "2026-06-03T12:00:00Z",
   "app": {
     "name": "ProFiler Suite",
-    "version": "15"
+    "version": "15.0.0"
   },
   "workspace": {
     "name": "ProFiler Workspace (2 Verbindungen)",
@@ -44,7 +44,7 @@ Stand: 2026-06-03
       "id": "local-docs",
       "label": "Dokumente",
       "file_count": 1240,
-      "redacted_root": "[source-root-1]/Dokumente",
+      "redacted_root": "[source-root-1]",
       "formats": ["docx", "pdf", "txt"],
       "enabled": true,
       "sources_count": 1,
@@ -89,6 +89,11 @@ Stand: 2026-06-03
 - übernommen werden nur sichere Einstellungen wie OCR-Sprache, Löschmodus oder UI-bezogene Optionen
 - nicht übernommen werden lokale Datenbankpfade, Companion-Pfade, PDF-Masterpasswörter und sonstige Secrets
 - der importierte Snapshot wird lokal als Vorschau gespeichert, damit Review-Daten sichtbar bleiben, ohne produktive Indexe umzubiegen
+- vor jeder Einstellungsmutation werden Dateigröße, Schema-Version, Container,
+  Werttypen, erlaubte Settings und der vollständige Payload auf absolute Pfade
+  sowie Secret-Feldnamen geprüft
+- zu große, zu tiefe oder nicht vollständig redigierte Dateien werden
+  fail-closed abgelehnt
 
 ## Abgrenzung
 

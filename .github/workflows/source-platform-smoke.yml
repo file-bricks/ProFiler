@@ -1,4 +1,4 @@
-name: source-platform-smoke
+name: basis-source-platform-smoke
 
 on:
   push:
@@ -32,10 +32,10 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             libgl1 libglib2.0-0 libegl1 libxkbcommon0
 
-      - name: PySide6 installieren
-        run: pip install "PySide6>=6.5.0"
+      - name: Gepinntes PySide6 installieren
+        run: pip install "PySide6==6.11.1"
 
-      - name: Source-Platform-Smoke
+      - name: 6-Check Basis-Source-Smoke
         run: PYTHONIOENCODING=utf-8 python source_platform_smoke.py
         env:
           QT_QPA_PLATFORM: offscreen

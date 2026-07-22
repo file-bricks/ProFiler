@@ -4,7 +4,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import pytest
 from module_registry import ModuleInfo, ModuleRegistry
 
 
@@ -76,6 +75,18 @@ class TestModuleRegistry:
         module = reg.get("sqliteviewer")
         assert module.available is True
         assert str(module.resolved_path) == str(custom / "SQLiteViewer.py")
+
+    def test_does_not_execute_known_filename_from_arbitrary_sibling(self, tmp_path):
+        untrusted = tmp_path / "untrusted-download"
+        untrusted.mkdir()
+        (untrusted / "SQLiteViewer.py").touch()
+        project_dir = tmp_path / "REL-PUB_ProFiler"
+        project_dir.mkdir()
+
+        module = ModuleRegistry(base_dir=project_dir).get("sqliteviewer")
+
+        assert module is not None
+        assert module.available is False
 
     def test_get_unknown_key_returns_none(self):
         reg = ModuleRegistry(base_dir=Path("."))

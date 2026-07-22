@@ -17,6 +17,11 @@ nicht an einen eigenen ProFiler-Server hoch.
 - UI- und Tool-Einstellungen unter `%LOCALAPPDATA%\ProFilerSuite`
 - redigierte Workspace-Exporte wie `profiler-workspace-v1.json`
 
+PDF-Passwörter bleiben nur im Arbeitsspeicher der laufenden Sitzung. ProFiler
+schreibt sie nicht in `profiler_settings.json`; beim Laden werden entsprechende
+Schlüssel aus älteren Einstellungsdateien entfernt. Für einen späteren
+dauerhaften Passwortspeicher wäre ein Betriebssystem-Credential-Store nötig.
+
 ### Keine Standard-Telemetrie
 
 - keine Pflicht-Cloud
@@ -51,6 +56,11 @@ indexes, or workspace exports to a dedicated ProFiler service.
 - PDF workflows and redaction runs, optionally with PyMuPDF
 - UI and tool settings under `%LOCALAPPDATA%\ProFilerSuite`
 - redacted workspace exports such as `profiler-workspace-v1.json`
+
+PDF passwords remain in memory for the current session only. ProFiler does not
+write them to `profiler_settings.json`, and removes matching keys from legacy
+settings when they are loaded. Persistent password storage would require an
+operating-system credential store.
 
 ### No default telemetry
 

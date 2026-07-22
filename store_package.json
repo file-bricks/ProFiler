@@ -9,7 +9,7 @@
   "capabilities": "runFullTrust",
   "category": "Productivity",
   "age_rating": "3+",
-  "privacy_url": "https://github.com/file-bricks/ProFiler/blob/main/PRIVACY_POLICY.md",
-  "support_url": "https://github.com/file-bricks/ProFiler/blob/main/SUPPORT.md",
+  "privacy_url": "https://github.com/file-bricks/ProFiler/blob/master/PRIVACY_POLICY.md",
+  "support_url": "https://github.com/file-bricks/ProFiler/blob/master/SUPPORT.md",
   "license": "AGPL-3.0-only"
 }

@@ -30,6 +30,8 @@ ProFiler Suite is a local-first desktop file manager for private document collec
 - `workspace_exchange.py` — redacted workspace export/import
 - `requirements.txt` — Python dependencies
 - `source_platform_smoke.py` — macOS/Linux CI smoke test
+- `PLATFORM_SUPPORT.md` — exact six-check evidence and unsupported platform gates
+- `version.py` — canonical public version contract (`15.0.0`)
 
 ## Search Phrases
 
@@ -51,4 +53,14 @@ local file index database SQLite
 
 ProFiler is not a cloud service, not a hosted SaaS document manager, not a web app, and not a general bookmark manager. It is a local Windows desktop app that keeps all data on-device in SQLite.
 
-## Last-checked: 2026-07-06
+## Contract Boundaries
+
+- The product interface is the desktop GUI. No ProFiler REST API, OpenAPI,
+  JSON-RPC, or document-search CLI is implemented in V15.
+- `github_installer.py` has its own administrative module-installer CLI; it is
+  not a remote-control interface for the main application.
+- The Ubuntu/macOS workflow is a six-check basis source smoke, not OCR, PDF,
+  tray, packaging, or Store evidence.
+- PDF passwords are session-only and are not persisted to JSON settings.
+
+## Last-checked: 2026-07-22

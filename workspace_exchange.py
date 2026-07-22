@@ -3,19 +3,21 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import sqlite3
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
+from urllib.parse import quote
 
 from app_paths import app_data_dir, config_path, resolve_read_path
+from version import APP_VERSION
 
 APP_NAME = "ProFiler Suite"
 SCHEMA_NAME = "profiler-workspace-v1"
 SCHEMA_VERSION = 1
-APP_VERSION = "15"
 CONFIG_DIR = app_data_dir()
 PRIVACY_CONFIG_PATH = config_path("datenschutzampel.json")
 IMPORTED_WORKSPACE_PATH = config_path("imported_workspace_preview.json")
@@ -33,6 +35,25 @@ SAFE_EXPORT_SETTINGS = (
     "rename_in_filesystem",
 )
 SAFE_IMPORT_SETTINGS = SAFE_EXPORT_SETTINGS
+MAX_WORKSPACE_BYTES = 5 * 1024 * 1024
+MAX_CONTAINER_ITEMS = 2_000
+MAX_TREE_NODES = 20_000
+MAX_TREE_DEPTH = 12
+MAX_STRING_LENGTH = 8_192
+SENSITIVE_KEY_PATTERN = re.compile(
+    r"(?:password|passwd|passphrase|api[_-]?key|token|secret|private[_-]?key|authorization)",
+    re.IGNORECASE,
+)
+REQUIRED_TOP_LEVEL_KEYS = frozenset({
+    "schema",
+    "schema_version",
+    "workspace",
+    "settings",
+    "indexes",
+    "privacy_summary",
+    "tool_links",
+    "redactions",
+})
 
 
 class WorkspaceFormatError(ValueError):
@@ -57,9 +78,6 @@ class PathRedactor:
             return value
 
         ref = self._register(value, preferred_prefix)
-        leaf = Path(value).name
-        if leaf:
-            return f"[{ref}]/{leaf}"
         return f"[{ref}]"
 
     def _register(self, original: str, preferred_prefix: str) -> str:
@@ -95,10 +113,7 @@ def export_workspace(
         exported_at=exported_at,
         privacy_config=privacy_config,
     )
-    Path(output_path).write_text(
-        json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
-        encoding="utf-8",
-    )
+    _write_json_atomic(Path(output_path), payload)
     return payload
 
 
@@ -116,7 +131,7 @@ def build_workspace_export(
     redactor = PathRedactor()
     privacy_data = privacy_config if privacy_config is not None else _load_json_file(PRIVACY_CONFIG_PATH)
 
-    return {
+    payload = {
         "schema": SCHEMA_NAME,
         "schema_version": SCHEMA_VERSION,
         "exported_at": exported_at.isoformat().replace("+00:00", "Z"),
@@ -135,6 +150,8 @@ def build_workspace_export(
             "raw_documents": False,
         },
     }
+    _validate_workspace_payload(payload)
+    return payload
 
 
 def import_workspace(
@@ -154,11 +171,7 @@ def import_workspace(
         "source_filename": Path(input_path).name,
         "workspace": payload,
     }
-    target_path.parent.mkdir(parents=True, exist_ok=True)
-    target_path.write_text(
-        json.dumps(preview_record, indent=2, ensure_ascii=False) + "\n",
-        encoding="utf-8",
-    )
+    _write_json_atomic(target_path, preview_record)
 
     workspace = payload.get("workspace", {})
     return {
@@ -173,22 +186,121 @@ def import_workspace(
 
 def load_workspace(input_path: str) -> Dict[str, Any]:
     """Load and validate a workspace export."""
+    source = Path(input_path)
     try:
-        payload = json.loads(Path(input_path).read_text(encoding="utf-8"))
+        if not source.is_file():
+            raise OSError("Pfad ist keine reguläre Datei")
+        size = source.stat().st_size
+        if size > MAX_WORKSPACE_BYTES:
+            raise WorkspaceFormatError(
+                f"Workspace-Datei ist größer als {MAX_WORKSPACE_BYTES} Bytes"
+            )
+        payload = json.loads(source.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise WorkspaceFormatError(f"Workspace-Datei konnte nicht gelesen werden: {exc}") from exc
 
+    _validate_workspace_payload(payload)
+    return payload
+
+
+def _validate_workspace_payload(payload: Any) -> None:
+    if not isinstance(payload, dict):
+        raise WorkspaceFormatError("Workspace-Wurzel muss ein JSON-Objekt sein")
     if payload.get("schema") != SCHEMA_NAME:
         raise WorkspaceFormatError(
             f"Falsches Schema: erwartet '{SCHEMA_NAME}', erhalten '{payload.get('schema', '')}'"
         )
-    return payload
+    if payload.get("schema_version") != SCHEMA_VERSION:
+        raise WorkspaceFormatError(
+            f"Nicht unterstützte Schema-Version: {payload.get('schema_version')!r}"
+        )
+
+    missing = REQUIRED_TOP_LEVEL_KEYS - payload.keys()
+    if missing:
+        raise WorkspaceFormatError(
+            f"Workspace-Pflichtfelder fehlen: {', '.join(sorted(missing))}"
+        )
+    for key in ("workspace", "settings", "privacy_summary", "tool_links", "redactions"):
+        if not isinstance(payload.get(key), dict):
+            raise WorkspaceFormatError(f"Workspace-Feld '{key}' muss ein Objekt sein")
+    if not isinstance(payload.get("indexes"), list):
+        raise WorkspaceFormatError("Workspace-Feld 'indexes' muss eine Liste sein")
+
+    redactions = payload["redactions"]
+    if redactions.get("paths") is not True or redactions.get("secrets") is not True:
+        raise WorkspaceFormatError("Workspace bestätigt Pfad-/Secret-Redaktion nicht")
+    if redactions.get("raw_documents") is not False:
+        raise WorkspaceFormatError("Workspace darf keine Rohdokumente enthalten")
+
+    _validate_safe_tree(payload)
+    _validate_import_settings(payload["settings"])
+
+
+def _validate_safe_tree(value: Any) -> None:
+    nodes = 0
+    stack = [(value, 0)]
+    while stack:
+        current, depth = stack.pop()
+        nodes += 1
+        if nodes > MAX_TREE_NODES:
+            raise WorkspaceFormatError("Workspace enthält zu viele Werte")
+        if depth > MAX_TREE_DEPTH:
+            raise WorkspaceFormatError("Workspace ist zu tief verschachtelt")
+
+        if isinstance(current, dict):
+            if len(current) > MAX_CONTAINER_ITEMS:
+                raise WorkspaceFormatError("Workspace-Objekt enthält zu viele Felder")
+            for key, nested in current.items():
+                if not isinstance(key, str):
+                    raise WorkspaceFormatError("Workspace-Schlüssel müssen Text sein")
+                if key != "secrets" and SENSITIVE_KEY_PATTERN.search(key):
+                    raise WorkspaceFormatError(f"Sensibles Feld ist nicht erlaubt: {key}")
+                stack.append((nested, depth + 1))
+        elif isinstance(current, list):
+            if len(current) > MAX_CONTAINER_ITEMS:
+                raise WorkspaceFormatError("Workspace-Liste enthält zu viele Einträge")
+            stack.extend((item, depth + 1) for item in current)
+        elif isinstance(current, str):
+            if len(current) > MAX_STRING_LENGTH:
+                raise WorkspaceFormatError("Workspace-Text ist zu lang")
+            normalized = current.replace("\\", "/")
+            if PathRedactor._is_absolute_path(normalized):
+                raise WorkspaceFormatError("Workspace enthält einen absoluten lokalen Pfad")
+        elif current is not None and not isinstance(current, (bool, int, float)):
+            raise WorkspaceFormatError("Workspace enthält einen nicht unterstützten Werttyp")
+
+
+def _validate_import_settings(settings: Dict[str, Any]) -> None:
+    unknown = set(settings) - set(SAFE_IMPORT_SETTINGS) - {"ocr_languages"}
+    if unknown:
+        raise WorkspaceFormatError(
+            f"Nicht unterstützte Einstellungen: {', '.join(sorted(unknown))}"
+        )
+
+    bool_keys = {"auto_cleanup_enabled", "ocr_enabled", "rename_in_filesystem"}
+    int_keys = {"trash_retention_days"}
+    string_keys = set(SAFE_IMPORT_SETTINGS) - bool_keys - int_keys
+    for key, value in settings.items():
+        if key in bool_keys and not isinstance(value, bool):
+            raise WorkspaceFormatError(f"Einstellung '{key}' muss boolesch sein")
+        if key in int_keys and (not isinstance(value, int) or isinstance(value, bool)):
+            raise WorkspaceFormatError(f"Einstellung '{key}' muss eine Ganzzahl sein")
+        if key in string_keys and not isinstance(value, str):
+            raise WorkspaceFormatError(f"Einstellung '{key}' muss Text sein")
+    languages = settings.get("ocr_languages")
+    if languages is not None and (
+        not isinstance(languages, list)
+        or not languages
+        or len(languages) > 8
+        or any(not isinstance(item, str) or not item or len(item) > 32 for item in languages)
+    ):
+        raise WorkspaceFormatError("Einstellung 'ocr_languages' ist ungültig")
 
 
 def _build_workspace_metadata(connections: List[Dict[str, Any]]) -> Dict[str, Any]:
     enabled = [conn for conn in connections if conn.get("enabled", True)]
     if len(enabled) == 1:
-        name = enabled[0].get("name") or "ProFiler Workspace"
+        name = _safe_label(enabled[0].get("name"), "ProFiler Workspace")
     elif enabled:
         name = f"ProFiler Workspace ({len(enabled)} Verbindungen)"
     else:
@@ -238,9 +350,9 @@ def _build_index_payload(
 
 
 def _summarize_database(db_path: Path, connection: Dict[str, Any], redactor: PathRedactor) -> Dict[str, Any]:
-    label = connection.get("name") or db_path.stem
+    label = _safe_label(connection.get("name"), "ProFiler Index")
     summary: Dict[str, Any] = {
-        "id": connection.get("id") or _slugify(label),
+        "id": _safe_identifier(connection.get("id"), _slugify(label)),
         "label": label,
         "file_count": 0,
         "redacted_root": _redacted_root(connection, redactor),
@@ -255,7 +367,8 @@ def _summarize_database(db_path: Path, connection: Dict[str, Any], redactor: Pat
 
     conn: Optional[sqlite3.Connection] = None
     try:
-        conn = sqlite3.connect(str(db_path))
+        db_uri = f"file:{quote(db_path.resolve().as_posix(), safe='/:')}?mode=ro"
+        conn = sqlite3.connect(db_uri, uri=True)
         version_columns = _table_columns(conn, "versions")
         where_clauses: List[str] = []
         if "is_deleted" in version_columns:
@@ -368,3 +481,37 @@ def _table_columns(conn: sqlite3.Connection, table_name: str) -> List[str]:
 def _slugify(text: str) -> str:
     slug = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
     return slug or "index"
+
+
+def _safe_label(value: Any, fallback: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        return fallback
+    candidate = value.strip()
+    normalized = candidate.replace("\\", "/")
+    if PathRedactor._is_absolute_path(normalized) or len(candidate) > 120:
+        return fallback
+    return candidate
+
+
+def _safe_identifier(value: Any, fallback: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        return fallback
+    candidate = value.strip()
+    normalized = candidate.replace("\\", "/")
+    if PathRedactor._is_absolute_path(normalized):
+        return fallback
+    safe = re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,79}", candidate)
+    return candidate if safe else fallback
+
+
+def _write_json_atomic(target: Path, payload: Dict[str, Any]) -> None:
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary = target.with_suffix(target.suffix + ".tmp")
+    try:
+        temporary.write_text(
+            json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        os.replace(temporary, target)
+    finally:
+        temporary.unlink(missing_ok=True)

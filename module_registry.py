@@ -135,16 +135,6 @@ class ModuleRegistry:
             for ex in extras:
                 candidates.append(sibling / ex)
 
-        # 4) Alle Geschwister-Verzeichnisse durchsuchen
-        try:
-            for entry in self._base_dir.parent.iterdir():
-                if entry.is_dir() and entry != self._base_dir:
-                    c = entry / filename
-                    if c not in candidates:
-                        candidates.append(c)
-        except OSError:
-            pass
-
         seen: set = set()
         for c in candidates:
             resolved = c.resolve() if c.exists() else c

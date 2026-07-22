@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import sys
 import os
+import io
 import json
 import uuid
 import hashlib
@@ -40,6 +41,7 @@ from sibling_launcher import (
     launch_prosync as _sibling_launch_prosync,
     LaunchResult as _LaunchResult,
 )
+from version import APP_VERSION
 
 # Optionale Bibliotheken
 try:
@@ -122,7 +124,7 @@ def setup_windows_encoding():
 # Encoding-Setup beim Import ausführen
 setup_windows_encoding()
 
-print("ProFiler Suite V15 startet...")
+print(f"ProFiler Suite {APP_VERSION} startet...")
 print("Encoding Check:", sys.stdout.encoding)
 
 # ============================================================================
@@ -364,7 +366,13 @@ class SyncConfigManager:
         self.save()
 
 class SettingsManager:
-    """Verwaltet App-Einstellungen (Lösch-Verhalten, PDF-Passwrter, etc.)"""
+    """Verwaltet App-Einstellungen; PDF-Passwörter bleiben sitzungsbezogen."""
+
+    SESSION_ONLY_KEYS = frozenset({
+        "pdf_master_password_open",
+        "pdf_master_password_save",
+    })
+
     def __init__(self):
         self.data = {
             "delete_mode": "soft",
@@ -384,16 +392,33 @@ class SettingsManager:
             try:
                 with open(load_path, "r", encoding="utf-8") as f:
                     loaded = json.load(f)
+                    if not isinstance(loaded, dict):
+                        raise ValueError("Einstellungsdatei muss ein JSON-Objekt sein")
+                    had_legacy_secrets = any(key in loaded for key in self.SESSION_ONLY_KEYS)
+                    for key in self.SESSION_ONLY_KEYS:
+                        loaded.pop(key, None)
                     self.data.update(loaded)
-            except (OSError, json.JSONDecodeError):
+                    if had_legacy_secrets:
+                        self.save()
+            except (OSError, ValueError, json.JSONDecodeError):
                 self.save()
         else:
             self.save()
     
     def save(self):
         os.makedirs(os.path.dirname(SETTINGS_PATH) or ".", exist_ok=True)
-        with open(SETTINGS_PATH, "w", encoding="utf-8") as f:
-            json.dump(self.data, f, indent=2)
+        persistent_data = {
+            key: value
+            for key, value in self.data.items()
+            if key not in self.SESSION_ONLY_KEYS
+        }
+        target = Path(SETTINGS_PATH)
+        temporary = target.with_suffix(target.suffix + ".tmp")
+        temporary.write_text(
+            json.dumps(persistent_data, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        os.replace(temporary, target)
     
     def get(self, key, default=None):
         return self.data.get(key, default)
@@ -680,28 +705,37 @@ class PDFUtils:
     
     @staticmethod
     def apply_ocr_to_pdf(input_path, output_path, lang='deu'):
-        """Wendet OCR auf PDF an"""
-        if not HAS_OCR or not HAS_PDF2IMAGE:
-            raise Exception("pytesseract oder pdf2image nicht installiert")
+        """Erzeugt aus Bildseiten ein durchsuchbares PDF mit OCR-Textebene."""
+        if not HAS_OCR or not HAS_PDF2IMAGE or not HAS_PDF:
+            raise Exception("pytesseract, pdf2image oder PyPDF2 nicht installiert")
         
         try:
             # PDF zu Bildern
             images = convert_from_path(input_path)
             
-            # OCR auf jedes Bild
             writer = PdfWriter()
-            
             for img in images:
-                # OCR durchführen
-                text = pytesseract.image_to_string(img, lang=lang)
-                
-                # Hier müsste man eigentlich ein searchable PDF erstellen
-                # Vereinfachte Version: Nur Text extrahieren
-                # Für production: pdf2pdfocr oder ocrmypdf verwenden
-                pass
-            
-            # Für jetzt: Kopiere Original
-            shutil.copy(input_path, output_path)
+                page_pdf = pytesseract.image_to_pdf_or_hocr(
+                    img,
+                    extension="pdf",
+                    lang=lang,
+                )
+                page_reader = PdfReader(io.BytesIO(page_pdf))
+                for page in page_reader.pages:
+                    writer.add_page(page)
+
+            if not writer.pages:
+                raise ValueError("OCR lieferte keine PDF-Seiten")
+
+            target = Path(output_path)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            temporary = target.with_suffix(target.suffix + ".tmp")
+            try:
+                with temporary.open("wb") as handle:
+                    writer.write(handle)
+                os.replace(temporary, target)
+            finally:
+                temporary.unlink(missing_ok=True)
             return True
             
         except Exception as e:
@@ -8426,7 +8460,7 @@ class UnifiedMainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         
-        self.setWindowTitle("ProFiler Suite V14.3 - Auto-Sync Watchdog")
+        self.setWindowTitle(f"ProFiler Suite {APP_VERSION} - Auto-Sync Watchdog")
         self.resize(1400, 900)
         
         # Managers
@@ -8592,8 +8626,8 @@ class UnifiedMainWindow(QMainWindow):
         """Über-Dialog"""
         QMessageBox.about(
             self,
-            "ProFiler Suite V13.3",
-            "ProFiler Suite V13.3 - Enhanced\n\n"
+            f"ProFiler Suite {APP_VERSION}",
+            f"ProFiler Suite {APP_VERSION}\n\n"
             "Features:\n"
             "• PDF-Verschlüsselung/Entschlüsselung\n"
             "• PDF-Auszüge erstellen\n"
@@ -8756,7 +8790,7 @@ class UnifiedMainWindow(QMainWindow):
 
 def main():
     app = QApplication(sys.argv)
-    app.setApplicationName("ProFiler Suite V9")
+    app.setApplicationName(f"ProFiler Suite {APP_VERSION}")
     
     # Check Dependencies
     warnings = []

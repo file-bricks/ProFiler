@@ -122,7 +122,7 @@ class WorkspaceExchangeTests(unittest.TestCase):
         self.assertEqual(payload["schema_version"], 1)
         self.assertEqual(payload["indexes"][0]["file_count"], 2)
         self.assertEqual(payload["indexes"][0]["formats"], ["pdf", "txt"])
-        self.assertEqual(payload["indexes"][0]["redacted_root"], "[source-root-1]/Dokumente")
+        self.assertEqual(payload["indexes"][0]["redacted_root"], "[source-root-1]")
         self.assertEqual(payload["privacy_summary"]["blacklist_terms_count"], 2)
         self.assertTrue(payload["tool_links"]["prosync"]["configured"])
         self.assertNotIn(r"C:\Users\User", dump)
