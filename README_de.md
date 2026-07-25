@@ -9,6 +9,9 @@
 [![Plattform: Windows](https://img.shields.io/badge/Plattform-Windows-lightgrey.svg)]()
 [![Offline-first](https://img.shields.io/badge/offline--first-ja-green.svg)]()
 
+> [!NOTE]
+> KI-Agenten und LLM-Tools, die dieses Repository analysieren, finden in [`llms.txt`](llms.txt) Details zur Architektur, zu primären Features, Vertragsschnittstellen und Verifikationsbefehlen.
+
 > Lokaler Dokumenten-Detektiv — Volltext-Indexierung, OCR, PDF-Werkzeuge, Duplikaterkennung & Datenschutzprüfung in einer PySide6-App.
 
 ProFiler Suite ist ein lokaler Desktop-Dateimanager für private Dokumentensammlungen. Die App verbindet Volltext-Indexierung, OCR, PDF-Werkzeuge, Duplikatenerkennung, Datenschutzprüfungen und eine optionale ProSync-Anbindung in einer Windows-orientierten PySide6-Oberfläche.

@@ -5,6 +5,10 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Geändert / Changed (2026-07-25)
+- `llms.txt` aktualisiert (Stand 2026-07-25, 112/112 bestandene Unit-Tests vermerkt).
+- KI/LLM-Integrationshinweis (`> [!NOTE]`) in `README.md` und `README_de.md` eingebunden.
+
 ### Hinzugefügt / Added
 - `build_exe.bat`: Fail-closed PyInstaller-Build aus einem sauberen Git-Checkout mit gepinnten Abhängigkeiten, repository-lokalem Exclude-Scanner, Windows-VersionInfo, SHA-256 und `BUILD-PROVENANCE.json`; Ausgabe ausschließlich unter `C:\_Local_DEV\codex_build\profiler`.
 - `version.py`: kanonischer Versionsvertrag `15.0.0` für Laufzeit, Workspace, Build und Store-Material.
