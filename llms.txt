@@ -65,4 +65,4 @@ ProFiler is not a cloud service, not a hosted SaaS document manager, not a web a
 
 Test status: 112/112 Python tests passing (100% green).
 
-## Last-checked: 2026-07-25
+## Last-checked: 2026-07-27

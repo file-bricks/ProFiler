@@ -5,6 +5,10 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Geändert / Changed (2026-07-27)
+- `llms.txt` Last-checked Datum auf 2026-07-27 aktualisiert (112/112 Unit-Tests verifiziert 100% grün).
+- Technische Hygiene & Maintenance Check durchgeführt (Pfad A automation gemini/antigravity).
+
 ### Geändert / Changed (2026-07-25)
 - `llms.txt` aktualisiert (Stand 2026-07-25, 112/112 bestandene Unit-Tests vermerkt).
 - KI/LLM-Integrationshinweis (`> [!NOTE]`) in `README.md` und `README_de.md` eingebunden.
