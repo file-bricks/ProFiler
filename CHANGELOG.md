@@ -5,9 +5,18 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Sicherheit / Security (2026-08-06)
+- `pypdf` auf **6.14.2** angehoben (Pin und untere Schranke). Der erste Wurf pinnte
+  6.13.2 — die Version, die zufällig lokal installiert war — und handelte sich damit
+  zehn offene Warnungen ein (Endlosschleifen bei nicht terminierten Inline-Bildern,
+  Speicherverbrauch bei falschen Bildmaßen, ignorierte Stream-Längen; gepatcht in
+  6.13.3, 6.14.0, 6.14.1, 6.14.2). Auch `>=3.9.0` als untere Schranke war zu tief.
+  Lehre: bei einem Bibliothekswechsel die aktuell sichere Version nachschlagen,
+  nicht die gerade greifbare übernehmen.
+
 ### Sicherheit / Security (2026-08-05)
-- Wechsel von `PyPDF2` auf den gepflegten Nachfolger `pypdf` (>=3.9.0, gepinnt
-  auf 6.13.2). PyPDF2 ist eingestellt: die offene Warnung GHSA-4vvm-4w3v-6mr8
+- Wechsel von `PyPDF2` auf den gepflegten Nachfolger `pypdf`. PyPDF2 ist
+  eingestellt: die offene Warnung GHSA-4vvm-4w3v-6mr8
   (Endlosschleife bei einem Kommentar ohne folgendes Zeichen, betrifft
   2.2.0–3.0.1) hat dort **keine** korrigierte Version, ein Versionssprung
   innerhalb von PyPDF2 war also nicht möglich. Die genutzte API
