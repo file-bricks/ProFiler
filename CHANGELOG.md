@@ -5,6 +5,17 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Sicherheit / Security (2026-08-05)
+- Wechsel von `PyPDF2` auf den gepflegten Nachfolger `pypdf` (>=3.9.0, gepinnt
+  auf 6.13.2). PyPDF2 ist eingestellt: die offene Warnung GHSA-4vvm-4w3v-6mr8
+  (Endlosschleife bei einem Kommentar ohne folgendes Zeichen, betrifft
+  2.2.0–3.0.1) hat dort **keine** korrigierte Version, ein Versionssprung
+  innerhalb von PyPDF2 war also nicht möglich. Die genutzte API
+  (`PdfReader`/`PdfWriter`) ist in beiden Bibliotheken identisch; angepasst
+  wurden Import, Abhängigkeiten, Nutzerhinweise und `THIRD_PARTY_LICENSES.txt`.
+  112/112 Tests grün — der PDF-OCR-Test lief erstmals wirklich durch, statt am
+  fehlenden Import zu scheitern.
+
 ### Geändert / Changed (2026-07-27)
 - `llms.txt` Last-checked Datum auf 2026-07-27 aktualisiert (112/112 Unit-Tests verifiziert 100% grün).
 - Technische Hygiene & Maintenance Check durchgeführt (Pfad A automation gemini/antigravity).

@@ -15,7 +15,7 @@ Direct runtime dependencies
 Name             Locked version   License / distribution note
 ---------------- ---------------- ---------------------------------------------
 PySide6          6.11.1           LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
-PyPDF2           3.0.1            BSD-3-Clause; deprecated upstream compatibility
+pypdf            6.13.2           BSD-3-Clause
 pikepdf          10.9.1           MPL-2.0
 PyMuPDF          1.27.2.3         AGPL-3.0-or-later OR commercial Artifex license
 pdf2image        1.17.0           MIT
@@ -62,7 +62,7 @@ Upstream references
 ===================
 
 PySide6: https://doc.qt.io/qtforpython-6/
-PyPDF2: https://pypdf2.readthedocs.io/
+pypdf: https://pypdf.readthedocs.io/
 pikepdf: https://pikepdf.readthedocs.io/
 PyMuPDF: https://pymupdf.readthedocs.io/
 pdf2image: https://github.com/Belval/pdf2image

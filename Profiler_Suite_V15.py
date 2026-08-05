@@ -45,8 +45,12 @@ from version import APP_VERSION
 
 # Optionale Bibliotheken
 try:
-    import PyPDF2
-    from PyPDF2 import PdfReader, PdfWriter
+    # pypdf ist der gepflegte Nachfolger von PyPDF2. PyPDF2 wurde eingestellt
+    # und bekommt keine Sicherheitspatches mehr (GHSA-4vvm-4w3v-6mr8 hat dort
+    # bis heute keine korrigierte Version). Die hier genutzte API
+    # (PdfReader/PdfWriter) ist in beiden identisch.
+    import pypdf
+    from pypdf import PdfReader, PdfWriter
     HAS_PDF = True
 except ImportError:
     HAS_PDF = False
@@ -609,7 +613,7 @@ class PDFUtils:
     def encrypt_pdf(input_path, output_path, password):
         """Verschlüsselt ein PDF mit Passwort"""
         if not HAS_PDF:
-            raise Exception("PyPDF2 nicht installiert")
+            raise Exception("pypdf nicht installiert")
         
         try:
             reader = PdfReader(input_path)
@@ -634,7 +638,7 @@ class PDFUtils:
     def decrypt_pdf(input_path, output_path, password):
         """Entschlüsselt ein PDF"""
         if not HAS_PDF:
-            raise Exception("PyPDF2 nicht installiert")
+            raise Exception("pypdf nicht installiert")
         
         try:
             reader = PdfReader(input_path)
@@ -662,7 +666,7 @@ class PDFUtils:
     def extract_pages(input_path, output_path, page_indices):
         """Erstellt PDF-Auszug mit ausgewählten Seiten"""
         if not HAS_PDF:
-            raise Exception("PyPDF2 nicht installiert")
+            raise Exception("pypdf nicht installiert")
         
         try:
             reader = PdfReader(input_path)
@@ -684,7 +688,7 @@ class PDFUtils:
     def remove_text_from_pdf(input_path, output_path):
         """Entfernt Text aus PDF, behlt nur Bilder"""
         if not HAS_PDF:
-            raise Exception("PyPDF2 nicht installiert")
+            raise Exception("pypdf nicht installiert")
         
         try:
             # Dies ist komplex - vereinfachte Version:
@@ -707,7 +711,7 @@ class PDFUtils:
     def apply_ocr_to_pdf(input_path, output_path, lang='deu'):
         """Erzeugt aus Bildseiten ein durchsuchbares PDF mit OCR-Textebene."""
         if not HAS_OCR or not HAS_PDF2IMAGE or not HAS_PDF:
-            raise Exception("pytesseract, pdf2image oder PyPDF2 nicht installiert")
+            raise Exception("pytesseract, pdf2image oder pypdf nicht installiert")
         
         try:
             # PDF zu Bildern
@@ -1896,7 +1900,7 @@ class BatchProcessor(QThread):
     def _encrypt_pdf(self, filepath):
         """Verschlüsselt eine PDF-Datei"""
         if not HAS_PDF:
-            return (False, "PyPDF2 nicht installiert")
+            return (False, "pypdf nicht installiert")
         
         password = self.params.get("password")
         if not password:
@@ -1932,7 +1936,7 @@ class BatchProcessor(QThread):
     def _decrypt_pdf(self, filepath):
         """Entschlüsselt eine PDF-Datei"""
         if not HAS_PDF:
-            return (False, "PyPDF2 nicht installiert")
+            return (False, "pypdf nicht installiert")
         
         password = self.params.get("password")
         if not password:
@@ -1964,7 +1968,7 @@ class BatchProcessor(QThread):
     def _extract_pdf_text(self, filepath):
         """Extrahiert Text aus einer PDF-Datei"""
         if not HAS_PDF:
-            return (False, "PyPDF2 nicht installiert")
+            return (False, "pypdf nicht installiert")
         
         output_dir = self.params.get("output_dir", os.path.dirname(filepath))
         base = os.path.splitext(os.path.basename(filepath))[0]
@@ -3906,7 +3910,7 @@ class AnonymizationSettingsDialog(QDialog):
                         if text:
                             words.extend([w.strip() for w in text.split() if w.strip()])
                 else:
-                    QMessageBox.warning(self, "Fehler", "PyPDF2 nicht installiert")
+                    QMessageBox.warning(self, "Fehler", "pypdf nicht installiert")
                     return
             
             # Füge Wörter hinzu
@@ -7392,7 +7396,7 @@ Quelle=Browser-Favoriten
     def _pool_to_pdf(self, files, output_file):
         """Kombiniert Dateien zu PDF"""
         if not HAS_PDF:
-            raise Exception("PyPDF2 nicht installiert")
+            raise Exception("pypdf nicht installiert")
         
         writer = PdfWriter()
         
@@ -8798,7 +8802,7 @@ def main():
     warnings = []
     
     if not HAS_PDF:
-        warnings.append("⚠️ PyPDF2 nicht installiert - PDF-Features deaktiviert")
+        warnings.append("⚠️ pypdf nicht installiert - PDF-Features deaktiviert")
     
     if not HAS_OCR:
         warnings.append("⚠️ pytesseract nicht installiert - OCR deaktiviert")
@@ -8814,7 +8818,7 @@ def main():
         msg.setIcon(QMessageBox.Icon.Warning)
         msg.setWindowTitle("Fehlende Abhängigkeiten")
         msg.setText("Einige Features sind nicht verfügbar:\n\n" + "\n".join(warnings))
-        msg.setInformativeText("Installation:\npip install PyPDF2 pytesseract pdf2image python-docx Pillow")
+        msg.setInformativeText("Installation:\npip install pypdf pytesseract pdf2image python-docx Pillow")
         msg.exec()
     
     window = UnifiedMainWindow()
