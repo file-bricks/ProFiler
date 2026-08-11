@@ -5,6 +5,9 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Beholfen / Fixed (2026-08-11)
+- **Bugsweep Iteration 1 (DATA/REL-PUB_ProFiler)**: Robustere UTF-8-BOM-Dekodierung in `workspace_exchange.py` (`load_workspace`, `_load_json_file`) via `utf-8-sig` sowie Absicherung der Pfad-Resolvierung und Existenzprüfungen in `_build_index_payload` & `_summarize_database` gegen `OSError`/`RuntimeError`. 2 neue Unit-Tests in `test_workspace_exchange.py` hinzugefügt (114/114 Tests grün).
+
 ### Sicherheit / Security (2026-08-06)
 - `pypdf` auf **6.14.2** angehoben (Pin und untere Schranke). Der erste Wurf pinnte
   6.13.2 — die Version, die zufällig lokal installiert war — und handelte sich damit

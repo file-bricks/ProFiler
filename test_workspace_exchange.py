@@ -160,6 +160,42 @@ class WorkspaceExchangeTests(unittest.TestCase):
         self.assertEqual(target_settings.data["prosync_path"], r"C:\secret\keep-me.exe")
         self.assertEqual(preview["workspace"]["schema"], SCHEMA_NAME)
 
+    def test_import_workspace_handles_utf8_bom(self):
+        payload = build_workspace_export(
+            self.search,
+            self.settings,
+            self.connections,
+            privacy_config=self.privacy_config,
+        )
+        json_bytes = (b"\xef\xbb\xbf" + json.dumps(payload, indent=2, ensure_ascii=False).encode("utf-8") + b"\n")
+        self.export_path.write_bytes(json_bytes)
+
+        target_settings = FakeSettingsManager()
+        result = import_workspace(
+            str(self.export_path),
+            target_settings,
+            preview_path=str(self.preview_path),
+        )
+        self.assertEqual(result["workspace_name"], payload["workspace"]["name"])
+
+    def test_build_workspace_export_handles_invalid_db_path(self):
+        search = FakeSearchManager([r"Z:\NonExistentDirectory\invalid_db.db"])
+        connections = FakeConnectionManager([
+            {
+                "id": "invalid-conn",
+                "name": "Invalid",
+                "enabled": True,
+                "db_path": r"Z:\NonExistentDirectory\invalid_db.db",
+            }
+        ])
+        payload = build_workspace_export(
+            search,
+            self.settings,
+            connections,
+            privacy_config=self.privacy_config,
+        )
+        self.assertEqual(payload["indexes"][0]["status"], "missing")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

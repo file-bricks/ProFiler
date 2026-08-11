@@ -195,7 +195,7 @@ def load_workspace(input_path: str) -> Dict[str, Any]:
             raise WorkspaceFormatError(
                 f"Workspace-Datei ist größer als {MAX_WORKSPACE_BYTES} Bytes"
             )
-        payload = json.loads(source.read_text(encoding="utf-8"))
+        payload = json.loads(source.read_text(encoding="utf-8-sig"))
     except (OSError, json.JSONDecodeError) as exc:
         raise WorkspaceFormatError(f"Workspace-Datei konnte nicht gelesen werden: {exc}") from exc
 
@@ -338,18 +338,27 @@ def _build_index_payload(
     connections: List[Dict[str, Any]],
     redactor: PathRedactor,
 ) -> List[Dict[str, Any]]:
-    connection_lookup = {
-        str(Path(conn.get("db_path", "")).resolve()): conn
-        for conn in connections
-        if conn.get("db_path")
-    }
+    connection_lookup: Dict[str, Dict[str, Any]] = {}
+    for conn in connections:
+        raw_conn_db = conn.get("db_path")
+        if not raw_conn_db:
+            continue
+        try:
+            resolved_key = str(Path(raw_conn_db).resolve())
+            connection_lookup[resolved_key] = conn
+        except (OSError, RuntimeError):
+            connection_lookup[str(raw_conn_db)] = conn
 
     summaries: List[Dict[str, Any]] = []
     for raw_db_path in db_paths:
         if not raw_db_path:
             continue
         db_path = Path(raw_db_path)
-        conn = connection_lookup.get(str(db_path.resolve()), {})
+        try:
+            resolved_str = str(db_path.resolve())
+        except (OSError, RuntimeError):
+            resolved_str = str(db_path)
+        conn = connection_lookup.get(resolved_str, {})
         summaries.append(_summarize_database(db_path, conn, redactor))
     return summaries
 
@@ -366,7 +375,11 @@ def _summarize_database(db_path: Path, connection: Dict[str, Any], redactor: Pat
         "sources_count": len(connection.get("sources", [])),
     }
 
-    if not db_path.exists():
+    try:
+        if not db_path.exists():
+            summary["status"] = "missing"
+            return summary
+    except (OSError, RuntimeError):
         summary["status"] = "missing"
         return summary
 
@@ -460,7 +473,7 @@ def _load_json_file(path: Path) -> Dict[str, Any]:
     if not read_path.exists():
         return {}
     try:
-        return json.loads(read_path.read_text(encoding="utf-8"))
+        return json.loads(read_path.read_text(encoding="utf-8-sig"))
     except (OSError, json.JSONDecodeError):
         return {}
 
