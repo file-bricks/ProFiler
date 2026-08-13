@@ -10,6 +10,10 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - **Pytest & Packaging-Konfiguration**: `pyproject.toml` um `[tool.pytest.ini_options]` und `[tool.ruff]` erweitert, `scripts/__init__.py` initialisiert. Vollständige Testsuite 114/114 bestanden (100% grün).
 - **Dokumentation & Discoverability**: `README.md` & `README_de.md` um Mermaid-Architekturdiagramm (5 Stufen) und Badges (Org, PySide6, Tests, Ecosystem, LLM-Context) erweitert; `llms.txt` auf Stand 2026-08-14 synchronisiert.
 
+### Verifikation / Gate-Status (2026-08-13)
+- **TASKPLAN 1381:** Der 6-Check-Source-Smoke und die 112 Tests plus 18 Subtests sind lokal grün; Remote-Run `31529140177` bestätigt Ubuntu/macOS.
+- **TASKPLAN 1380:** Poppler-/Tesseract-Bündelung bleibt offen. Die benötigten Runtime-Verzeichnisse fehlen und `build_exe.bat` enthält keinen Bundle-Schritt; Paket-/Installations-OCR-Smoke und MSIX bleiben ausdrücklich ungeprüft.
+
 ### Beholfen / Fixed (2026-08-11)
 - **Bugsweep Iteration 1 (DATA/REL-PUB_ProFiler)**: Robustere UTF-8-BOM-Dekodierung in `workspace_exchange.py` (`load_workspace`, `_load_json_file`) via `utf-8-sig` sowie Absicherung der Pfad-Resolvierung und Existenzprüfungen in `_build_index_payload` & `_summarize_database` gegen `OSError`/`RuntimeError`. 2 neue Unit-Tests in `test_workspace_exchange.py` hinzugefügt (114/114 Tests grün).
 
@@ -61,30 +65,3 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - `pyproject.toml` zur Standardisierung der Paketmetadaten und Abhängigkeiten angelegt.
 - Windows-Store-Basismaterialien ergänzt: `store_package.json`, `STORE_LISTING.md`, `PRIVACY_POLICY.md`, `SUPPORT.md`, `WINDOWS_STORE_PREP.md` und `scripts/check_store_readiness.py`.
 - Neue Tests `tests/test_app_paths.py` und `tests/test_store_materials.py` für App-Datenpfade und Store-Materialien.
-
-### Geändert / Changed
-- `START.bat` startet `ProFiler.exe` nur bei passender benachbarter SHA-256-Datei und verwendet im Quellcheckout sonst `Profiler_Suite_V15.py`.
-- `README.md` und `README_de.md` referenzieren den Haupt-Screenshot jetzt policy-konform unter `README/screenshots/main.png` und dokumentieren den lokalen Windows-EXE-Build.
-- `find_tool_path()`: Delegiert für bekannte Dateinamen an `ModuleRegistry` statt einfacher same-dir/parent-dir-Prüfung; Fallback bleibt für unbekannte Tool-Namen erhalten.
-- `Profiler_Suite_V15.py`: `normalize_configured_tool_path` und `resolve_prosync_launch_path` aus dem Hauptfile nach `sibling_launcher.py` verlagert (kanonische Implementierung dort). GUI-Methode `launch_prosync()` delegiert an `sibling_launcher.launch_prosync()` und wertet `LaunchOutcome` aus. `WINDOWS_ENV_VAR_PATTERN`-Konstante entfernt (in `sibling_launcher` intern).
-- Laufzeit-Konfigurationen liegen nur unter AppData; getrackte Dateien heißen eindeutig `*.example.json` und enthalten keine lokalen Benutzerpfade oder Passwortfelder.
-- `README.md` auf English-first GitHub-SEO, klare Usecases, PySide6-Positionierung und Discovery-Keywords umgestellt.
-- Workspace-Import übernimmt bewusst nur sichere Einstellungen; lokale DB-Pfade bleiben redigiert und werden nicht automatisch reaktiviert.
-- Windows-Konfigurationsdateien und Datenschutzampel nutzen für neue Installationen `%LOCALAPPDATA%\ProFilerSuite`; bestehende `~/.profiler_suite`-Dateien bleiben lesbar.
-- `THIRD_PARTY_LICENSES.txt` ist jetzt aus direkten Manifesten abgeleitet; die konkrete Build-Umgebung wird artefaktbezogen in der Provenienz erfasst.
-
-### Behoben / Fixed
-- `.gitignore` ignoriert jetzt `LOCK*.txt`, `LOCK.permissions.json`, `*.bak` und interne `docs/superpowers/`-Planungsartefakte, damit Privacy- und Wartungsdateien nicht versehentlich ins Repo geraten.
-- `Profiler_Suite_V15.py` (Anonymisierungs-Worker): Ausgabedateinamen `_geschwrzt` → `_geschwärzt` korrigiert (3 Stellen); Log-Meldung ergänzt um fehlendes ✅-Emoji und korrekten Umlaut.
-- `Profiler_Suite_V15.py` (SearchWidgetHybrid): Hardcodierte Linux-Fallbackpfade `/mnt/project/MethodenAnalyser3.py`, `/mnt/project/Kompilator.py`, `/mnt/project/SQLiteViewer.py` und `/mnt/project/PythonBox.py` entfernt; Tool-nicht-gefunden-Dialog ist jetzt der einzige Fehlerpfad.
-- ProSync wird über Autodetektion, konfigurierte Pfade oder den gemeinsamen Software-Baum gefunden.
-- PDF-OCR erzeugt nun tatsächlich ein mehrseitiges PDF mit Tesseract-Textebene, statt das Original unverändert als Erfolg zu kopieren.
-- PDF-Passwörter bleiben sitzungsbezogen; ältere Klartextschlüssel werden beim Laden aus der JSON-Datei entfernt.
-- Excel-Cleanup verlangt einen passenden Eigentumsmarker, arbeitet transaktional und erhält gemeinsam genutzte Datei-/Tag-Datensätze.
-- Workspace-Import validiert Größe, Schema-Version, Typen, Settings, Pfad- und Secret-Redaktion vor jeder Mutation.
-- Store-Pflichtlinks verwenden den realen Default-Branch `master`; die Materialprüfung grenzt MSIX/WACK/Signing ausdrücklich aus.
-
-## [1.0.0] - Datum nicht dokumentiert
-
-### Hinzugefügt / Added
-- Erstveröffentlichung / Initial release

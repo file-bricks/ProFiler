@@ -1,6 +1,6 @@
 # Plattformnachweis – ProFiler Suite
 
-Stand: 2026-07-22
+Stand: 2026-08-13 (Verifikation)
 
 ## Produktlinie
 
@@ -20,6 +20,21 @@ Die GitHub-Actions-Matrix führt `source_platform_smoke.py` auf
 6. offscreen erzeugtes `UnifiedMainWindow`
 
 Ein grüner Lauf belegt nur diese Basis-Source-Kompatibilität.
+
+## Verifikation 2026-08-13
+
+- Lokaler Checkout `003988e`: `python -m pytest -q` meldet **112 passed** und
+  **18 Subtests passed**; `python source_platform_smoke.py` besteht mit **6/6**.
+  Vorhandene fremde Änderungen an `llms.txt` und die ungetrackte
+  `BEFUNDE.md` wurden dabei nicht verändert.
+- Remote-`master` steht inzwischen auf `7d3ee66`; der
+  [GitHub-Actions-Run 31529140177](https://github.com/file-bricks/ProFiler/actions/runs/31529140177)
+  ist für `ubuntu-latest` und `macos-latest` erfolgreich. Beide Matrix-Jobs
+  installieren PySide6 und führen den 6-Check-Smoke aus; die Linux-
+  Systemabhängigkeiten werden nur auf Ubuntu installiert.
+- Diese Verifikation bestätigt ausschließlich den Basis-Source-Smoke. Die
+  Poppler-/Tesseract-Bündelung, OCR/PDF-Installations-Smokes und native
+  PyInstaller-/MSIX-Paketierung bleiben ein separates, offenes Gate.
 
 ## Nicht durch den Basis-Smoke belegt
 
