@@ -6,6 +6,7 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [15.0.0] - 2026-08-14
 
 ### Hinzugefügt / Added
+- **Accessibility:** Die zentralen Arbeitsbereiche Dateisuche, Suchergebnisse und Dateivorschau haben nun sprechende Accessible Names, Descriptions und Tooltips. Die kompakte Drei-Spalten-Oberfläche bleibt unverändert.
 - **Windows Store Packaging Staging:** `store_package/ProFiler/AppxManifest.xml` mit Identity `Geiger.ProFilerSuite`, Publisher `CN=52596601-BAB4-4F3F-B182-E8F3F273B202`, Version `15.0.0.0`, Capability `runFullTrust` und mehrsprachigen Ressourcen (`de-de`, `en-us`) angelegt.
 - **MSIX-Tile- & Icon-Assets:** Vollständiges Multi-Resolution Tile- und Logo-Paket (`icon_44x44.png`, `icon_50x50.png`, `icon_150x150.png`, `icon_310x150.png`, `icon_310x310.png`) unter `store_package/ProFiler/icons/`, `store_assets/` und `assets/icons/` generiert.
 - **Store-Screenshots (1920x1080):** Vier hochauflösende Promo-Screenshots unter `screenshots/store/` und `README/screenshots/store/` hinterlegt (`shot-1-library-overview.png`, `shot-2-search-ocr.png`, `shot-3-privacy-traffic-light.png`, `shot-4-pdf-tools.png`).

@@ -1,8 +1,9 @@
 import os
+from types import SimpleNamespace
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtWidgets import QApplication, QPushButton
+from PySide6.QtWidgets import QApplication, QPushButton, QLineEdit, QTextEdit, QTreeWidget
 
 import Profiler_Suite_V15 as profiler
 
@@ -76,4 +77,31 @@ def test_batch_dialog_compact_action_buttons_expose_accessible_context():
     copy_dialog.close()
     encrypt_dialog.close()
     extract_dialog.close()
+    app.quit()
+
+
+def test_search_workspaces_expose_screen_reader_context():
+    app = QApplication.instance() or QApplication([])
+    search = profiler.SearchWidgetHybrid(SimpleNamespace(dbs=[]), DummySettings())
+
+    search_input = search.findChild(QLineEdit)
+    assert search_input is not None
+    assert search_input.accessibleName() == "Dateisuche"
+    assert "Dokumentensammlungen" in search_input.accessibleDescription()
+    assert search_input.toolTip() == "Dateien und Dokumente durchsuchen"
+
+    results = search.findChild(QTreeWidget)
+    assert results is not None
+    assert results.accessibleName() == "Suchergebnisse"
+    assert "Pfeiltasten" in results.accessibleDescription()
+    assert "verschoben" in results.toolTip()
+
+    preview = search.findChild(QTextEdit)
+    assert preview is not None
+    assert preview.isReadOnly()
+    assert preview.accessibleName() == "Dateivorschau"
+    assert "ausgewählten Datei" in preview.accessibleDescription()
+    assert preview.toolTip() == "Vorschau der ausgewählten Datei"
+
+    search.close()
     app.quit()
