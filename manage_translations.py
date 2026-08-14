@@ -8,11 +8,12 @@ Verwendung:
 """
 
 import json
-import re
 import os
+import re
 import sys
 
 TRANSLATION_FILE = "locales/translations.json"
+SUPPORTED_LANGUAGES = ("de", "en", "es", "zh", "ja", "ru")
 
 STRING_PATTERNS = [
     re.compile(r'text\s*=\s*"([^"]+)"'),
@@ -58,6 +59,12 @@ def find_german_strings(source_dir):
     return german_strings
 
 
+def new_translation_entry(de, en=""):
+    entry = {language: "" for language in SUPPORTED_LANGUAGES}
+    entry.update({"de": de, "en": en})
+    return entry
+
+
 def manage_translations(source_dir="."):
     trans_file = os.path.join(source_dir, TRANSLATION_FILE)
 
@@ -75,7 +82,7 @@ def manage_translations(source_dir="."):
     added = []
     for s in sorted(found):
         if s not in translations:
-            translations[s] = {"de": s, "en": ""}
+            translations[s] = new_translation_entry(s)
             added.append(s)
 
     os.makedirs(os.path.dirname(trans_file), exist_ok=True)

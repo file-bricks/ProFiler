@@ -22,6 +22,7 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Geändert / Changed (2026-08-14)
+- **I18N foundation:** `TranslationSystem v2.0.0` and the translation scanner support the planned DE/EN/ES/ZH/JA/RU schema with deterministic English-then-German fallbacks. New regression tests protect the language registry, direct Tier-2 values, fallback behavior, new-entry schema, and existing DE/EN translation integrity; reviewed Tier-2 translations remain a separate task.
 - **Code-Hygiene & Linting**: Typ-Annotationen, Import-Sortierung und Exceptions in Modulen (`workspace_exchange.py`, `ProFiler_Datenschutzampel.py`, `scripts/build_exclude_scanner.py`, `tests/test_store_materials.py`) via `ruff` bereinigt.
 - **Pytest & Packaging-Konfiguration**: `pyproject.toml` um `[tool.pytest.ini_options]` und `[tool.ruff]` erweitert, `scripts/__init__.py` initialisiert. Vollständige Testsuite 114/114 bestanden (100% grün).
 - **Dokumentation & Discoverability**: `README.md` & `README_de.md` um Mermaid-Architekturdiagramm (5 Stufen) und Badges (Org, PySide6, Tests, Ecosystem, LLM-Context) erweitert; `llms.txt` auf Stand 2026-08-14 synchronisiert.
