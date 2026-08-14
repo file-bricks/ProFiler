@@ -1,7 +1,7 @@
 {
   "app_name": "ProFiler Suite",
   "publisher": "CN=52596601-BAB4-4F3F-B182-E8F3F273B202",
-  "publisher_display": "Geiger",
+  "publisher_display": "Lukas Geiger",
   "identity_name": "Geiger.ProFilerSuite",
   "version": "15.0.0.0",
   "description": "Lokale Dokument- und Dateiverwaltung mit Suche, OCR, Datenschutzprüfung und PDF-Werkzeugen.",
@@ -11,5 +11,10 @@
   "age_rating": "3+",
   "privacy_url": "https://github.com/file-bricks/ProFiler/blob/master/PRIVACY_POLICY.md",
   "support_url": "https://github.com/file-bricks/ProFiler/blob/master/SUPPORT.md",
-  "license": "AGPL-3.0-only"
+  "license": "AGPL-3.0-only",
+  "languages": [
+    "de-DE",
+    "en-US"
+  ],
+  "logo": "store_assets/icon_150x150.png"
 }

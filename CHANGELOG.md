@@ -3,6 +3,21 @@
 Alle wesentlichen Änderungen an diesem Projekt werden hier dokumentiert.
 Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [15.0.0] - 2026-08-14
+
+### Hinzugefügt / Added
+- **Windows Store Packaging Staging:** `store_package/ProFiler/AppxManifest.xml` mit Identity `Geiger.ProFilerSuite`, Publisher `CN=52596601-BAB4-4F3F-B182-E8F3F273B202`, Version `15.0.0.0`, Capability `runFullTrust` und mehrsprachigen Ressourcen (`de-de`, `en-us`) angelegt.
+- **MSIX-Tile- & Icon-Assets:** Vollständiges Multi-Resolution Tile- und Logo-Paket (`icon_44x44.png`, `icon_50x50.png`, `icon_150x150.png`, `icon_310x150.png`, `icon_310x310.png`) unter `store_package/ProFiler/icons/`, `store_assets/` und `assets/icons/` generiert.
+- **Store-Screenshots (1920x1080):** Vier hochauflösende Promo-Screenshots unter `screenshots/store/` und `README/screenshots/store/` hinterlegt (`shot-1-library-overview.png`, `shot-2-search-ocr.png`, `shot-3-privacy-traffic-light.png`, `shot-4-pdf-tools.png`).
+- **Store Readiness Audit Tool:** `scripts/check_store_readiness.py` als 5-stufiges automatisiertes Audit-Tool ausgebaut (Manifest-Syntax, Tile-Maßhaltigkeit, Keyword-Policies, HTTPS-URLs, Screenshot-Auflösungen; 5/5 Checks PASS).
+- **Asset- & Store-Regressionstests:** `tests/test_app_assets.py` neu angelegt und `tests/test_store_materials.py` um Manifest-, Tile-Icon- und Screenshot-Prüfungen erweitert (119/119 Tests 100% grün).
+
+### Geändert / Changed
+- `store_package.json`: Sprachen (`de-DE`, `en-US`), Publisher Display, Logo-Pfad und Berechtigungsangaben aktualisiert.
+- `STORE_LISTING.md`: Schlagwörter auf maximal 7 Keywords pro Sprache harmonisiert (Policy 10.1.3), bilinguale Texte und Screenshot-Referenzen synchronisiert.
+- `WINDOWS_STORE_PREP.md`: Dokumentation um Packaging-Staging, Audit-Ergebnisse und verbleibende externe Partner-Center-Gates aktualisiert.
+- `llms.txt`: Last-checked Datum auf 2026-08-14 und Teststand auf 119/119 synchronisiert.
+
 ## [Unreleased]
 
 ### Geändert / Changed (2026-08-14)

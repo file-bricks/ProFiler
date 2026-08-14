@@ -32,6 +32,8 @@ ProFiler Suite is a local-first desktop file manager for private document collec
 - `source_platform_smoke.py` — macOS/Linux CI smoke test
 - `PLATFORM_SUPPORT.md` — exact six-check evidence and unsupported platform gates
 - `version.py` — canonical public version contract (`15.0.0`)
+- `STORE_LISTING.md` — bilingual Windows Store listing metadata
+- `store_package.json` — Store package configuration and parameters
 
 ## Search Phrases
 
@@ -63,6 +65,6 @@ ProFiler is not a cloud service, not a hosted SaaS document manager, not a web a
   tray, packaging, or Store evidence.
 - PDF passwords are session-only and are not persisted to JSON settings.
 
-Test status: 114/114 Python tests passing (100% green).
+Test status: 119/119 Python tests passing (100% green).
 
 ## Last-checked: 2026-08-14
