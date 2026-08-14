@@ -4,10 +4,15 @@
 
 [English](README.md) | **[Deutsch](README_de.md)** | [GitHub](https://github.com/file-bricks/ProFiler)
 
+[![Org: file-bricks](https://img.shields.io/badge/Org-file--bricks-blue)](https://github.com/file-bricks)
 [![Lizenz: AGPL v3](https://img.shields.io/badge/Lizenz-AGPL%20v3-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
+[![GUI: PySide6](https://img.shields.io/badge/GUI-PySide6-green.svg)](https://wiki.qt.io/Qt_for_Python)
 [![Plattform: Windows](https://img.shields.io/badge/Plattform-Windows-lightgrey.svg)]()
 [![Offline-first](https://img.shields.io/badge/offline--first-ja-green.svg)]()
+[![Tests: 114 bestanden](https://img.shields.io/badge/tests-114%20bestanden-brightgreen.svg)]()
+[![Ökosystem: open-bricks](https://img.shields.io/badge/%C3%96kosystem-open--bricks-blueviolet)](https://github.com/open-bricks)
+[![LLM-Kontext: llms.txt](https://img.shields.io/badge/LLM--Kontext-llms.txt-orange)](llms.txt)
 
 > [!NOTE]
 > KI-Agenten und LLM-Tools, die dieses Repository analysieren, finden in [`llms.txt`](llms.txt) Details zur Architektur, zu primären Features, Vertragsschnittstellen und Verifikationsbefehlen.
@@ -17,6 +22,46 @@
 ProFiler Suite ist ein lokaler Desktop-Dateimanager für private Dokumentensammlungen. Die App verbindet Volltext-Indexierung, OCR, PDF-Werkzeuge, Duplikatenerkennung, Datenschutzprüfungen und eine optionale ProSync-Anbindung in einer Windows-orientierten PySide6-Oberfläche.
 
 ProFiler richtet sich an Menschen, die viele lokale Dokumente verwalten und Suche, Vorschau, PDF-Verarbeitung und Datenschutz-Workflows nutzen möchten, ohne Dateien in einen Cloud-Dienst hochzuladen.
+
+## Architektur
+
+```mermaid
+graph TD
+    subgraph Quellen["1. Dokumenten- & Dateiquellen"]
+        A1["Lokaler Verzeichnisbaum"]
+        A2["Dokumentenordner (PDF, DOCX, TXT, RTF)"]
+        A3["Gescannte Unterlagen & Bilder"]
+        A4["OneDrive-Ordner (Erkennung von Cloud-Platzhaltern)"]
+    end
+
+    subgraph KernEngine["2. Kern-Erfassungs- & Indexierungs-Engine"]
+        B1["Crawler & Dateisystem-Watchdog"]
+        B2["SHA-256 Fingerprinting"]
+        B3["Lokaler SQLite-Index (Versionen, Metadaten)"]
+    end
+
+    subgraph Verarbeitung["3. Dokumenten- & PDF-Verarbeitung"]
+        C1["Tesseract OCR-Engine"]
+        C2["PDF-Werkzeuge (Verschlüsseln, Entschlüsseln, Auszüge, Redigieren)"]
+        C3["Duplikat- & Versionsverwaltung"]
+    end
+
+    subgraph DatenschutzGate["4. Datenschutz & Arbeitsbereich-Sicherheit"]
+        D1["Datenschutzampel (Mustererkennung sensibler Daten)"]
+        D2["Redigierter Arbeitsbereich-Austausch (JSON-Schema v1)"]
+    end
+
+    subgraph UI["5. Desktop-Oberfläche & Begleitwerkzeuge"]
+        E1["PySide6 UnifiedMainWindow (Dark/Light Themes)"]
+        E2["SQLiteViewer (Index-Inspektor)"]
+        E3["ProSync-Sibling-Launcher"]
+    end
+
+    Quellen --> KernEngine
+    KernEngine --> Verarbeitung
+    Verarbeitung --> DatenschutzGate
+    DatenschutzGate --> UI
+```
 
 ## Highlights
 

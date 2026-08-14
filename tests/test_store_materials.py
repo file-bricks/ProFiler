@@ -4,7 +4,6 @@ import json
 import re
 from pathlib import Path
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -78,7 +77,7 @@ def test_desktop_release_materials_point_to_local_build_flow() -> None:
 
 
 def test_store_readiness_script_reports_clean_state() -> None:
-    namespace: dict = {"__file__": str(PROJECT_ROOT / "scripts" / "check_store_readiness.py")}
-    script = (PROJECT_ROOT / "scripts" / "check_store_readiness.py").read_text(encoding="utf-8")
-    exec(script, namespace)
-    assert namespace["evaluate_store_readiness"]() == []
+    from scripts.check_store_readiness import evaluate_store_readiness
+
+    assert evaluate_store_readiness() == []
+

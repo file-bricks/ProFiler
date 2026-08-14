@@ -25,10 +25,10 @@ import os
 import re
 import subprocess
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Callable, List, Optional
 
 # Muster für Windows-Umgebungsvariablen (%VAR%)
 _WINDOWS_ENV_VAR_PATTERN = re.compile(r"%([^%]+)%")
@@ -38,7 +38,7 @@ _WINDOWS_ENV_VAR_PATTERN = re.compile(r"%([^%]+)%")
 # Pfad-Auflösung
 # ---------------------------------------------------------------------------
 
-def normalize_configured_tool_path(base_dir, configured_path) -> Optional[Path]:
+def normalize_configured_tool_path(base_dir, configured_path) -> Path | None:
     """Expandiert einen konfigurierten Tool-Pfad und verankert relative Pfade am App-Root.
 
     Unterstützt Windows-%VAR%-Syntax sowie Unix-~/‑Tilde-Expansion.
@@ -58,7 +58,7 @@ def normalize_configured_tool_path(base_dir, configured_path) -> Optional[Path]:
     return expanded_path
 
 
-def _first_existing(candidates: List[Path]) -> Optional[Path]:
+def _first_existing(candidates: list[Path]) -> Path | None:
     """Gibt den ersten existierenden Pfad aus der Liste zurück, oder None."""
     seen: set = set()
     for candidate in candidates:
@@ -72,7 +72,7 @@ def _first_existing(candidates: List[Path]) -> Optional[Path]:
     return None
 
 
-def resolve_prosync_launch_path(base_dir, configured_path: str = "") -> Optional[Path]:
+def resolve_prosync_launch_path(base_dir, configured_path: str = "") -> Path | None:
     """Ermittelt den besten verfügbaren ProSync-Einstiegspunkt.
 
     Kandidatenreihenfolge (höchste Priorität zuerst):
@@ -87,7 +87,7 @@ def resolve_prosync_launch_path(base_dir, configured_path: str = "") -> Optional
     base_dir = Path(base_dir).expanduser()
     sibling_root = base_dir.parent / "REL-PUB_ProSync"
 
-    candidates: List[Path] = []
+    candidates: list[Path] = []
     if configured_path:
         configured = normalize_configured_tool_path(base_dir, configured_path)
         if configured is not None:
@@ -150,7 +150,7 @@ class LaunchOutcome:
     """Enthält das Ergebnis und eine menschenlesbare Meldung."""
     result: LaunchResult
     message: str
-    path: Optional[Path] = None
+    path: Path | None = None
 
     @property
     def ok(self) -> bool:
@@ -205,7 +205,7 @@ def launch_sibling(
     display_name: str,
     base_dir,
     configured_path: str = "",
-    candidates_fn: Optional[Callable[[Path, Optional[Path]], List[Path]]] = None,
+    candidates_fn: Callable[[Path, Path | None], list[Path]] | None = None,
 ) -> LaunchOutcome:
     """Allgemeiner Launcher für beliebige Geschwister-Module der ProFiler Suite.
 
@@ -227,7 +227,7 @@ def launch_sibling(
         kein Crash.
     """
     base_dir = Path(base_dir).expanduser()
-    configured: Optional[Path] = None
+    configured: Path | None = None
     if configured_path:
         configured = normalize_configured_tool_path(base_dir, configured_path)
 

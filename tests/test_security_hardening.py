@@ -10,7 +10,6 @@ from unittest import mock
 
 import pytest
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -155,7 +154,11 @@ def test_workspace_import_rejects_wrong_version_paths_and_secret_keys(tmp_path: 
 
 
 def test_workspace_import_rejects_oversized_file(tmp_path: Path) -> None:
-    from workspace_exchange import MAX_WORKSPACE_BYTES, WorkspaceFormatError, load_workspace
+    from workspace_exchange import (
+        MAX_WORKSPACE_BYTES,
+        WorkspaceFormatError,
+        load_workspace,
+    )
 
     candidate = tmp_path / "too-large.json"
     candidate.write_bytes(b" " * (MAX_WORKSPACE_BYTES + 1))

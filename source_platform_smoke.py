@@ -4,11 +4,11 @@ Läuft auf Linux/macOS (offscreen) und Windows ohne Anzeige.
 6 Checks: stdlib, PySide6, workspace_exchange, SQLite, Umlaut, headless Window.
 Kein Nachweis für Tesseract, Poppler, PDF-Funktionen, Tray, Packaging oder Store.
 """
-import sys
-import os
-import tempfile
-import sqlite3
 import json
+import os
+import sqlite3
+import sys
+import tempfile
 from pathlib import Path
 from unittest import mock
 
@@ -28,7 +28,7 @@ def fail(label: str, exc: Exception) -> None:
 
 # ── 1. Stdlib ─────────────────────────────────────────────────────────────────
 try:
-    import pathlib, json, sqlite3 as _sqlite3
+    import json
     ok("stdlib (pathlib, json, sqlite3)")
 except Exception as e:
     fail("stdlib", e)
@@ -36,7 +36,6 @@ except Exception as e:
 # ── 2. PySide6 vorhanden ──────────────────────────────────────────────────────
 try:
     from PySide6.QtWidgets import QApplication
-    from PySide6.QtCore import QCoreApplication
     ok("PySide6 importierbar")
 except Exception as e:
     fail("PySide6", e)

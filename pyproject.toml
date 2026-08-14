@@ -42,3 +42,20 @@ excel = [
 
 [project.urls]
 Homepage = "https://github.com/file-bricks/ProFiler"
+Repository = "https://github.com/file-bricks/ProFiler"
+Issues = "https://github.com/file-bricks/ProFiler/issues"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests", "."]
+python_files = ["test_*.py", "*_test.py"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501", "E402", "W291", "W293"]
+

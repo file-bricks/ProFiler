@@ -15,8 +15,8 @@ Verwendung (API):
 
 from __future__ import annotations
 
-import json
 import hashlib
+import json
 import shutil
 import stat
 import sys
@@ -26,7 +26,6 @@ import urllib.request
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Optional, Tuple
 from urllib.parse import urlparse
 
 # ---------------------------------------------------------------------------
@@ -34,7 +33,7 @@ from urllib.parse import urlparse
 # ---------------------------------------------------------------------------
 
 # key -> (org, repo) oder None wenn kein Repo verfügbar
-GITHUB_REPOS: Dict[str, Optional[Tuple[str, str]]] = {
+GITHUB_REPOS: dict[str, tuple[str, str] | None] = {
     "prosync": ("file-bricks", "ProSync"),
     "sqliteviewer": ("file-bricks", "SQLiteViewer"),
     "datenschutzampel": None,  # kein öffentliches GitHub-Repo verifiziert (file-bricks hat nur AmpelClip)
@@ -43,7 +42,7 @@ GITHUB_REPOS: Dict[str, Optional[Tuple[str, str]]] = {
 }
 
 # Sibling-Verzeichnisnamen (identisch mit module_registry._KNOWN sibling_dir_hint)
-_SIBLING_DIRS: Dict[str, str] = {
+_SIBLING_DIRS: dict[str, str] = {
     "prosync": "REL-PUB_ProSync",
     "sqliteviewer": "REL-PUB_SQLiteViewer",
     "datenschutzampel": "REL-PUB_Datenschutzampel",
@@ -77,18 +76,18 @@ class ReleaseInfo:
     tag_name: str
     name: str
     zipball_url: str
-    zip_asset_url: Optional[str] = None
-    zip_asset_name: Optional[str] = None
-    expected_sha256: Optional[str] = None
+    zip_asset_url: str | None = None
+    zip_asset_name: str | None = None
+    expected_sha256: str | None = None
 
 
 @dataclass
 class InstallResult:
     key: str
     success: bool
-    installed_path: Optional[Path] = None
+    installed_path: Path | None = None
     message: str = ""
-    error: Optional[str] = None
+    error: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -98,8 +97,8 @@ class InstallResult:
 def fetch_latest_release(
     org: str,
     repo: str,
-    token: Optional[str] = None,
-) -> Optional[dict]:
+    token: str | None = None,
+) -> dict | None:
     """Ruft das neueste Release von GitHub ab. Gibt None zurück wenn keins existiert."""
     url = f"{_GITHUB_API}/repos/{org}/{repo}/releases/latest"
     headers = {"Accept": "application/vnd.github+json", "User-Agent": "ProFiler-Installer/1.0"}
@@ -118,7 +117,7 @@ def fetch_latest_release(
         raise
 
 
-def find_zip_asset(release: dict) -> Tuple[str, Optional[str]]:
+def find_zip_asset(release: dict) -> tuple[str, str | None]:
     """
     Gibt (download_url, asset_name) zurück.
     Bevorzugt einen expliziten .zip-Asset; fällt auf zipball_url zurück.
@@ -169,7 +168,7 @@ def _validated_https_url(url: str) -> str:
 def download_file(
     url: str,
     dest: Path,
-    token: Optional[str] = None,
+    token: str | None = None,
     max_bytes: int = _MAX_DOWNLOAD_BYTES,
 ) -> None:
     """Lädt eine begrenzte Datei; Tokens werden nur an api.github.com gesendet."""
@@ -287,9 +286,9 @@ def extract_zip_to_sibling(zip_path: Path, sibling_dir: Path) -> None:
 
 def install_module(
     key: str,
-    parent_dir: Optional[Path] = None,
-    token: Optional[str] = None,
-    expected_sha256: Optional[str] = None,
+    parent_dir: Path | None = None,
+    token: str | None = None,
+    expected_sha256: str | None = None,
 ) -> InstallResult:
     """
     Installiert ein Modul aus dem GitHub-Release in das Geschwister-Verzeichnis.
@@ -385,7 +384,7 @@ def install_module(
     )
 
 
-def install_all(parent_dir: Optional[Path] = None, token: Optional[str] = None) -> list:
+def install_all(parent_dir: Path | None = None, token: str | None = None) -> list:
     """Installiert alle Module mit verfügbarem GitHub-Repo."""
     results = []
     for key in GITHUB_REPOS:
@@ -400,7 +399,7 @@ def install_all(parent_dir: Optional[Path] = None, token: Optional[str] = None) 
     return results
 
 
-def list_modules(parent_dir: Optional[Path] = None) -> None:
+def list_modules(parent_dir: Path | None = None) -> None:
     """Gibt eine Statusübersicht aller Module aus."""
     if parent_dir is None:
         parent_dir = Path(__file__).parent.parent

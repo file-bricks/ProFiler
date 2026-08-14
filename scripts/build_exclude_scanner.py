@@ -122,9 +122,8 @@ def collect_app_imports(project: Path) -> set[str]:
             if isinstance(node, ast.Import):
                 for alias in node.names:
                     found.add(alias.name.split(".")[0])
-            elif isinstance(node, ast.ImportFrom):
-                if node.level == 0 and node.module:  # nur absolute Imports
-                    found.add(node.module.split(".")[0])
+            elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+                found.add(node.module.split(".")[0])
     return found
 
 
@@ -135,7 +134,7 @@ def collect_requirements(project: Path) -> set[str]:
         try:
             for line in req.read_text(encoding="utf-8", errors="replace").splitlines():
                 line = line.strip()
-                if not line or line.startswith("#") or line.startswith("-"):
+                if not line or line.startswith(("#", "-")):
                     continue
                 m = _REQ_NAME_RE.match(line)
                 if m:

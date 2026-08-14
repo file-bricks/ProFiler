@@ -7,9 +7,10 @@ import os
 import re
 import sqlite3
 from collections import Counter
+from collections.abc import Iterable
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any
 from urllib.parse import quote
 
 from app_paths import app_data_dir, config_path, resolve_read_path
@@ -64,7 +65,7 @@ class PathRedactor:
     """Replace absolute local paths with stable references."""
 
     def __init__(self) -> None:
-        self._refs: Dict[str, str] = {}
+        self._refs: dict[str, str] = {}
         self._counters: Counter[str] = Counter()
 
     def redact(self, value: Any, preferred_prefix: str = "path") -> Any:
@@ -94,7 +95,7 @@ class PathRedactor:
 
     @staticmethod
     def _is_absolute_path(value: str) -> bool:
-        return value.startswith("//") or value.startswith("/") or bool(WINDOWS_ABS_PATTERN.match(value))
+        return value.startswith(("//", "/")) or bool(WINDOWS_ABS_PATTERN.match(value))
 
 
 def export_workspace(
@@ -102,9 +103,9 @@ def export_workspace(
     search_manager: Any,
     settings_manager: Any,
     connection_manager: Any,
-    exported_at: Optional[datetime] = None,
-    privacy_config: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
+    exported_at: datetime | None = None,
+    privacy_config: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Write the redacted workspace export and return the payload."""
     payload = build_workspace_export(
         search_manager,
@@ -121,9 +122,9 @@ def build_workspace_export(
     search_manager: Any,
     settings_manager: Any,
     connection_manager: Any,
-    exported_at: Optional[datetime] = None,
-    privacy_config: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
+    exported_at: datetime | None = None,
+    privacy_config: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Build the workspace export payload."""
     exported_at = exported_at or datetime.now(timezone.utc)
     settings_data = dict(getattr(settings_manager, "data", {}) or {})
@@ -157,9 +158,9 @@ def build_workspace_export(
 def import_workspace(
     input_path: str,
     settings_manager: Any,
-    preview_path: Optional[str] = None,
-    imported_at: Optional[datetime] = None,
-) -> Dict[str, Any]:
+    preview_path: str | None = None,
+    imported_at: datetime | None = None,
+) -> dict[str, Any]:
     """Load a workspace export, apply safe settings, and persist a local preview."""
     payload = load_workspace(input_path)
     applied_settings = _apply_imported_settings(settings_manager, payload.get("settings", {}))
@@ -184,7 +185,7 @@ def import_workspace(
     }
 
 
-def load_workspace(input_path: str) -> Dict[str, Any]:
+def load_workspace(input_path: str) -> dict[str, Any]:
     """Load and validate a workspace export."""
     source = Path(input_path)
     try:
@@ -270,7 +271,7 @@ def _validate_safe_tree(value: Any) -> None:
             raise WorkspaceFormatError("Workspace enthält einen nicht unterstützten Werttyp")
 
 
-def _validate_import_settings(settings: Dict[str, Any]) -> None:
+def _validate_import_settings(settings: dict[str, Any]) -> None:
     unknown = set(settings) - set(SAFE_IMPORT_SETTINGS) - {"ocr_languages"}
     if unknown:
         raise WorkspaceFormatError(
@@ -302,7 +303,7 @@ def _validate_import_settings(settings: Dict[str, Any]) -> None:
         raise WorkspaceFormatError("Einstellung 'ocr_languages' ist ungültig")
 
 
-def _build_workspace_metadata(connections: List[Dict[str, Any]]) -> Dict[str, Any]:
+def _build_workspace_metadata(connections: list[dict[str, Any]]) -> dict[str, Any]:
     enabled = [conn for conn in connections if conn.get("enabled", True)]
     if len(enabled) == 1:
         name = _safe_label(enabled[0].get("name"), "ProFiler Workspace")
@@ -319,8 +320,8 @@ def _build_workspace_metadata(connections: List[Dict[str, Any]]) -> Dict[str, An
     }
 
 
-def _build_settings_payload(settings_data: Dict[str, Any]) -> Dict[str, Any]:
-    payload: Dict[str, Any] = {}
+def _build_settings_payload(settings_data: dict[str, Any]) -> dict[str, Any]:
+    payload: dict[str, Any] = {}
     for key in SAFE_EXPORT_SETTINGS:
         if key in settings_data:
             payload[key] = settings_data[key]
@@ -335,10 +336,10 @@ def _build_settings_payload(settings_data: Dict[str, Any]) -> Dict[str, Any]:
 
 def _build_index_payload(
     db_paths: Iterable[str],
-    connections: List[Dict[str, Any]],
+    connections: list[dict[str, Any]],
     redactor: PathRedactor,
-) -> List[Dict[str, Any]]:
-    connection_lookup: Dict[str, Dict[str, Any]] = {}
+) -> list[dict[str, Any]]:
+    connection_lookup: dict[str, dict[str, Any]] = {}
     for conn in connections:
         raw_conn_db = conn.get("db_path")
         if not raw_conn_db:
@@ -349,7 +350,7 @@ def _build_index_payload(
         except (OSError, RuntimeError):
             connection_lookup[str(raw_conn_db)] = conn
 
-    summaries: List[Dict[str, Any]] = []
+    summaries: list[dict[str, Any]] = []
     for raw_db_path in db_paths:
         if not raw_db_path:
             continue
@@ -363,9 +364,9 @@ def _build_index_payload(
     return summaries
 
 
-def _summarize_database(db_path: Path, connection: Dict[str, Any], redactor: PathRedactor) -> Dict[str, Any]:
+def _summarize_database(db_path: Path, connection: dict[str, Any], redactor: PathRedactor) -> dict[str, Any]:
     label = _safe_label(connection.get("name"), "ProFiler Index")
-    summary: Dict[str, Any] = {
+    summary: dict[str, Any] = {
         "id": _safe_identifier(connection.get("id"), _slugify(label)),
         "label": label,
         "file_count": 0,
@@ -383,12 +384,12 @@ def _summarize_database(db_path: Path, connection: Dict[str, Any], redactor: Pat
         summary["status"] = "missing"
         return summary
 
-    conn: Optional[sqlite3.Connection] = None
+    conn: sqlite3.Connection | None = None
     try:
         db_uri = f"file:{quote(db_path.resolve().as_posix(), safe='/:')}?mode=ro"
         conn = sqlite3.connect(db_uri, uri=True)
         version_columns = _table_columns(conn, "versions")
-        where_clauses: List[str] = []
+        where_clauses: list[str] = []
         if "is_deleted" in version_columns:
             where_clauses.append("COALESCE(v.is_deleted, 0) = 0")
         if "is_hidden" in version_columns:
@@ -418,7 +419,7 @@ def _summarize_database(db_path: Path, connection: Dict[str, Any], redactor: Pat
     return summary
 
 
-def _build_privacy_summary(privacy_data: Dict[str, Any]) -> Dict[str, Any]:
+def _build_privacy_summary(privacy_data: dict[str, Any]) -> dict[str, Any]:
     blacklist = list(privacy_data.get("blacklist", []) or [])
     whitelist = list(privacy_data.get("whitelist", []) or [])
 
@@ -435,7 +436,7 @@ def _build_privacy_summary(privacy_data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def _build_tool_links(settings_data: Dict[str, Any]) -> Dict[str, Any]:
+def _build_tool_links(settings_data: dict[str, Any]) -> dict[str, Any]:
     return {
         "prosync": {
             "enabled": True,
@@ -453,8 +454,8 @@ def _build_tool_links(settings_data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def _apply_imported_settings(settings_manager: Any, imported_settings: Dict[str, Any]) -> List[str]:
-    applied: List[str] = []
+def _apply_imported_settings(settings_manager: Any, imported_settings: dict[str, Any]) -> list[str]:
+    applied: list[str] = []
     for key in SAFE_IMPORT_SETTINGS:
         if key in imported_settings:
             settings_manager.set(key, imported_settings[key])
@@ -468,7 +469,7 @@ def _apply_imported_settings(settings_manager: Any, imported_settings: Dict[str,
     return applied
 
 
-def _load_json_file(path: Path) -> Dict[str, Any]:
+def _load_json_file(path: Path) -> dict[str, Any]:
     read_path = resolve_read_path(path.name)
     if not read_path.exists():
         return {}
@@ -478,20 +479,20 @@ def _load_json_file(path: Path) -> Dict[str, Any]:
         return {}
 
 
-def _list_connections(connection_manager: Any) -> Iterable[Dict[str, Any]]:
+def _list_connections(connection_manager: Any) -> Iterable[dict[str, Any]]:
     if hasattr(connection_manager, "list_connections"):
         return connection_manager.list_connections()
     return []
 
 
-def _redacted_root(connection: Dict[str, Any], redactor: PathRedactor) -> str:
+def _redacted_root(connection: dict[str, Any], redactor: PathRedactor) -> str:
     sources = list(connection.get("sources", []) or [])
     if not sources:
         return "[source-root-unknown]"
     return str(redactor.redact(sources[0], "source-root"))
 
 
-def _table_columns(conn: sqlite3.Connection, table_name: str) -> List[str]:
+def _table_columns(conn: sqlite3.Connection, table_name: str) -> list[str]:
     rows = conn.execute(f"PRAGMA table_info({table_name})").fetchall()
     return [row[1] for row in rows]
 
@@ -522,7 +523,7 @@ def _safe_identifier(value: Any, fallback: str) -> str:
     return candidate if safe else fallback
 
 
-def _write_json_atomic(target: Path, payload: Dict[str, Any]) -> None:
+def _write_json_atomic(target: Path, payload: dict[str, Any]) -> None:
     target.parent.mkdir(parents=True, exist_ok=True)
     temporary = target.with_suffix(target.suffix + ".tmp")
     try:

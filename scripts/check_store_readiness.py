@@ -4,14 +4,13 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import List
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from app_paths import APP_DATA_DIRNAME, app_data_dir  # noqa: E402
-from version import APP_VERSION  # noqa: E402
+from app_paths import APP_DATA_DIRNAME, app_data_dir
+from version import APP_VERSION
 
 PYPROJECT_PATH = PROJECT_ROOT / "pyproject.toml"
 STORE_PACKAGE_PATH = PROJECT_ROOT / "store_package.json"
@@ -29,8 +28,8 @@ def load_store_package() -> dict:
     return json.loads(STORE_PACKAGE_PATH.read_text(encoding="utf-8"))
 
 
-def evaluate_store_readiness() -> List[str]:
-    findings: List[str] = []
+def evaluate_store_readiness() -> list[str]:
+    findings: list[str] = []
     package = load_store_package()
     project_version = read_pyproject_version()
     if project_version != APP_VERSION:

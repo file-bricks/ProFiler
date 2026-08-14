@@ -4,10 +4,15 @@
 
 **[English](README.md)** | [Deutsch](README_de.md) | [GitHub](https://github.com/file-bricks/ProFiler)
 
+[![Org: file-bricks](https://img.shields.io/badge/Org-file--bricks-blue)](https://github.com/file-bricks)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
+[![GUI: PySide6](https://img.shields.io/badge/GUI-PySide6-green.svg)](https://wiki.qt.io/Qt_for_Python)
 [![Platform: Windows](https://img.shields.io/badge/platform-Windows-lightgrey.svg)]()
 [![Offline-first](https://img.shields.io/badge/offline--first-yes-green.svg)]()
+[![Tests: 114 passed](https://img.shields.io/badge/tests-114%20passed-brightgreen.svg)]()
+[![Ecosystem: open-bricks](https://img.shields.io/badge/ecosystem-open--bricks-blueviolet)](https://github.com/open-bricks)
+[![LLM Context: llms.txt](https://img.shields.io/badge/LLM%20Context-llms.txt-orange)](llms.txt)
 
 > [!NOTE]
 > AI agents and LLM tools reading this repository should refer to [`llms.txt`](llms.txt) for codebase architecture, primary features, contract boundaries, and verification commands.
@@ -17,6 +22,46 @@
 ProFiler Suite is a local-first desktop file manager for private document collections. It combines full-text file indexing, OCR, PDF tools, duplicate detection, privacy checks, and optional ProSync integration in one Windows-oriented PySide6 app.
 
 It is built for users who manage many local documents and want search, preview, PDF processing, and privacy workflows without uploading files to a cloud service.
+
+## Architecture
+
+```mermaid
+graph TD
+    subgraph Sources["1. Document & File Sources"]
+        A1["Local Directory Tree"]
+        A2["Document Folders (PDF, DOCX, TXT, RTF)"]
+        A3["Scanned Paperwork & Images"]
+        A4["OneDrive Mounts (Cloud-Placeholder Aware)"]
+    end
+
+    subgraph CoreEngine["2. Core Ingestion & Indexing"]
+        B1["Crawler & File Watchdog"]
+        B2["SHA-256 Fingerprinting"]
+        B3["SQLite Local Index (Versions, Metadata)"]
+    end
+
+    subgraph Processing["3. Document & PDF Processing Layer"]
+        C1["Tesseract OCR Engine"]
+        C2["PDF Utilities (Encrypt, Decrypt, Extract, Redact)"]
+        C3["Deduplication & Version Tracker"]
+    end
+
+    subgraph PrivacyGate["4. Privacy & Workspace Security"]
+        D1["Datenschutzampel (PII Pattern Detector)"]
+        D2["Redacted Workspace Exchange (JSON Schema v1)"]
+    end
+
+    subgraph UI["5. Presentation & Companion Integration"]
+        E1["PySide6 UnifiedMainWindow (Dark/Light Themes)"]
+        E2["SQLiteViewer (Index Inspector)"]
+        E3["ProSync Sibling Launcher"]
+    end
+
+    Sources --> CoreEngine
+    CoreEngine --> Processing
+    Processing --> PrivacyGate
+    PrivacyGate --> UI
+```
 
 ## Highlights
 

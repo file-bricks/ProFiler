@@ -1,7 +1,7 @@
 """Unit-Tests für github_installer.py (alle netzwerkfrei via Mock)."""
 
-import io
 import hashlib
+import io
 import json
 import sys
 import zipfile
@@ -12,17 +12,16 @@ from unittest.mock import MagicMock, patch
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from github_installer import (
+    _SIBLING_DIRS,
     GITHUB_REPOS,
     InstallResult,
     ReleaseInfo,
-    _SIBLING_DIRS,
     extract_zip_to_sibling,
     fetch_latest_release,
     find_zip_asset,
     install_module,
     parse_release,
 )
-
 
 # ---------------------------------------------------------------------------
 # Hilfsfunktionen

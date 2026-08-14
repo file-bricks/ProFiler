@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional
 
 
 @dataclass
@@ -12,11 +11,11 @@ class ModuleInfo:
     display_name: str
     filename: str
     configured_path: str = ""
-    resolved_path: Optional[Path] = None
+    resolved_path: Path | None = None
     available: bool = False
 
 
-_KNOWN: List[tuple] = [
+_KNOWN: list[tuple] = [
     # (key, display_name, filename, sibling_dir_hint, extra_candidates)
     (
         "prosync",
@@ -62,28 +61,28 @@ class ModuleRegistry:
     def __init__(
         self,
         base_dir: Path,
-        configured_paths: Optional[Dict[str, str]] = None,
+        configured_paths: dict[str, str] | None = None,
     ):
         self._base_dir = Path(base_dir).expanduser().resolve()
         self._configured = configured_paths or {}
-        self._modules: Dict[str, ModuleInfo] = {}
+        self._modules: dict[str, ModuleInfo] = {}
         self._detect_all()
 
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
 
-    def get(self, key: str) -> Optional[ModuleInfo]:
+    def get(self, key: str) -> ModuleInfo | None:
         return self._modules.get(key)
 
-    def get_by_filename(self, filename: str) -> Optional[ModuleInfo]:
+    def get_by_filename(self, filename: str) -> ModuleInfo | None:
         """Liefert ModuleInfo zum bekannten Hauptdateinamen, oder None."""
         for info in self._modules.values():
             if info.filename == filename:
                 return info
         return None
 
-    def all_modules(self) -> List[ModuleInfo]:
+    def all_modules(self) -> list[ModuleInfo]:
         return list(self._modules.values())
 
     def refresh(self) -> None:
@@ -106,10 +105,10 @@ class ModuleRegistry:
         display_name: str,
         filename: str,
         sibling_hint: str,
-        extras: List[str],
+        extras: list[str],
         configured_path: str,
     ) -> ModuleInfo:
-        candidates: List[Path] = []
+        candidates: list[Path] = []
 
         # 1) Konfigurierter Pfad hat höchste Priorität
         if configured_path:

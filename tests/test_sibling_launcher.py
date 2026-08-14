@@ -9,7 +9,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import patch
 
 # Repo-Root eine Ebene über tests/ in den Suchpfad aufnehmen
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -17,14 +17,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from sibling_launcher import (
     LaunchOutcome,
     LaunchResult,
-    _first_existing,
     launch_prosync,
     launch_sibling,
     launch_tool_process,
     normalize_configured_tool_path,
     resolve_prosync_launch_path,
 )
-
 
 # ---------------------------------------------------------------------------
 # normalize_configured_tool_path
