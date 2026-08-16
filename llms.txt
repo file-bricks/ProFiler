@@ -65,6 +65,17 @@ ProFiler is not a cloud service, not a hosted SaaS document manager, not a web a
   tray, packaging, or Store evidence.
 - PDF passwords are session-only and are not persisted to JSON settings.
 
-Test status: 119/119 Python tests passing (100% green).
+## Ecosystem Sibling Tools
 
-## Last-checked: 2026-08-14
+Part of the **file-bricks** desktop suite under the **open-bricks** umbrella:
+- `file-bricks/knowledgedigest`: Portable knowledge database with BM25 ranking & LLM summaries
+- `doc-bricks/PDFtoPDFocr`: Batch OCR & searchable PDF conversion engine
+- `doc-bricks/DokuZen`: Desktop PDF workshop, format converter & security unlocker
+- `doc-bricks/MediaBrain`: Multi-modal media transcription & structured indexing
+- `doc-bricks/TextBrain`: Document intelligence & text analysis
+- `dev-bricks/DevCenter`: Developer workspace dashboard & automation launcher
+- `dev-bricks/CodeBox`: Offline snippet vault & code runner sandbox
+
+Test status: 135/135 Python tests passing (100% green).
+
+## Last-checked: 2026-08-16

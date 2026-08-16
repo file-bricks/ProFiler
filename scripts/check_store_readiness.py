@@ -294,7 +294,7 @@ def main() -> int:
     print(f"  - Package Version: {EXPECTED_VERSION}")
     print(f"  - App Identity:    {EXPECTED_IDENTITY}")
     print(f"  - Publisher:       {EXPECTED_PUBLISHER}")
-    print(f"  - Capabilities:    runFullTrust")
+    print("  - Capabilities:    runFullTrust")
     print("=" * 65)
     return 0
 

@@ -3,6 +3,14 @@
 Alle wesentlichen Änderungen an diesem Projekt werden hier dokumentiert.
 Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [Unreleased]
+
+### Geändert / Changed (2026-08-16)
+- **Discoverability & Badges:** Test-Badges in `README.md` und `README_de.md` auf 135 bestandene Tests aktualisiert; Ökosystem- und Geschwisterwerkzeuge-Matrix (`file-bricks`, `doc-bricks`, `dev-bricks`, `open-bricks`) mit Direktverlinkungen integriert.
+- **Automatisierte Metadaten- & Manifest-Testsuite:** `tests/test_metadata.py` implementiert zur automatisierten Prüfung von Versionsparität (`version.py`, `pyproject.toml`, `store_package.json`, `AppxManifest.xml`), Dokumentenintegrität, UTF-8-Encoding und LLM-Metadaten (5/5 Tests bestanden).
+- **Ruff Linting & Code-Hygiene:** Harmlosen f-String-Präfix in `scripts/check_store_readiness.py` bereinigt, `[tool.ruff.lint]` angepasst (`ruff check` 100% sauber).
+- **LLM Context Discovery:** `llms.txt` Last-checked Datum auf `2026-08-16` und Teststand auf 135/135 synchronisiert.
+
 ## [15.0.0] - 2026-08-14
 
 ### Hinzugefügt / Added
