@@ -1,7 +1,7 @@
 """
 TranslationSystem - Multi-Language Support fuer Anwendungen
 ============================================================
-Version: 1.0.0 (isoliert aus _LANG)
+Version: 2.0.0 (isoliert aus _LANG)
 Quelle: ARC_EntwicklungsschleifeAdvanced/TranslationSystem.py v2.4
 
 Verwendung:
@@ -20,17 +20,20 @@ from typing import Dict, List, Set
 
 
 class TranslationSystem:
-    """Multi-Language Support System v1.0"""
+    """Multi-Language Support System v2.0 with deterministic fallbacks."""
+
+    SUPPORTED_LANGUAGES = ("de", "en", "es", "zh", "ja", "ru")
+    FALLBACK_LANGUAGES = ("en", "de")
 
     def __init__(self, default_lang: str = 'de', app_dir: Path = None):
         """
         Initialisiert Translation-System.
 
         Args:
-            default_lang: Standard-Sprache ('de' oder 'en')
+            default_lang: Standard-Sprache (eine unterstützte Sprache)
             app_dir: Verzeichnis der Anwendung (default: aktuelles Verzeichnis)
         """
-        self.current_lang = default_lang
+        self.current_lang = default_lang if default_lang in self.SUPPORTED_LANGUAGES else "de"
 
         if app_dir is None:
             app_dir = Path(__file__).parent
@@ -83,24 +86,33 @@ class TranslationSystem:
         Returns:
             Uebersetzter Text oder Key als Fallback
         """
-        if key in self.translations:
-            return self.translations[key].get(self.current_lang, key)
+        entry = self.translations.get(key)
+        if isinstance(entry, dict):
+            for language in (self.current_lang, *self.FALLBACK_LANGUAGES):
+                value = entry.get(language)
+                if isinstance(value, str) and value:
+                    return value
 
         if self._is_german(key):
-            self.translations[key] = {"de": key, "en": ""}
+            self.translations[key] = self._new_translation_entry(key, "")
             self._save_translations()
 
         return key
 
     def set_language(self, lang: str):
-        if lang in ['de', 'en']:
+        if lang in self.SUPPORTED_LANGUAGES:
             self.current_lang = lang
+
+    @classmethod
+    def get_supported_languages(cls) -> List[str]:
+        """Return the supported language codes without exposing mutable state."""
+        return list(cls.SUPPORTED_LANGUAGES)
 
     def get_language(self) -> str:
         return self.current_lang
 
     def add_translation(self, key: str, de: str, en: str):
-        self.translations[key] = {"de": de, "en": en}
+        self.translations[key] = self._new_translation_entry(de, en)
         self._save_translations()
 
     def scan_and_update(self, project_dir: Path = None) -> Dict:
@@ -113,7 +125,7 @@ class TranslationSystem:
         added = []
         for string in sorted(found_strings):
             if string not in self.translations:
-                self.translations[string] = {"de": string, "en": ""}
+                self.translations[string] = self._new_translation_entry(string, "")
                 added.append(string)
 
         if added:
@@ -149,8 +161,18 @@ class TranslationSystem:
         text_lower = text.lower()
         return any(hint in text_lower for hint in self.german_hints)
 
-    def get_missing_translations(self) -> List[str]:
-        return [k for k, v in self.translations.items() if not v.get("en")]
+    def get_missing_translations(self, language: str = "en") -> List[str]:
+        """Return entries missing a reviewed value for one supported language."""
+        if language not in self.SUPPORTED_LANGUAGES:
+            raise ValueError(f"Unsupported language: {language}")
+        return [key for key, value in self.translations.items() if not value.get(language)]
+
+    @classmethod
+    def _new_translation_entry(cls, de: str, en: str) -> Dict[str, str]:
+        """Create a complete language schema while leaving translations for review."""
+        entry = {language: "" for language in cls.SUPPORTED_LANGUAGES}
+        entry.update({"de": de, "en": en})
+        return entry
 
 
 if __name__ == "__main__":

@@ -4630,6 +4630,11 @@ class SearchWidgetHybrid(QWidget):
         
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Suche... (Auto-Suche nach 300ms)")
+        self.search_input.setAccessibleName("Dateisuche")
+        self.search_input.setAccessibleDescription(
+            "Durchsucht die verbundenen Dokumentensammlungen. Die Ergebnisliste wird nach kurzer Eingabepause aktualisiert."
+        )
+        self.search_input.setToolTip("Dateien und Dokumente durchsuchen")
         self.search_input.textChanged.connect(self.on_search_text_changed)
         search_layout.addWidget(self.search_input)
         
@@ -4667,6 +4672,11 @@ class SearchWidgetHybrid(QWidget):
         
         # Results Tree (NEU: für gruppierte Anzeige)
         self.result_tree = QTreeWidget()
+        self.result_tree.setAccessibleName("Suchergebnisse")
+        self.result_tree.setAccessibleDescription(
+            "Zeigt gefundene Dateien mit Typ, Größe und Datum. Mit den Pfeiltasten navigieren, Enter öffnet die ausgewählte Datei."
+        )
+        self.result_tree.setToolTip("Suchergebnisse; Dateien können zur Organisation verschoben werden")
         # Drag & Drop aktivieren (NEU V13.1!)
         self.result_tree.setDragEnabled(True)
         self.result_tree.setAcceptDrops(True)
@@ -4698,6 +4708,11 @@ class SearchWidgetHybrid(QWidget):
         
         self.preview_text = QTextEdit()
         self.preview_text.setReadOnly(True)
+        self.preview_text.setAccessibleName("Dateivorschau")
+        self.preview_text.setAccessibleDescription(
+            "Zeigt Details und eine Textvorschau der in den Suchergebnissen ausgewählten Datei."
+        )
+        self.preview_text.setToolTip("Vorschau der ausgewählten Datei")
         layout.addWidget(self.preview_text)
         
         # Buttons

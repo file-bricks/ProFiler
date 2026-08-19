@@ -10,7 +10,7 @@
 [![GUI: PySide6](https://img.shields.io/badge/GUI-PySide6-green.svg)](https://wiki.qt.io/Qt_for_Python)
 [![Plattform: Windows](https://img.shields.io/badge/Plattform-Windows-lightgrey.svg)]()
 [![Offline-first](https://img.shields.io/badge/offline--first-ja-green.svg)]()
-[![Tests: 114 bestanden](https://img.shields.io/badge/tests-114%20bestanden-brightgreen.svg)]()
+[![Tests: 135 bestanden](https://img.shields.io/badge/tests-135%20bestanden-brightgreen.svg)]()
 [![Ökosystem: open-bricks](https://img.shields.io/badge/%C3%96kosystem-open--bricks-blueviolet)](https://github.com/open-bricks)
 [![LLM-Kontext: llms.txt](https://img.shields.io/badge/LLM--Kontext-llms.txt-orange)](llms.txt)
 
@@ -189,6 +189,21 @@ Wenn du Volltextsuche mit BM25-Ranking, LLM-Zusammenfassungen oder einen Web-Vie
 | KI | Nicht der Fokus | LLM-Zusammenfassungen und Keyword-Extraktion |
 | Oberflächen | Desktop-GUI, System-Tray | Desktop-GUI, Web-Viewer, CLI, Python-API |
 | Lizenz | AGPL-3.0 | MIT |
+
+## Ökosystem & Geschwisterwerkzeuge
+
+ProFiler Suite ist Teil der **file-bricks** Desktop-Werkzeugfamilie unter dem Dach von **[open-bricks](https://github.com/open-bricks)**:
+
+| Werkzeug | Repository | Fokus | Status |
+|---|---|---|---|
+| **ProFiler** | [file-bricks/ProFiler](https://github.com/file-bricks/ProFiler) | Lokale Dokumentenindexierung, OCR, Duplikatenerkennung & Datenschutz | Aktiv |
+| **KnowledgeDigest** | [file-bricks/knowledgedigest](https://github.com/file-bricks/knowledgedigest) | Portable Wissensdatenbank, FTS5-BM25-Suche & LLM-Zusammenfassungen | Aktiv |
+| **PDFtoPDFocr** | [doc-bricks/PDFtoPDFocr](https://github.com/doc-bricks/PDFtoPDFocr) | Batch-OCR & durchsuchbare PDF-Generierung | Aktiv |
+| **DokuZen** | [doc-bricks/DokuZen](https://github.com/doc-bricks/DokuZen) | Desktop-PDF-Werkstatt, Format-Konverter & Sicherheits-Entsperrung | Aktiv |
+| **MediaBrain** | [doc-bricks/MediaBrain](https://github.com/doc-bricks/MediaBrain) | Multimodale Medientranskription & strukturierte Indexierung | Aktiv |
+| **TextBrain** | [doc-bricks/TextBrain](https://github.com/doc-bricks/TextBrain) | Dokumenten-Intelligenz, semantische Klassifikation & Zusammenfassungen | Aktiv |
+| **DevCenter** | [dev-bricks/DevCenter](https://github.com/dev-bricks/DevCenter) | Entwickler-Dashboard & Automations-Zentrale | Aktiv |
+| **CodeBox** | [dev-bricks/CodeBox](https://github.com/dev-bricks/CodeBox) | Offline-Snippet-Vault & Code-Runner-Sandbox | Aktiv |
 
 ## Datenschutz- und Schwärzungshinweis
 

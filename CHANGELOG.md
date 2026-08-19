@@ -5,10 +5,39 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Geändert / Changed (2026-08-16)
+- **Discoverability & Badges:** Test-Badges in `README.md` und `README_de.md` auf 135 bestandene Tests aktualisiert; Ökosystem- und Geschwisterwerkzeuge-Matrix (`file-bricks`, `doc-bricks`, `dev-bricks`, `open-bricks`) mit Direktverlinkungen integriert.
+- **Automatisierte Metadaten- & Manifest-Testsuite:** `tests/test_metadata.py` implementiert zur automatisierten Prüfung von Versionsparität (`version.py`, `pyproject.toml`, `store_package.json`, `AppxManifest.xml`), Dokumentenintegrität, UTF-8-Encoding und LLM-Metadaten (5/5 Tests bestanden).
+- **Ruff Linting & Code-Hygiene:** Harmlosen f-String-Präfix in `scripts/check_store_readiness.py` bereinigt, `[tool.ruff.lint]` angepasst (`ruff check` 100% sauber).
+- **LLM Context Discovery:** `llms.txt` Last-checked Datum auf `2026-08-16` und Teststand auf 135/135 synchronisiert.
+
+## [15.0.0] - 2026-08-14
+
+### Hinzugefügt / Added
+- **Accessibility:** Die zentralen Arbeitsbereiche Dateisuche, Suchergebnisse und Dateivorschau haben nun sprechende Accessible Names, Descriptions und Tooltips. Die kompakte Drei-Spalten-Oberfläche bleibt unverändert.
+- **Windows Store Packaging Staging:** `store_package/ProFiler/AppxManifest.xml` mit Identity `Geiger.ProFilerSuite`, Publisher `CN=52596601-BAB4-4F3F-B182-E8F3F273B202`, Version `15.0.0.0`, Capability `runFullTrust` und mehrsprachigen Ressourcen (`de-de`, `en-us`) angelegt.
+- **MSIX-Tile- & Icon-Assets:** Vollständiges Multi-Resolution Tile- und Logo-Paket (`icon_44x44.png`, `icon_50x50.png`, `icon_150x150.png`, `icon_310x150.png`, `icon_310x310.png`) unter `store_package/ProFiler/icons/`, `store_assets/` und `assets/icons/` generiert.
+- **Store-Screenshots (1920x1080):** Vier hochauflösende Promo-Screenshots unter `screenshots/store/` und `README/screenshots/store/` hinterlegt (`shot-1-library-overview.png`, `shot-2-search-ocr.png`, `shot-3-privacy-traffic-light.png`, `shot-4-pdf-tools.png`).
+- **Store Readiness Audit Tool:** `scripts/check_store_readiness.py` als 5-stufiges automatisiertes Audit-Tool ausgebaut (Manifest-Syntax, Tile-Maßhaltigkeit, Keyword-Policies, HTTPS-URLs, Screenshot-Auflösungen; 5/5 Checks PASS).
+- **Asset- & Store-Regressionstests:** `tests/test_app_assets.py` neu angelegt und `tests/test_store_materials.py` um Manifest-, Tile-Icon- und Screenshot-Prüfungen erweitert (119/119 Tests 100% grün).
+
+### Geändert / Changed
+- `store_package.json`: Sprachen (`de-DE`, `en-US`), Publisher Display, Logo-Pfad und Berechtigungsangaben aktualisiert.
+- `STORE_LISTING.md`: Schlagwörter auf maximal 7 Keywords pro Sprache harmonisiert (Policy 10.1.3), bilinguale Texte und Screenshot-Referenzen synchronisiert.
+- `WINDOWS_STORE_PREP.md`: Dokumentation um Packaging-Staging, Audit-Ergebnisse und verbleibende externe Partner-Center-Gates aktualisiert.
+- `llms.txt`: Last-checked Datum auf 2026-08-14 und Teststand auf 119/119 synchronisiert.
+
+## [Unreleased]
+
 ### Geändert / Changed (2026-08-14)
+- **I18N foundation:** `TranslationSystem v2.0.0` and the translation scanner support the planned DE/EN/ES/ZH/JA/RU schema with deterministic English-then-German fallbacks. New regression tests protect the language registry, direct Tier-2 values, fallback behavior, new-entry schema, and existing DE/EN translation integrity; reviewed Tier-2 translations remain a separate task.
 - **Code-Hygiene & Linting**: Typ-Annotationen, Import-Sortierung und Exceptions in Modulen (`workspace_exchange.py`, `ProFiler_Datenschutzampel.py`, `scripts/build_exclude_scanner.py`, `tests/test_store_materials.py`) via `ruff` bereinigt.
 - **Pytest & Packaging-Konfiguration**: `pyproject.toml` um `[tool.pytest.ini_options]` und `[tool.ruff]` erweitert, `scripts/__init__.py` initialisiert. Vollständige Testsuite 114/114 bestanden (100% grün).
 - **Dokumentation & Discoverability**: `README.md` & `README_de.md` um Mermaid-Architekturdiagramm (5 Stufen) und Badges (Org, PySide6, Tests, Ecosystem, LLM-Context) erweitert; `llms.txt` auf Stand 2026-08-14 synchronisiert.
+
+### Verifikation / Gate-Status (2026-08-13)
+- **TASKPLAN 1381:** Der 6-Check-Source-Smoke und die 112 Tests plus 18 Subtests sind lokal grün; Remote-Run `31529140177` bestätigt Ubuntu/macOS.
+- **TASKPLAN 1380:** Poppler-/Tesseract-Bündelung bleibt offen. Die benötigten Runtime-Verzeichnisse fehlen und `build_exe.bat` enthält keinen Bundle-Schritt; Paket-/Installations-OCR-Smoke und MSIX bleiben ausdrücklich ungeprüft.
 
 ### Beholfen / Fixed (2026-08-11)
 - **Bugsweep Iteration 1 (DATA/REL-PUB_ProFiler)**: Robustere UTF-8-BOM-Dekodierung in `workspace_exchange.py` (`load_workspace`, `_load_json_file`) via `utf-8-sig` sowie Absicherung der Pfad-Resolvierung und Existenzprüfungen in `_build_index_payload` & `_summarize_database` gegen `OSError`/`RuntimeError`. 2 neue Unit-Tests in `test_workspace_exchange.py` hinzugefügt (114/114 Tests grün).
@@ -61,30 +90,3 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - `pyproject.toml` zur Standardisierung der Paketmetadaten und Abhängigkeiten angelegt.
 - Windows-Store-Basismaterialien ergänzt: `store_package.json`, `STORE_LISTING.md`, `PRIVACY_POLICY.md`, `SUPPORT.md`, `WINDOWS_STORE_PREP.md` und `scripts/check_store_readiness.py`.
 - Neue Tests `tests/test_app_paths.py` und `tests/test_store_materials.py` für App-Datenpfade und Store-Materialien.
-
-### Geändert / Changed
-- `START.bat` startet `ProFiler.exe` nur bei passender benachbarter SHA-256-Datei und verwendet im Quellcheckout sonst `Profiler_Suite_V15.py`.
-- `README.md` und `README_de.md` referenzieren den Haupt-Screenshot jetzt policy-konform unter `README/screenshots/main.png` und dokumentieren den lokalen Windows-EXE-Build.
-- `find_tool_path()`: Delegiert für bekannte Dateinamen an `ModuleRegistry` statt einfacher same-dir/parent-dir-Prüfung; Fallback bleibt für unbekannte Tool-Namen erhalten.
-- `Profiler_Suite_V15.py`: `normalize_configured_tool_path` und `resolve_prosync_launch_path` aus dem Hauptfile nach `sibling_launcher.py` verlagert (kanonische Implementierung dort). GUI-Methode `launch_prosync()` delegiert an `sibling_launcher.launch_prosync()` und wertet `LaunchOutcome` aus. `WINDOWS_ENV_VAR_PATTERN`-Konstante entfernt (in `sibling_launcher` intern).
-- Laufzeit-Konfigurationen liegen nur unter AppData; getrackte Dateien heißen eindeutig `*.example.json` und enthalten keine lokalen Benutzerpfade oder Passwortfelder.
-- `README.md` auf English-first GitHub-SEO, klare Usecases, PySide6-Positionierung und Discovery-Keywords umgestellt.
-- Workspace-Import übernimmt bewusst nur sichere Einstellungen; lokale DB-Pfade bleiben redigiert und werden nicht automatisch reaktiviert.
-- Windows-Konfigurationsdateien und Datenschutzampel nutzen für neue Installationen `%LOCALAPPDATA%\ProFilerSuite`; bestehende `~/.profiler_suite`-Dateien bleiben lesbar.
-- `THIRD_PARTY_LICENSES.txt` ist jetzt aus direkten Manifesten abgeleitet; die konkrete Build-Umgebung wird artefaktbezogen in der Provenienz erfasst.
-
-### Behoben / Fixed
-- `.gitignore` ignoriert jetzt `LOCK*.txt`, `LOCK.permissions.json`, `*.bak` und interne `docs/superpowers/`-Planungsartefakte, damit Privacy- und Wartungsdateien nicht versehentlich ins Repo geraten.
-- `Profiler_Suite_V15.py` (Anonymisierungs-Worker): Ausgabedateinamen `_geschwrzt` → `_geschwärzt` korrigiert (3 Stellen); Log-Meldung ergänzt um fehlendes ✅-Emoji und korrekten Umlaut.
-- `Profiler_Suite_V15.py` (SearchWidgetHybrid): Hardcodierte Linux-Fallbackpfade `/mnt/project/MethodenAnalyser3.py`, `/mnt/project/Kompilator.py`, `/mnt/project/SQLiteViewer.py` und `/mnt/project/PythonBox.py` entfernt; Tool-nicht-gefunden-Dialog ist jetzt der einzige Fehlerpfad.
-- ProSync wird über Autodetektion, konfigurierte Pfade oder den gemeinsamen Software-Baum gefunden.
-- PDF-OCR erzeugt nun tatsächlich ein mehrseitiges PDF mit Tesseract-Textebene, statt das Original unverändert als Erfolg zu kopieren.
-- PDF-Passwörter bleiben sitzungsbezogen; ältere Klartextschlüssel werden beim Laden aus der JSON-Datei entfernt.
-- Excel-Cleanup verlangt einen passenden Eigentumsmarker, arbeitet transaktional und erhält gemeinsam genutzte Datei-/Tag-Datensätze.
-- Workspace-Import validiert Größe, Schema-Version, Typen, Settings, Pfad- und Secret-Redaktion vor jeder Mutation.
-- Store-Pflichtlinks verwenden den realen Default-Branch `master`; die Materialprüfung grenzt MSIX/WACK/Signing ausdrücklich aus.
-
-## [1.0.0] - Datum nicht dokumentiert
-
-### Hinzugefügt / Added
-- Erstveröffentlichung / Initial release
