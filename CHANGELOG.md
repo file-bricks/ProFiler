@@ -5,6 +5,12 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Hinzugefügt / Added (2026-08-20)
+- **Tier-2 Multi-Language Expansion (I18N):** Vollständige mehrsprachige Lokalisierung (`locales/translations.json`) mit 109 übersetzten UI-Strings über alle 6 Zielsprachen (Deutsch `de`, English `en`, Español `es`, 简体中文 `zh`, 日本語 `ja`, Русский `ru`) mit 100% Abdeckung (0 fehlende Übersetzungen).
+- **Settings UI Language Selector:** `SettingsDialog` in `Profiler_Suite_V15.py` um neuen Tab „Allgemein“ mit nativer Oberflächensprachauswahl (`de`, `en`, `es`, `zh`, `ja`, `ru`) und persistenter Konfigurationsspeicherung erweitert.
+- **Store-Manifest Parität:** `store_package.json` und `store_package/ProFiler/AppxManifest.xml` um alle 6 Sprachressourcen (`de-DE`, `en-US`, `es-ES`, `zh-CN`, `ja-JP`, `ru-RU`) erweitert.
+- **I18N Testsuite:** `tests/test_i18n.py` erweitert um vollständige 6-Sprachen-Paritätsprüfungen, Fallback-Ketten, Namenszuordnungen und Store-Manifest-Validierung (139/139 Tests bestanden).
+
 ### Geändert / Changed (2026-08-16)
 - **Discoverability & Badges:** Test-Badges in `README.md` und `README_de.md` auf 135 bestandene Tests aktualisiert; Ökosystem- und Geschwisterwerkzeuge-Matrix (`file-bricks`, `doc-bricks`, `dev-bricks`, `open-bricks`) mit Direktverlinkungen integriert.
 - **Automatisierte Metadaten- & Manifest-Testsuite:** `tests/test_metadata.py` implementiert zur automatisierten Prüfung von Versionsparität (`version.py`, `pyproject.toml`, `store_package.json`, `AppxManifest.xml`), Dokumentenintegrität, UTF-8-Encoding und LLM-Metadaten (5/5 Tests bestanden).

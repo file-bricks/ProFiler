@@ -14,7 +14,11 @@
   "license": "AGPL-3.0-only",
   "languages": [
     "de-DE",
-    "en-US"
+    "en-US",
+    "es-ES",
+    "zh-CN",
+    "ja-JP",
+    "ru-RU"
   ],
   "logo": "store_assets/icon_150x150.png"
 }

@@ -19,11 +19,28 @@ from pathlib import Path
 from typing import Dict, List, Set
 
 
+
 class TranslationSystem:
     """Multi-Language Support System v2.0 with deterministic fallbacks."""
 
     SUPPORTED_LANGUAGES = ("de", "en", "es", "zh", "ja", "ru")
     FALLBACK_LANGUAGES = ("en", "de")
+    LANGUAGE_NAMES = {
+        "de": "Deutsch",
+        "en": "English",
+        "es": "Español",
+        "zh": "简体中文",
+        "ja": "日本語",
+        "ru": "Русский",
+    }
+    LANGUAGE_DISPLAY_NAMES = {
+        "de": "Deutsch (de)",
+        "en": "English (en)",
+        "es": "Español (es)",
+        "zh": "简体中文 (zh)",
+        "ja": "日本語 (ja)",
+        "ru": "Русский (ru)",
+    }
 
     def __init__(self, default_lang: str = 'de', app_dir: Path = None):
         """
@@ -107,6 +124,16 @@ class TranslationSystem:
     def get_supported_languages(cls) -> List[str]:
         """Return the supported language codes without exposing mutable state."""
         return list(cls.SUPPORTED_LANGUAGES)
+
+    @classmethod
+    def get_language_names(cls) -> Dict[str, str]:
+        """Return a mapping of language codes to native language names."""
+        return dict(cls.LANGUAGE_NAMES)
+
+    @classmethod
+    def get_language_display_names(cls) -> Dict[str, str]:
+        """Return a mapping of language codes to display strings."""
+        return dict(cls.LANGUAGE_DISPLAY_NAMES)
 
     def get_language(self) -> str:
         return self.current_lang

@@ -1,438 +1,874 @@
 {
   "(Datei nicht gefunden)": {
     "de": "(Datei nicht gefunden)",
-    "en": "(File not found)"
+    "en": "(File not found)",
+    "es": "(Archivo no encontrado)",
+    "zh": "（未找到文件）",
+    "ja": "（ファイルが見つかりません）",
+    "ru": "(Файл не найден)"
   },
   "+ Hinzufügen": {
     "de": "+ Hinzufügen",
-    "en": "+ Add"
+    "en": "+ Add",
+    "es": "+ Añadir",
+    "zh": "+ 添加",
+    "ja": "+ 追加",
+    "ru": "+ Добавить"
   },
   "+ Ordner hinzufügen": {
     "de": "+ Ordner hinzufügen",
-    "en": "+ Add Folder"
+    "en": "+ Add Folder",
+    "es": "+ Añadir carpeta",
+    "zh": "+ 添加文件夹",
+    "ja": "+ フォルダを追加",
+    "ru": "+ Добавить папку"
   },
   "<b>Filter</b>": {
     "de": "<b>Filter</b>",
-    "en": "<b>Filter</b>"
+    "en": "<b>Filter</b>",
+    "es": "<b>Filtro</b>",
+    "zh": "<b>筛选</b>",
+    "ja": "<b>フィルター</b>",
+    "ru": "<b>Фильтр</b>"
   },
   "Abbrechen": {
     "de": "Abbrechen",
-    "en": "Cancel"
+    "en": "Cancel",
+    "es": "Cancelar",
+    "zh": "取消",
+    "ja": "キャンセル",
+    "ru": "Отмена"
   },
   "Aktualisieren": {
     "de": "Aktualisieren",
-    "en": "Refresh"
+    "en": "Refresh",
+    "es": "Actualizar",
+    "zh": "刷新",
+    "ja": "更新",
+    "ru": "Обновить"
   },
   "Alle auswählen [A]": {
     "de": "Alle auswählen [A]",
-    "en": "Select All [A]"
+    "en": "Select All [A]",
+    "es": "Seleccionar todo [A]",
+    "zh": "全选 [A]",
+    "ja": "すべて選択 [A]",
+    "ru": "Выбрать все [A]"
   },
   "Analyse läuft…": {
     "de": "Analyse läuft…",
-    "en": "Analysis running…"
+    "en": "Analysis running…",
+    "es": "Análisis en curso…",
+    "zh": "正在分析…",
+    "ja": "分析を実行中…",
+    "ru": "Выполняется анализ…"
   },
   "Anonymisierungs-Einstellungen": {
     "de": "Anonymisierungs-Einstellungen",
-    "en": "Anonymization Settings"
+    "en": "Anonymization Settings",
+    "es": "Configuración de anonimización",
+    "zh": "匿名化设置",
+    "ja": "匿名化設定",
+    "ru": "Настройки анонимизации"
   },
   "Ausblenden (Safety-Mode - Keine Dateisystem-Änderung)": {
     "de": "Ausblenden (Safety-Mode - Keine Dateisystem-Änderung)",
-    "en": "Hide (Safety Mode - No File System Changes)"
+    "en": "Hide (Safety Mode - No File System Changes)",
+    "es": "Ocultar (Modo seguro - Sin cambios en el sistema de archivos)",
+    "zh": "隐藏（安全模式 - 不更改文件系统）",
+    "ja": "非表示（セーフティモード - ファイルシステムの変更なし）",
+    "ru": "Скрыть (Безопасный режим - без изменений в файловой системе)"
   },
   "Ausgewählt: 0 Seiten": {
     "de": "Ausgewählt: 0 Seiten",
-    "en": "Selected: 0 Pages"
+    "en": "Selected: 0 Pages",
+    "es": "Seleccionadas: 0 páginas",
+    "zh": "已选：0 页",
+    "ja": "選択中: 0 ページ",
+    "ru": "Выбрано: 0 страниц"
   },
   "Ausgewählte Duplikate löschen": {
     "de": "Ausgewählte Duplikate löschen",
-    "en": "Delete Selected Duplicates"
+    "en": "Delete Selected Duplicates",
+    "es": "Eliminar duplicados seleccionados",
+    "zh": "删除选中的重复项",
+    "ja": "選択した重複項目を削除",
+    "ru": "Удалить выбранные дубликаты"
   },
   "Auswählen [SPACE]": {
     "de": "Auswählen [SPACE]",
-    "en": "Select [SPACE]"
+    "en": "Select [SPACE]",
+    "es": "Seleccionar [ESPACIO]",
+    "zh": "选择 [空格]",
+    "ja": "選択 [SPACE]",
+    "ru": "Выбрать [ПРОБЕЛ]"
   },
   "Auszug speichern": {
     "de": "Auszug speichern",
-    "en": "Save Excerpt"
+    "en": "Save Excerpt",
+    "es": "Guardar extracto",
+    "zh": "保存摘要",
+    "ja": "抜粋を保存",
+    "ru": "Сохранить выдержку"
   },
   "Benötigt: Tesseract-OCR installiert": {
     "de": "Benötigt: Tesseract-OCR installiert",
-    "en": "Requires: Tesseract-OCR installed"
+    "en": "Requires: Tesseract-OCR installed",
+    "es": "Requiere: Tesseract-OCR instalado",
+    "zh": "需要：已安装 Tesseract-OCR",
+    "ja": "必要条件: Tesseract-OCR がインストール済み",
+    "ru": "Требуется: установлен Tesseract-OCR"
   },
   "Bereinigung läuft...": {
     "de": "Bereinigung läuft...",
-    "en": "Cleanup running..."
+    "en": "Cleanup running...",
+    "es": "Limpieza en curso...",
+    "zh": "正在清理...",
+    "ja": "クリーンアップを実行中...",
+    "ru": "Выполняется очистка..."
   },
   "Bereinigungs-Optionen": {
     "de": "Bereinigungs-Optionen",
-    "en": "Cleanup Options"
+    "en": "Cleanup Options",
+    "es": "Opciones de limpieza",
+    "zh": "清理选项",
+    "ja": "クリーンアップオプション",
+    "ru": "Параметры очистки"
   },
   "DB wählen": {
     "de": "DB wählen",
-    "en": "Select DB"
+    "en": "Select DB",
+    "es": "Seleccionar BD",
+    "zh": "选择数据库",
+    "ja": "DB を選択",
+    "ru": "Выбрать БД"
   },
   "Datei auswählen & korrigieren": {
     "de": "Datei auswählen & korrigieren",
-    "en": "Select & Fix File"
+    "en": "Select & Fix File",
+    "es": "Seleccionar y corregir archivo",
+    "zh": "选择并修复文件",
+    "ja": "ファイルを選択して修正",
+    "ru": "Выбрать и исправить файл"
   },
   "Datei nicht gefunden": {
     "de": "Datei nicht gefunden",
-    "en": "File not found"
+    "en": "File not found",
+    "es": "Archivo no encontrado",
+    "zh": "未找到文件",
+    "ja": "ファイルが見つかりません",
+    "ru": "Файл не найден"
   },
   "Datei nicht gefunden.": {
     "de": "Datei nicht gefunden.",
-    "en": "File not found."
+    "en": "File not found.",
+    "es": "Archivo no encontrado.",
+    "zh": "未找到文件。",
+    "ja": "ファイルが見つかりません。",
+    "ru": "Файл не найден."
   },
   "Dateiliste exportieren": {
     "de": "Dateiliste exportieren",
-    "en": "Export File List"
+    "en": "Export File List",
+    "es": "Exportar lista de archivos",
+    "zh": "导出文件列表",
+    "ja": "ファイルリストをエクスポート",
+    "ru": "Экспортировать список файлов"
   },
   "Dateitypen:": {
     "de": "Dateitypen:",
-    "en": "File Types:"
+    "en": "File Types:",
+    "es": "Tipos de archivo:",
+    "zh": "文件类型：",
+    "ja": "ファイルタイプ:",
+    "ru": "Типы файлов:"
   },
   "Einrückungsfehler gefunden": {
     "de": "Einrückungsfehler gefunden",
-    "en": "Indentation Error Found"
+    "en": "Indentation Error Found",
+    "es": "Error de sangría detectado",
+    "zh": "发现缩进错误",
+    "ja": "インデントエラーが検出されました",
+    "ru": "Обнаружена ошибка отступа"
   },
   "Einstellungen": {
     "de": "Einstellungen",
-    "en": "Settings"
+    "en": "Settings",
+    "es": "Configuración",
+    "zh": "设置",
+    "ja": "設定",
+    "ru": "Настройки"
   },
   "Datei": {
     "de": "Datei",
-    "en": "File"
+    "en": "File",
+    "es": "Archivo",
+    "zh": "文件",
+    "ja": "ファイル",
+    "ru": "Файл"
   },
   "Tools": {
     "de": "Tools",
-    "en": "Tools"
+    "en": "Tools",
+    "es": "Herramientas",
+    "zh": "工具",
+    "ja": "ツール",
+    "ru": "Инструменты"
   },
   "Hilfe": {
     "de": "Hilfe",
-    "en": "Help"
+    "en": "Help",
+    "es": "Ayuda",
+    "zh": "帮助",
+    "ja": "ヘルプ",
+    "ru": "Справка"
   },
   "Anzeigen": {
     "de": "Anzeigen",
-    "en": "Show"
+    "en": "Show",
+    "es": "Mostrar",
+    "zh": "显示",
+    "ja": "表示",
+    "ru": "Показать"
   },
   "Beenden": {
     "de": "Beenden",
-    "en": "Quit"
+    "en": "Quit",
+    "es": "Salir",
+    "zh": "退出",
+    "ja": "終了",
+    "ru": "Выход"
   },
   "Browser-Favoriten importieren...": {
     "de": "Browser-Favoriten importieren...",
-    "en": "Import browser favorites..."
+    "en": "Import browser favorites...",
+    "es": "Importar favoritos del navegador...",
+    "zh": "导入浏览器收藏夹...",
+    "ja": "ブラウザのお気に入りをインポート...",
+    "ru": "Импортировать закладки браузера..."
   },
   "Datenschutzampel starten...": {
     "de": "Datenschutzampel starten...",
-    "en": "Start privacy light..."
+    "en": "Start privacy light...",
+    "es": "Iniciar semáforo de privacidad...",
+    "zh": "启动隐私红绿灯...",
+    "ja": "プライバシー信号機を起動...",
+    "ru": "Запустить светофор конфиденциальности..."
   },
   "Über": {
     "de": "Über",
-    "en": "About"
+    "en": "About",
+    "es": "Acerca de",
+    "zh": "关于",
+    "ja": "バージョン情報",
+    "ru": "О программе"
   },
   "Bereit": {
     "de": "Bereit",
-    "en": "Ready"
+    "en": "Ready",
+    "es": "Listo",
+    "zh": "就绪",
+    "ja": "準備完了",
+    "ru": "Готово"
   },
   "Läuft im Hintergrund. Doppelklick zum öffnen.": {
     "de": "Läuft im Hintergrund. Doppelklick zum Öffnen.",
-    "en": "Running in the background. Double-click to open."
+    "en": "Running in the background. Double-click to open.",
+    "es": "Ejecutándose en segundo plano. Doble clic para abrir.",
+    "zh": "正在后台运行。双击以打开。",
+    "ja": "バックグラウンドで実行中。ダブルクリックして開きます。",
+    "ru": "Работает в фоновом режиме. Двойной клик для открытия."
   },
   "Suche & Explorer": {
     "de": "Suche & Explorer",
-    "en": "Search & Explorer"
+    "en": "Search & Explorer",
+    "es": "Búsqueda y explorador",
+    "zh": "搜索与资源管理器",
+    "ja": "検索＆エクスプローラー",
+    "ru": "Поиск и проводник"
   },
   "Verbindungen & Themen": {
     "de": "Verbindungen & Themen",
-    "en": "Connections & Topics"
+    "en": "Connections & Topics",
+    "es": "Conexiones y temas",
+    "zh": "连接与主题",
+    "ja": "接続とトピック",
+    "ru": "Связи и темы"
   },
   "Auto-Sync": {
     "de": "Auto-Sync",
-    "en": "Auto-Sync"
+    "en": "Auto-Sync",
+    "es": "Sincronización automática",
+    "zh": "自动同步",
+    "ja": "自動同期",
+    "ru": "Автосинхронизация"
   },
   "🌐 Browser-Favoriten importieren...": {
     "de": "🌐 Browser-Favoriten importieren...",
-    "en": "🌐 Import browser favorites..."
+    "en": "🌐 Import browser favorites...",
+    "es": "🌐 Importar favoritos del navegador...",
+    "zh": "🌐 导入浏览器收藏夹...",
+    "ja": "🌐 ブラウザのお気に入りをインポート...",
+    "ru": "🌐 Импортировать закладки браузера..."
   },
   "🚦 Datenschutzampel starten...": {
     "de": "🚦 Datenschutzampel starten...",
-    "en": "🚦 Start privacy light..."
+    "en": "🚦 Start privacy light...",
+    "es": "🚦 Iniciar semáforo de privacidad...",
+    "zh": "🚦 启动隐私红绿灯...",
+    "ja": "🚦 プライバシー信号機を起動...",
+    "ru": "🚦 Запустить светофор конфиденциальности..."
   },
   "FormConstructor öffnen...": {
     "de": "FormConstructor öffnen...",
-    "en": "Open FormConstructor..."
+    "en": "Open FormConstructor...",
+    "es": "Abrir FormConstructor...",
+    "zh": "打开 FormConstructor...",
+    "ja": "FormConstructor を開く...",
+    "ru": "Открыть FormConstructor..."
   },
   "❌ Beenden": {
     "de": "❌ Beenden",
-    "en": "❌ Quit"
+    "en": "❌ Quit",
+    "es": "❌ Salir",
+    "zh": "❌ 退出",
+    "ja": "❌ 終了",
+    "ru": "❌ Выход"
   },
   "Erstellen Sie eine neue Prompt-Datei mit Versionsverwaltung:": {
     "de": "Erstellen Sie eine neue Prompt-Datei mit Versionsverwaltung:",
-    "en": "Create a new prompt file with version control:"
+    "en": "Create a new prompt file with version control:",
+    "es": "Cree un nuevo archivo de instrucciones con control de versiones:",
+    "zh": "创建带有版本控制的新提示词文件：",
+    "ja": "バージョン管理付きの新しいプロンプトファイルを作成:",
+    "ru": "Создать новый файл промптов с контролем версий:"
   },
   "Exportieren...": {
     "de": "Exportieren...",
-    "en": "Export..."
+    "en": "Export...",
+    "es": "Exportar...",
+    "zh": "导出...",
+    "ja": "エクスポート...",
+    "ru": "Экспорт..."
   },
   "Fehlende Abhängigkeiten": {
     "de": "Fehlende Abhängigkeiten",
-    "en": "Missing Dependencies"
+    "en": "Missing Dependencies",
+    "es": "Dependencias faltantes",
+    "zh": "缺少依赖项",
+    "ja": "不足している依存関係",
+    "ru": "Отсутствующие зависимости"
   },
   "Fehler bei Vorschau": {
     "de": "Fehler bei Vorschau",
-    "en": "Preview Error"
+    "en": "Preview Error",
+    "es": "Error de vista previa",
+    "zh": "预览错误",
+    "ja": "プレビューエラー",
+    "ru": "Ошибка предварительного просмотра"
   },
   "Filter": {
     "de": "Filter",
-    "en": "Filter"
+    "en": "Filter",
+    "es": "Filtro",
+    "zh": "筛选",
+    "ja": "フィルター",
+    "ru": "Фильтр"
   },
   "Filter Typ:": {
     "de": "Filter Typ:",
-    "en": "Filter Type:"
+    "en": "Filter Type:",
+    "es": "Tipo de filtro:",
+    "zh": "筛选类型：",
+    "ja": "フィルタータイプ:",
+    "ru": "Тип фильтра:"
   },
   "Global-DB wählen": {
     "de": "Global-DB wählen",
-    "en": "Select Global DB"
+    "en": "Select Global DB",
+    "es": "Seleccionar BD global",
+    "zh": "选择全局数据库",
+    "ja": "グローバル DB を選択",
+    "ru": "Выбрать глобальную БД"
   },
   "Hinzufügen": {
     "de": "Hinzufügen",
-    "en": "Add"
+    "en": "Add",
+    "es": "Añadir",
+    "zh": "添加",
+    "ja": "追加",
+    "ru": "Добавить"
   },
   "Import luft...": {
     "de": "Import luft...",
-    "en": "Import running..."
+    "en": "Import running...",
+    "es": "Importación en curso...",
+    "zh": "正在导入...",
+    "ja": "インポートを実行中...",
+    "ru": "Выполняется импорт..."
   },
   "Import läuft...": {
     "de": "Import läuft...",
-    "en": "Import running..."
+    "en": "Import running...",
+    "es": "Importación en curso...",
+    "zh": "正在导入...",
+    "ja": "インポートを実行中...",
+    "ru": "Выполняется импорт..."
   },
   "Importieren...": {
     "de": "Importieren...",
-    "en": "Import..."
+    "en": "Import...",
+    "es": "Importar...",
+    "zh": "导入...",
+    "ja": "インポート...",
+    "ru": "Импорт..."
   },
   "Lösch-Vorschau": {
     "de": "Lösch-Vorschau",
-    "en": "Delete Preview"
+    "en": "Delete Preview",
+    "es": "Vista previa de eliminación",
+    "zh": "删除预览",
+    "ja": "削除プレビュー",
+    "ru": "Предварительный просмотр удаления"
   },
   "Masterpasswrter für schnelle Batch-Operationen": {
     "de": "Masterpasswrter für schnelle Batch-Operationen",
-    "en": "Master Passwords for Quick Batch Operations"
+    "en": "Master Passwords for Quick Batch Operations",
+    "es": "Contraseñas maestras para operaciones por lotes rápidas",
+    "zh": "用于快速批处理操作的主密码",
+    "ja": "高速バッチ操作用のマスターパスワード",
+    "ru": "Мастер-пароли для быстрых пакетных операций"
   },
   "Masterpasswörter für schnelle Batch-Operationen": {
     "de": "Masterpasswörter für schnelle Batch-Operationen",
-    "en": "Master Passwords for Quick Batch Operations"
+    "en": "Master Passwords for Quick Batch Operations",
+    "es": "Contraseñas maestras para operaciones por lotes rápidas",
+    "zh": "用于快速批处理操作的主密码",
+    "ja": "高速バッチ操作用のマスターパスワード",
+    "ru": "Мастер-пароли для быстрых пакетных операций"
   },
   "Neue Version wird in derselben Datei gespeichert:": {
     "de": "Neue Version wird in derselben Datei gespeichert:",
-    "en": "New version will be saved in the same file:"
+    "en": "New version will be saved in the same file:",
+    "es": "La nueva versión se guardará en el mismo archivo:",
+    "zh": "新版本将保存在同一文件中：",
+    "ja": "新しいバージョンは同じファイルに保存されます:",
+    "ru": "Новая версия будет сохранена в том же файле:"
   },
   "Nächste ▶": {
     "de": "Nächste ▶",
-    "en": "Next ▶"
+    "en": "Next ▶",
+    "es": "Siguiente ▶",
+    "zh": "下一个 ▶",
+    "ja": "次へ ▶",
+    "ru": "Следующий ▶"
   },
   "Optionen:": {
     "de": "Optionen:",
-    "en": "Options:"
+    "en": "Options:",
+    "es": "Opciones:",
+    "zh": "选项：",
+    "ja": "オプション:",
+    "ru": "Параметры:"
   },
   "Ordner auswählen & prüfen": {
     "de": "Ordner auswählen & prüfen",
-    "en": "Select & Check Folder"
+    "en": "Select & Check Folder",
+    "es": "Seleccionar y comprobar carpeta",
+    "zh": "选择并检查文件夹",
+    "ja": "フォルダを選択してチェック",
+    "ru": "Выбрать и проверить папку"
   },
   "PDF-Schwärzung": {
     "de": "PDF-Schwärzung",
-    "en": "PDF Redaction"
+    "en": "PDF Redaction",
+    "es": "Redacción de PDF",
+    "zh": "PDF 涂黑遮盖",
+    "ja": "PDF 墨消し",
+    "ru": "Скрытие данных в PDF"
   },
   "Permanent Löschen": {
     "de": "Permanent Löschen",
-    "en": "Permanently Delete"
+    "en": "Permanently Delete",
+    "es": "Eliminar permanentemente",
+    "zh": "永久删除",
+    "ja": "完全に削除",
+    "ru": "Удалить навсегда"
   },
   "Python-Entwicklungsumgebung oeffnen": {
     "de": "Python-Entwicklungsumgebung öffnen",
-    "en": "Open Python Development Environment"
+    "en": "Open Python Development Environment",
+    "es": "Abrir entorno de desarrollo Python",
+    "zh": "打开 Python 开发环境",
+    "ja": "Python 開発環境を開く",
+    "ru": "Открыть среду разработки Python"
   },
   "Python-Entwicklungsumgebung öffnen": {
     "de": "Python-Entwicklungsumgebung öffnen",
-    "en": "Open Python Development Environment"
+    "en": "Open Python Development Environment",
+    "es": "Abrir entorno de desarrollo Python",
+    "zh": "打开 Python 开发环境",
+    "ja": "Python 開発環境を開く",
+    "ru": "Открыть среду разработки Python"
   },
   "Quelle wählen": {
     "de": "Quelle wählen",
-    "en": "Select Source"
+    "en": "Select Source",
+    "es": "Seleccionar origen",
+    "zh": "选择源",
+    "ja": "ソースを選択",
+    "ru": "Выбрать источник"
   },
   "Schließen": {
     "de": "Schließen",
-    "en": "Close"
+    "en": "Close",
+    "es": "Cerrar",
+    "zh": "关闭",
+    "ja": "閉じる",
+    "ru": "Закрыть"
   },
   "Speichern": {
     "de": "Speichern",
-    "en": "Save"
+    "en": "Save",
+    "es": "Guardar",
+    "zh": "保存",
+    "ja": "保存",
+    "ru": "Сохранить"
   },
   "Start": {
     "de": "Start",
-    "en": "Start"
+    "en": "Start",
+    "es": "Inicio",
+    "zh": "开始",
+    "ja": "開始",
+    "ru": "Пуск"
   },
   "Start Sync": {
     "de": "Start Sync",
-    "en": "Start Sync"
+    "en": "Start Sync",
+    "es": "Iniciar sincronización",
+    "zh": "开始同步",
+    "ja": "同期を開始",
+    "ru": "Начать синхронизацию"
   },
   "Status: Grün - Alles sicher": {
     "de": "Status: Grün - Alles sicher",
-    "en": "Status: Green - All Safe"
+    "en": "Status: Green - All Safe",
+    "es": "Estado: Verde - Todo seguro",
+    "zh": "状态：绿色 - 一切安全",
+    "ja": "ステータス: 緑 - すべて安全",
+    "ru": "Статус: Зелёный - Всё безопасно"
   },
   "Strategie beim Löschen:": {
     "de": "Strategie beim Löschen:",
-    "en": "Deletion Strategy:"
+    "en": "Deletion Strategy:",
+    "es": "Estrategia de eliminación:",
+    "zh": "删除策略：",
+    "ja": "削除方法:",
+    "ru": "Стратегия удаления:"
   },
   "Suche läuft...": {
     "de": "Suche läuft...",
-    "en": "Searching..."
+    "en": "Searching...",
+    "es": "Buscando...",
+    "zh": "正在搜索...",
+    "ja": "検索中...",
+    "ru": "Выполняется поиск..."
   },
   "Synchronisation läuft…": {
     "de": "Synchronisation läuft…",
-    "en": "Synchronization running…"
+    "en": "Synchronization running…",
+    "es": "Sincronización en curso…",
+    "zh": "正在同步…",
+    "ja": "同期を実行中…",
+    "ru": "Выполняется синхронизация…"
   },
   "Synchronisiert: 0 | Fehler: 0": {
     "de": "Synchronisiert: 0 | Fehler: 0",
-    "en": "Synchronized: 0 | Errors: 0"
+    "en": "Synchronized: 0 | Errors: 0",
+    "es": "Sincronizados: 0 | Errores: 0",
+    "zh": "已同步：0 | 错误：0",
+    "ja": "同期完了: 0 | エラー: 0",
+    "ru": "Синхронизировано: 0 | Ошибок: 0"
   },
   "Wähle eine .py-Datei mit Encoding-Problemen aus:": {
     "de": "Wähle eine .py-Datei mit Encoding-Problemen aus:",
-    "en": "Select a .py file with encoding issues:"
+    "en": "Select a .py file with encoding issues:",
+    "es": "Seleccione un archivo .py con problemas de codificación:",
+    "zh": "选择有编码问题的 .py 文件：",
+    "ja": "エンコードに問題がある .py ファイルを選択:",
+    "ru": "Выберите файл .py с проблемами кодировки:"
   },
   "Wähle einen Ordner mit .py-Dateien zur Prüfung:": {
     "de": "Wähle einen Ordner mit .py-Dateien zur Prüfung:",
-    "en": "Select a folder with .py files to check:"
+    "en": "Select a folder with .py files to check:",
+    "es": "Seleccione una carpeta con archivos .py para comprobar:",
+    "zh": "选择包含要检查的 .py 文件的文件夹：",
+    "ja": "チェックする .py ファイルがあるフォルダを選択:",
+    "ru": "Выберите папку с файлами .py для проверки:"
   },
   "Ziel wählen": {
     "de": "Ziel wählen",
-    "en": "Select Target"
+    "en": "Select Target",
+    "es": "Seleccionar destino",
+    "zh": "选择目标",
+    "ja": "ターゲットを選択",
+    "ru": "Выбрать назначение"
   },
   "[Bilddatei - Vorschau nicht verfügbar]": {
     "de": "[Bilddatei - Vorschau nicht verfügbar]",
-    "en": "[Image file - Preview not available]"
+    "en": "[Image file - Preview not available]",
+    "es": "[Archivo de imagen - Vista previa no disponible]",
+    "zh": "[图像文件 - 预览不可用]",
+    "ja": "[画像ファイル - プレビューは利用できません]",
+    "ru": "[Файл изображения - предпросмотр недоступен]"
   },
   "[Bilddatei - Vorschau wird in Textbox nicht angezeigt]": {
     "de": "[Bilddatei - Vorschau wird in Textbox nicht angezeigt]",
-    "en": "[Image file - Preview not displayed in text box]"
+    "en": "[Image file - Preview not displayed in text box]",
+    "es": "[Archivo de imagen - La vista previa no se muestra en el cuadro de texto]",
+    "zh": "[图像文件 - 文本框中未显示预览]",
+    "ja": "[画像ファイル - テキストボックスにプレビューが表示されません]",
+    "ru": "[Файл изображения - предпросмотр не отображается в текстовом поле]"
   },
   "[Datei ist leer oder Inhalt nicht lesbar]": {
     "de": "[Datei ist leer oder Inhalt nicht lesbar]",
-    "en": "[File is empty or content not readable]"
+    "en": "[File is empty or content not readable]",
+    "es": "[El archivo está vacío o el contenido no es legible]",
+    "zh": "[文件为空或内容不可读]",
+    "ja": "[ファイルが空であるか、内容が読み取れません]",
+    "ru": "[Файл пуст или содержимое не читается]"
   },
   "oeffnen": {
     "de": "öffnen",
-    "en": "Open"
+    "en": "Open",
+    "es": "Abrir",
+    "zh": "打开",
+    "ja": "開く",
+    "ru": "Открыть"
   },
   "ðŸ'¾ Auszug speichern": {
-    "de": "ðŸ'¾ Auszug speichern",
-    "en": "ðŸ'¾ Save Excerpt"
+    "de": "💾 Auszug speichern",
+    "en": "💾 Save Excerpt",
+    "es": "💾 Guardar extracto",
+    "zh": "💾 保存摘要",
+    "ja": "💾 抜粋を保存",
+    "ru": "💾 Сохранить выдержку"
   },
   "öffnen": {
     "de": "öffnen",
-    "en": "Open"
+    "en": "Open",
+    "es": "Abrir",
+    "zh": "打开",
+    "ja": "開く",
+    "ru": "Открыть"
   },
   "▶ Starten": {
     "de": "▶ Starten",
-    "en": "▶ Start"
+    "en": "▶ Start",
+    "es": "▶ Iniciar",
+    "zh": "▶ 启动",
+    "ja": "▶ 開始",
+    "ru": "▶ Запустить"
   },
   "▶ Sync Starten": {
     "de": "▶ Sync Starten",
-    "en": "▶ Start Sync"
+    "en": "▶ Start Sync",
+    "es": "▶ Iniciar sincronización",
+    "zh": "▶ 开始同步",
+    "ja": "▶ 同期を開始",
+    "ru": "▶ Начать синхронизацию"
   },
   "▶️ Starten": {
     "de": "▶️ Starten",
-    "en": "▶️ Start"
+    "en": "▶️ Start",
+    "es": "▶️ Iniciar",
+    "zh": "▶️ 启动",
+    "ja": "▶️ 開始",
+    "ru": "▶️ Запустить"
   },
   "⚙️ Einstellungen": {
     "de": "⚙️ Einstellungen",
-    "en": "⚙️ Settings"
+    "en": "⚙️ Settings",
+    "es": "⚙️ Configuración",
+    "zh": "⚙️ 设置",
+    "ja": "⚙️ 設定",
+    "ru": "⚙️ Настройки"
   },
   "✅ Watchdog verfügbar - Bereit": {
     "de": "✅ Watchdog verfügbar - Bereit",
-    "en": "✅ Watchdog available - Ready"
+    "en": "✅ Watchdog available - Ready",
+    "es": "✅ Watchdog disponible - Listo",
+    "zh": "✅ Watchdog 可用 - 就绪",
+    "ja": "✅ Watchdog 利用可能 - 準備完了",
+    "ru": "✅ Watchdog доступен - Готово"
   },
   "✓ Auswählen [SPACE]": {
     "de": "✓ Auswählen [SPACE]",
-    "en": "✓ Select [SPACE]"
+    "en": "✓ Select [SPACE]",
+    "es": "✓ Seleccionar [ESPACIO]",
+    "zh": "✓ 选择 [空格]",
+    "ja": "✓ 選択 [SPACE]",
+    "ru": "✓ Выбрать [ПРОБЕЛ]"
   },
   "✗ Abwählen [SPACE]": {
     "de": "✗ Abwählen [SPACE]",
-    "en": "✗ Deselect [SPACE]"
+    "en": "✗ Deselect [SPACE]",
+    "es": "✗ Deseleccionar [ESPACIO]",
+    "zh": "✗ 取消选择 [空格]",
+    "ja": "✗ 選択解除 [SPACE]",
+    "ru": "✗ Снять выбор [ПРОБЕЛ]"
   },
   "❌ Abbrechen": {
     "de": "❌ Abbrechen",
-    "en": "❌ Cancel"
+    "en": "❌ Cancel",
+    "es": "❌ Cancelar",
+    "zh": "❌ 取消",
+    "ja": "❌ キャンセル",
+    "ru": "❌ Отмена"
   },
   "❌ Datei nicht gefunden.\\n\\nDie Datei existiert nicht mehr am angegebenen Pfad.": {
     "de": "❌ Datei nicht gefunden.\\n\\nDie Datei existiert nicht mehr am angegebenen Pfad.",
-    "en": "❌ File not found.\\n\\nThe file no longer exists at the specified path."
+    "en": "❌ File not found.\\n\\nThe file no longer exists at the specified path.",
+    "es": "❌ Archivo no encontrado.\\n\\nEl archivo ya no existe en la ruta especificada.",
+    "zh": "❌ 未找到文件。\\n\\n该文件在指定路径下已不存在。",
+    "ja": "❌ ファイルが見つかりません。\\n\\n指定されたパスにファイルが存在しません。",
+    "ru": "❌ Файл не найден.\\n\\nФайл больше не существует по указанному пути."
   },
   "➕ Hinzufügen": {
     "de": "➕ Hinzufügen",
-    "en": "➕ Add"
+    "en": "➕ Add",
+    "es": "➕ Añadir",
+    "zh": "➕ 添加",
+    "ja": "➕ 追加",
+    "ru": "➕ Добавить"
   },
   "💾 Auszug speichern": {
     "de": "💾 Auszug speichern",
-    "en": "💾 Save Excerpt"
+    "en": "💾 Save Excerpt",
+    "es": "💾 Guardar extracto",
+    "zh": "💾 保存摘要",
+    "ja": "💾 抜粋を保存",
+    "ru": "💾 Сохранить выдержку"
   },
   "💾 Exportieren...": {
     "de": "💾 Exportieren...",
-    "en": "💾 Export..."
+    "en": "💾 Export...",
+    "es": "💾 Exportar...",
+    "zh": "💾 导出...",
+    "ja": "💾 エクスポート...",
+    "ru": "💾 Экспорт..."
   },
   "💾 Listen speichern": {
     "de": "💾 Listen speichern",
-    "en": "💾 Save Lists"
+    "en": "💾 Save Lists",
+    "es": "💾 Guardar listas",
+    "zh": "💾 保存列表",
+    "ja": "💾 リストを保存",
+    "ru": "💾 Сохранить списки"
   },
   "💾 Speichern": {
     "de": "💾 Speichern",
-    "en": "💾 Save"
+    "en": "💾 Save",
+    "es": "💾 Guardar",
+    "zh": "💾 保存",
+    "ja": "💾 保存",
+    "ru": "💾 Сохранить"
   },
   "📁 Dateitype:": {
     "de": "📁 Dateitype:",
-    "en": "📁 File Type:"
+    "en": "📁 File Type:",
+    "es": "📁 Tipo de archivo:",
+    "zh": "📁 文件类型：",
+    "ja": "📁 ファイルタイプ:",
+    "ru": "📁 Тип файла:"
   },
   "📂 Importieren...": {
     "de": "📂 Importieren...",
-    "en": "📂 Import..."
+    "en": "📂 Import...",
+    "es": "📂 Importar...",
+    "zh": "📂 导入...",
+    "ja": "📂 インポート...",
+    "ru": "📂 Импорт..."
   },
   "📂 Öffnen": {
     "de": "📂 Öffnen",
-    "en": "📂 Open"
+    "en": "📂 Open",
+    "es": "📂 Abrir",
+    "zh": "📂 打开",
+    "ja": "📂 開く",
+    "ru": "📂 Открыть"
   },
   "📄 Dateiliste exportieren": {
     "de": "📄 Dateiliste exportieren",
-    "en": "📄 Export File List"
+    "en": "📄 Export File List",
+    "es": "📄 Exportar lista de archivos",
+    "zh": "📄 导出文件列表",
+    "ja": "📄 ファイルリストをエクスポート",
+    "ru": "📄 Экспортировать список файлов"
   },
   "📋 Letzte Zwischenablage-Einträge:": {
     "de": "📋 Letzte Zwischenablage-Einträge:",
-    "en": "📋 Recent Clipboard Entries:"
+    "en": "📋 Recent Clipboard Entries:",
+    "es": "📋 Entradas recientes del portapapeles:",
+    "zh": "📋 最近的剪贴板条目：",
+    "ja": "📋 最近のクリップボード項目:",
+    "ru": "📋 Недавние записи буфера обмена:"
   },
   "🔄 Aktualisieren": {
     "de": "🔄 Aktualisieren",
-    "en": "🔄 Refresh"
+    "en": "🔄 Refresh",
+    "es": "🔄 Actualizar",
+    "zh": "🔄 刷新",
+    "ja": "🔄 更新",
+    "ru": "🔄 Обновить"
   },
   "🔍 Filter": {
     "de": "🔍 Filter",
-    "en": "🔍 Filter"
+    "en": "🔍 Filter",
+    "es": "🔍 Filtro",
+    "zh": "🔍 筛选",
+    "ja": "🔍 フィルター",
+    "ru": "🔍 Фильтр"
   },
   "🔗 Zusammenführen": {
     "de": "🔗 Zusammenführen",
-    "en": "🔗 Merge"
+    "en": "🔗 Merge",
+    "es": "🔗 Combinar",
+    "zh": "🔗 合并",
+    "ja": "🔗 結合",
+    "ru": "🔗 Объединить"
   },
   "🗑️ Ausgewählte entfernen": {
     "de": "🗑️ Ausgewählte entfernen",
-    "en": "🗑️ Remove Selected"
+    "en": "🗑️ Remove Selected",
+    "es": "🗑️ Eliminar seleccionados",
+    "zh": "🗑️ 移除选中的项目",
+    "ja": "🗑️ 選択した項目を削除",
+    "ru": "🗑️ Удалить выбранные"
   },
   "🗑️ Verlauf löschen": {
     "de": "🗑️ Verlauf löschen",
-    "en": "🗑️ Clear History"
+    "en": "🗑️ Clear History",
+    "es": "🗑️ Borrar historial",
+    "zh": "🗑️ 清除历史记录",
+    "ja": "🗑️ 履歴を消去",
+    "ru": "🗑️ Очистить историю"
   },
   "🟢 Auf Grün setzen": {
     "de": "🟢 Auf Grün setzen",
-    "en": "🟢 Set to Green"
+    "en": "🟢 Set to Green",
+    "es": "🟢 Establecer en verde",
+    "zh": "🟢 设置为绿色",
+    "ja": "🟢 緑に設定",
+    "ru": "🟢 Установить на зелёный"
   },
   "Läuft im Hintergrund. Doppelklick zum Öffnen.": {
     "de": "Läuft im Hintergrund. Doppelklick zum Öffnen.",
-    "en": "Running in the background. Double-click to open."
+    "en": "Running in the background. Double-click to open.",
+    "es": "Ejecutándose en segundo plano. Doble clic para abrir.",
+    "zh": "正在后台运行。双击以打开。",
+    "ja": "バックグラウンドで実行中。ダブルクリックして開きます。",
+    "ru": "Работает в фоновом режиме. Двойной клик для открытия."
   }
 }

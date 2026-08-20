@@ -109,6 +109,12 @@ try:
 except ImportError:
     _MODULE_REGISTRY_AVAILABLE = False
 
+try:
+    from translator import TranslationSystem
+    HAS_TRANSLATOR = True
+except ImportError:
+    HAS_TRANSLATOR = False
+
 # ============================================================================
 # ENCODING SETUP
 # ============================================================================
@@ -2912,7 +2918,7 @@ class PDFExcerptDialog(QDialog):
 # ============================================================================
 
 class SettingsDialog(QDialog):
-    """Erweiterte Einstellungen mit PDF-Bereich"""
+    """Erweiterte Einstellungen mit PDF- und Sprach-Bereich"""
     
     def __init__(self, settings_manager, parent=None):
         super().__init__(parent)
@@ -2926,15 +2932,19 @@ class SettingsDialog(QDialog):
         # Tab Widget
         tabs = QTabWidget()
         
-        # Tab 1: Lösch-Verhalten
+        # Tab 1: Allgemein & Sprache
+        general_tab = self.create_general_tab()
+        tabs.addTab(general_tab, "Allgemein")
+        
+        # Tab 2: Lösch-Verhalten
         delete_tab = self.create_delete_tab()
         tabs.addTab(delete_tab, "Löschen")
         
-        # Tab 2: PDF-Einstellungen (NEU!)
+        # Tab 3: PDF-Einstellungen (NEU!)
         pdf_tab = self.create_pdf_tab()
         tabs.addTab(pdf_tab, " PDF")
         
-        # Tab 3: Externe Tools (NEU V13!)
+        # Tab 4: Externe Tools (NEU V13!)
         tools_tab = self.create_tools_tab()
         tabs.addTab(tools_tab, " Externe Tools")
         
@@ -2947,6 +2957,49 @@ class SettingsDialog(QDialog):
         buttons.accepted.connect(self.save_and_close)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
+
+    def create_general_tab(self):
+        """Tab für allgemeine Einstellungen (Sprache, etc.)"""
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+
+        # Spracheinstellungen (Tier-2 Multi-Language)
+        lang_group = QGroupBox("Sprache / Language")
+        lang_layout = QFormLayout()
+
+        self.combo_ui_lang = QComboBox()
+        if HAS_TRANSLATOR:
+            languages = list(TranslationSystem.LANGUAGE_DISPLAY_NAMES.items())
+        else:
+            languages = [
+                ("de", "Deutsch (de)"),
+                ("en", "English (en)"),
+                ("es", "Español (es)"),
+                ("zh", "简体中文 (zh)"),
+                ("ja", "日本語 (ja)"),
+                ("ru", "Русский (ru)"),
+            ]
+        for code, label in languages:
+            self.combo_ui_lang.addItem(label, code)
+
+        current_lang = self.settings.get("ui_language", self.settings.get("language", "de"))
+        for i in range(self.combo_ui_lang.count()):
+            if self.combo_ui_lang.itemData(i) == current_lang:
+                self.combo_ui_lang.setCurrentIndex(i)
+                break
+
+        lang_layout.addRow("Oberflächensprache:", self.combo_ui_lang)
+
+        info_label = QLabel("Änderungen der Oberflächensprache werden nach dem Speichern wirksam.")
+        info_label.setStyleSheet("color: #888; font-size: 11px; padding-top: 4px;")
+        info_label.setWordWrap(True)
+        lang_layout.addRow(info_label)
+
+        lang_group.setLayout(lang_layout)
+        layout.addWidget(lang_group)
+
+        layout.addStretch()
+        return widget
     
     def create_delete_tab(self):
         """Tab für Lösch-Einstellungen"""
@@ -3271,6 +3324,11 @@ class SettingsDialog(QDialog):
 
     def save_and_close(self):
         """Speichert Einstellungen"""
+        # Language settings (NEU Multi-Language Tier-2)
+        selected_lang = self.combo_ui_lang.currentData() or "de"
+        self.settings.set("ui_language", selected_lang)
+        self.settings.set("language", selected_lang)
+        
         # Delete settings
         if self.radio_soft.isChecked():
             delete_mode = "soft"

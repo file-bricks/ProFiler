@@ -82,16 +82,78 @@ def test_legacy_translation_manager_uses_the_full_language_schema(tmp_path):
     assert set(translations["Öffnen"]) == set(TranslationSystem.get_supported_languages())
 
 
-def test_repository_translation_entries_keep_de_and_en_integrity():
+def test_repository_translation_entries_have_full_six_language_parity():
     translations_path = TranslationSystem().translations_file
     translations = json.loads(translations_path.read_text(encoding="utf-8"))
 
     assert translations
-    assert all(
-        isinstance(entry, dict)
-        and isinstance(entry.get("de"), str)
-        and entry["de"]
-        and isinstance(entry.get("en"), str)
-        and entry["en"]
-        for entry in translations.values()
-    )
+    assert len(translations) >= 100
+    languages = TranslationSystem.get_supported_languages()
+    for key, entry in translations.items():
+        assert isinstance(entry, dict), f"Key '{key}' is not a dict"
+        for lang in languages:
+            val = entry.get(lang)
+            assert isinstance(val, str) and val.strip(), (
+                f"Key '{key}' is missing valid translation for language '{lang}'"
+            )
+
+
+def test_repository_missing_translations_is_empty_for_all_supported_languages():
+    translator = TranslationSystem()
+    for lang in TranslationSystem.get_supported_languages():
+        missing = translator.get_missing_translations(lang)
+        assert missing == [], f"Found missing translations for '{lang}': {missing}"
+
+
+def test_language_names_and_display_mappings_cover_all_supported():
+    names = TranslationSystem.get_language_names()
+    display = TranslationSystem.get_language_display_names()
+    supported = TranslationSystem.get_supported_languages()
+
+    assert list(names.keys()) == supported
+    assert list(display.keys()) == supported
+    assert names["de"] == "Deutsch"
+    assert names["en"] == "English"
+    assert names["es"] == "Español"
+    assert names["zh"] == "简体中文"
+    assert names["ja"] == "日本語"
+    assert names["ru"] == "Русский"
+
+
+def test_store_manifests_include_all_supported_tier2_languages():
+    root = TranslationSystem().app_dir
+    pkg_file = root / "store_package.json"
+    manifest_file = root / "store_package" / "ProFiler" / "AppxManifest.xml"
+
+    pkg = json.loads(pkg_file.read_text(encoding="utf-8"))
+    expected_store_codes = ["de-DE", "en-US", "es-ES", "zh-CN", "ja-JP", "ru-RU"]
+    for code in expected_store_codes:
+        assert code in pkg["languages"], f"Store package missing language code: {code}"
+
+    manifest_text = manifest_file.read_text(encoding="utf-8").lower()
+    expected_xml_codes = ["de-de", "en-us", "es-es", "zh-cn", "ja-jp", "ru-ru"]
+    for code in expected_xml_codes:
+        assert f'language="{code}"' in manifest_text, f"AppxManifest missing resource language: {code}"
+
+
+def test_t_translates_sample_keys_in_all_six_languages():
+    translator = TranslationSystem()
+    key = "Ausgewählte Duplikate löschen"
+
+    translator.set_language("de")
+    assert translator.t(key) == "Ausgewählte Duplikate löschen"
+
+    translator.set_language("en")
+    assert translator.t(key) == "Delete Selected Duplicates"
+
+    translator.set_language("es")
+    assert translator.t(key) == "Eliminar duplicados seleccionados"
+
+    translator.set_language("zh")
+    assert translator.t(key) == "删除选中的重复项"
+
+    translator.set_language("ja")
+    assert translator.t(key) == "選択した重複項目を削除"
+
+    translator.set_language("ru")
+    assert translator.t(key) == "Удалить выбранные дубликаты"
