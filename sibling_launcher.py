@@ -128,8 +128,13 @@ def launch_tool_process(tool_path) -> None:
     suffix = tool_path.suffix.lower()
     if suffix == ".py":
         subprocess.Popen([sys.executable, str(tool_path)], cwd=str(tool_path.parent))
-    elif suffix == ".bat":
-        subprocess.Popen(["cmd", "/c", str(tool_path)], cwd=str(tool_path.parent))
+    elif suffix in (".bat", ".cmd"):
+        if sys.platform != "win32":
+            subprocess.Popen(["sh", str(tool_path)], cwd=str(tool_path.parent))
+        else:
+            subprocess.Popen(["cmd", "/c", str(tool_path)], cwd=str(tool_path.parent))
+    elif suffix in (".sh", ".command"):
+        subprocess.Popen(["sh", str(tool_path)], cwd=str(tool_path.parent))
     else:
         subprocess.Popen([str(tool_path)], cwd=str(tool_path.parent))
 

@@ -5,6 +5,12 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Hinzugefügt / Added (2026-08-21)
+- **Cross-Platform macOS & Linux Platform Smokes:** Dedizierte Plattform-Smoke-Testsuiten (`tests/macos_platform_smoke.py` und `tests/linux_platform_smoke.py`) mit je 8 reproduzierbaren Plattform-Checks implementiert (POSIX/XDG App-Pfade, Legacy-Fallback, Offscreen PySide6 UnifiedMainWindow, plattform-spezifische Dateimanager-Öffner via `open`/`open -R` und `xdg-open`, Sibling-Launcher-Skriptaufrufe, BOM-freier Workspace-Export ohne Secrets, SQLite Unicode-Roundtrip, Graceful OCR-Fallback, Tier-2 I18N).
+- **Sibling-Launcher POSIX-Unterstützung:** `sibling_launcher.py` um Unterstützung für `.sh` und `.command` Shellskripte sowie POSIX-Subprozess-Starts erweitert.
+- **Plattform-Smoke CI Workflow:** `.github/workflows/source-platform-smoke.yml` für `ubuntu-latest` und `macos-latest` um Ausführung der dedizierten Plattform-Smokes und der gesamten Testsuite erweitert.
+- **Plattform-Smoke Contract Tests:** `tests/test_platform_smoke_contract.py` integriert; Pytest Testsuite auf 141 Tests (100% grün) ausgebaut.
+
 ### Hinzugefügt / Added (2026-08-20)
 - **Tier-2 Multi-Language Expansion (I18N):** Vollständige mehrsprachige Lokalisierung (`locales/translations.json`) mit 109 übersetzten UI-Strings über alle 6 Zielsprachen (Deutsch `de`, English `en`, Español `es`, 简体中文 `zh`, 日本語 `ja`, Русский `ru`) mit 100% Abdeckung (0 fehlende Übersetzungen).
 - **Settings UI Language Selector:** `SettingsDialog` in `Profiler_Suite_V15.py` um neuen Tab „Allgemein“ mit nativer Oberflächensprachauswahl (`de`, `en`, `es`, `zh`, `ja`, `ru`) und persistenter Konfigurationsspeicherung erweitert.

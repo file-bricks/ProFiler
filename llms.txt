@@ -30,7 +30,9 @@ ProFiler Suite is a local-first desktop file manager for private document collec
 - `workspace_exchange.py` — redacted workspace export/import
 - `requirements.txt` — Python dependencies
 - `source_platform_smoke.py` — macOS/Linux CI smoke test
-- `PLATFORM_SUPPORT.md` — exact six-check evidence and unsupported platform gates
+- `tests/macos_platform_smoke.py` — dedicated macOS platform smoke suite
+- `tests/linux_platform_smoke.py` — dedicated Linux platform smoke suite
+- `PLATFORM_SUPPORT.md` — exact platform smoke evidence and boundary gates
 - `version.py` — canonical public version contract (`15.0.0`)
 - `STORE_LISTING.md` — bilingual Windows Store listing metadata
 - `store_package.json` — Store package configuration and parameters
@@ -76,6 +78,6 @@ Part of the **file-bricks** desktop suite under the **open-bricks** umbrella:
 - `dev-bricks/DevCenter`: Developer workspace dashboard & automation launcher
 - `dev-bricks/CodeBox`: Offline snippet vault & code runner sandbox
 
-Test status: 139/139 Python tests passing (100% green).
+Test status: 141/141 Python tests passing (100% green).
 
-## Last-checked: 2026-08-20
+## Last-checked: 2026-08-21

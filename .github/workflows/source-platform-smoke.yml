@@ -33,9 +33,26 @@ jobs:
             libgl1 libglib2.0-0 libegl1 libxkbcommon0
 
       - name: Gepinntes PySide6 installieren
-        run: pip install "PySide6==6.11.1"
+        run: pip install "PySide6==6.11.1" pytest
 
       - name: 6-Check Basis-Source-Smoke
         run: PYTHONIOENCODING=utf-8 python source_platform_smoke.py
+        env:
+          QT_QPA_PLATFORM: offscreen
+
+      - name: Linux Dedicated Platform Smoke
+        if: runner.os == 'Linux'
+        run: PYTHONIOENCODING=utf-8 python tests/linux_platform_smoke.py
+        env:
+          QT_QPA_PLATFORM: offscreen
+
+      - name: macOS Dedicated Platform Smoke
+        if: runner.os == 'macOS'
+        run: PYTHONIOENCODING=utf-8 python tests/macos_platform_smoke.py
+        env:
+          QT_QPA_PLATFORM: offscreen
+
+      - name: Pytest Platform Suite
+        run: python -m pytest -v
         env:
           QT_QPA_PLATFORM: offscreen
