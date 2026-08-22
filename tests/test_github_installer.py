@@ -194,21 +194,25 @@ class TestInstallModule(TestCase):
         self.assertIn("kein GitHub-Repository", result.message)
 
     def test_no_releases_returns_graceful_message(self):
-        with patch.dict(GITHUB_REPOS, {"prosync": ("file-bricks", "ProSync")}):
-            with patch("github_installer.fetch_latest_release", return_value=None):
-                result = install_module("prosync")
-        self.assertFalse(result.success)
-        self.assertIn("kein release", result.message.lower())
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch.dict(GITHUB_REPOS, {"prosync": ("file-bricks", "ProSync")}):
+                with patch("github_installer.fetch_latest_release", return_value=None):
+                    result = install_module("prosync", parent_dir=Path(tmp))
+            self.assertFalse(result.success)
+            self.assertIn("kein release", result.message.lower())
 
     def test_network_error_returns_error_result(self):
+        import tempfile
         import urllib.error
-        with patch(
-            "github_installer.fetch_latest_release",
-            side_effect=urllib.error.URLError("offline"),
-        ):
-            result = install_module("prosync")
-        self.assertFalse(result.success)
-        self.assertIn("Netzwerkfehler", result.error or "")
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch(
+                "github_installer.fetch_latest_release",
+                side_effect=urllib.error.URLError("offline"),
+            ):
+                result = install_module("prosync", parent_dir=Path(tmp))
+            self.assertFalse(result.success)
+            self.assertIn("Netzwerkfehler", result.error or "")
 
     def test_successful_install(self):
         import tempfile
