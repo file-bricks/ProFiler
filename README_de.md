@@ -10,7 +10,7 @@
 [![GUI: PySide6](https://img.shields.io/badge/GUI-PySide6-green.svg)](https://wiki.qt.io/Qt_for_Python)
 [![Plattform: Windows](https://img.shields.io/badge/Plattform-Windows-lightgrey.svg)]()
 [![Offline-first](https://img.shields.io/badge/offline--first-ja-green.svg)]()
-[![Tests: 141 bestanden](https://img.shields.io/badge/tests-141%20bestanden-brightgreen.svg)]()
+[![Tests: 144 bestanden](https://img.shields.io/badge/tests-144%20bestanden-brightgreen.svg)]()
 [![Ökosystem: open-bricks](https://img.shields.io/badge/%C3%96kosystem-open--bricks-blueviolet)](https://github.com/open-bricks)
 [![LLM-Kontext: llms.txt](https://img.shields.io/badge/LLM--Kontext-llms.txt-orange)](llms.txt)
 

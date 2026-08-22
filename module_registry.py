@@ -4,6 +4,27 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+try:
+    from sibling_launcher import normalize_configured_tool_path
+except ImportError:  # pragma: no cover
+    import os
+    import re
+
+    _WIN_ENV_PATTERN = re.compile(r"%([^%]+)%")
+
+    def normalize_configured_tool_path(base_dir, configured_path) -> Path | None:
+        raw_path = str(configured_path).strip()
+        if not raw_path:
+            return None
+        expanded_raw_path = _WIN_ENV_PATTERN.sub(
+            lambda match: os.environ.get(match.group(1), match.group(0)),
+            raw_path,
+        )
+        expanded_path = Path(os.path.expandvars(expanded_raw_path)).expanduser()
+        if not expanded_path.is_absolute():
+            expanded_path = Path(base_dir).expanduser() / expanded_path
+        return expanded_path
+
 
 @dataclass
 class ModuleInfo:
@@ -112,15 +133,14 @@ class ModuleRegistry:
 
         # 1) Konfigurierter Pfad hat höchste Priorität
         if configured_path:
-            p = Path(configured_path).expanduser()
-            if not p.is_absolute():
-                p = self._base_dir / p
-            if p.is_dir():
-                candidates.append(p / filename)
-                for ex in extras:
-                    candidates.append(p / ex)
-            else:
-                candidates.append(p)
+            p = normalize_configured_tool_path(self._base_dir, configured_path)
+            if p is not None:
+                if p.is_dir():
+                    candidates.append(p / filename)
+                    for ex in extras:
+                        candidates.append(p / ex)
+                else:
+                    candidates.append(p)
 
         # 2) Gleiches Verzeichnis
         candidates.append(self._base_dir / filename)

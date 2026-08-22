@@ -76,6 +76,47 @@ class TestModuleRegistry:
         assert module.available is True
         assert str(module.resolved_path) == str(custom / "SQLiteViewer.py")
 
+    def test_configured_path_with_windows_env_var(self, tmp_path, monkeypatch):
+        custom = tmp_path / "custom"
+        custom.mkdir()
+        tool_file = custom / "SQLiteViewer.py"
+        tool_file.touch()
+        monkeypatch.setenv("_PFTEST_REG_DIR", str(custom))
+
+        reg = ModuleRegistry(
+            base_dir=tmp_path,
+            configured_paths={"sqliteviewer": r"%_PFTEST_REG_DIR%\SQLiteViewer.py"},
+        )
+        module = reg.get("sqliteviewer")
+        assert module is not None
+        assert module.available is True
+        assert module.resolved_path == tool_file.resolve()
+
+    def test_configured_path_directory_with_env_var(self, tmp_path, monkeypatch):
+        custom = tmp_path / "custom"
+        custom.mkdir()
+        tool_file = custom / "ProSync.exe"
+        tool_file.touch()
+        monkeypatch.setenv("_PFTEST_REG_DIR", str(custom))
+
+        reg = ModuleRegistry(
+            base_dir=tmp_path,
+            configured_paths={"prosync": r"%_PFTEST_REG_DIR%"},
+        )
+        module = reg.get("prosync")
+        assert module is not None
+        assert module.available is True
+        assert module.resolved_path == tool_file.resolve()
+
+    def test_configured_path_whitespace_is_ignored(self, tmp_path):
+        reg = ModuleRegistry(
+            base_dir=tmp_path,
+            configured_paths={"sqliteviewer": "   "},
+        )
+        module = reg.get("sqliteviewer")
+        assert module is not None
+        assert module.available is False
+
     def test_does_not_execute_known_filename_from_arbitrary_sibling(self, tmp_path):
         untrusted = tmp_path / "untrusted-download"
         untrusted.mkdir()

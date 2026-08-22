@@ -78,6 +78,6 @@ Part of the **file-bricks** desktop suite under the **open-bricks** umbrella:
 - `dev-bricks/DevCenter`: Developer workspace dashboard & automation launcher
 - `dev-bricks/CodeBox`: Offline snippet vault & code runner sandbox
 
-Test status: 141/141 Python tests passing (100% green).
+Test status: 144/144 Python tests passing (100% green).
 
-## Last-checked: 2026-08-21
+## Last-checked: 2026-08-23

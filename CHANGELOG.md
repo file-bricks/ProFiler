@@ -5,6 +5,9 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Beholfen / Fixed (2026-08-23)
+- **Bugsweep — Companion Module Path Normalization (`module_registry.py`)**: `ModuleRegistry._detect_one` verwendet nun die kanonische Pfadnormalisierung `normalize_configured_tool_path` (inkl. Windows `%VAR%`-Umgebungsvariablen- und `~`-Tilde-Expansion sowie Whitespace-Bereinigung), sodass konfigurierte Begleitwerkzeugpfade in den Einstellungen und im Modul-Statusdialog fehlerfrei aufgelöst werden. 3 neue Regressionstests in `tests/test_module_registry.py` hinzugefügt (144/144 Tests 100% grün).
+
 ### Hinzugefügt / Added (2026-08-21)
 - **Cross-Platform macOS & Linux Platform Smokes:** Dedizierte Plattform-Smoke-Testsuiten (`tests/macos_platform_smoke.py` und `tests/linux_platform_smoke.py`) mit je 8 reproduzierbaren Plattform-Checks implementiert (POSIX/XDG App-Pfade, Legacy-Fallback, Offscreen PySide6 UnifiedMainWindow, plattform-spezifische Dateimanager-Öffner via `open`/`open -R` und `xdg-open`, Sibling-Launcher-Skriptaufrufe, BOM-freier Workspace-Export ohne Secrets, SQLite Unicode-Roundtrip, Graceful OCR-Fallback, Tier-2 I18N).
 - **Sibling-Launcher POSIX-Unterstützung:** `sibling_launcher.py` um Unterstützung für `.sh` und `.command` Shellskripte sowie POSIX-Subprozess-Starts erweitert.
