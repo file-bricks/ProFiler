@@ -99,3 +99,56 @@ def test_utf8_python_files_integrity() -> None:
     for py_path in py_files:
         content = py_path.read_text(encoding="utf-8")
         ast.parse(content, filename=str(py_path))
+
+
+def test_readme_quick_navigation_and_sequence_diagram_parity() -> None:
+    """Verify quick navigation, sequence diagram, and security invariants table parity."""
+    readme_en = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    readme_de = (PROJECT_ROOT / "README_de.md").read_text(encoding="utf-8")
+
+    # Quick navigation
+    assert "### Quick Navigation" in readme_en
+    assert "### Schnellnavigation" in readme_de
+
+    # Sequence diagram
+    assert "## Workflow Lifecycle" in readme_en
+    assert "## Workflow-Lebenszyklus" in readme_de
+    assert "sequenceDiagram" in readme_en and "sequenceDiagram" in readme_de
+    assert "Datenschutzampel" in readme_en and "Datenschutzampel" in readme_de
+
+    # Core capabilities & security invariants
+    assert "## Core Capabilities & Security Invariants" in readme_en
+    assert "## Kernfähigkeiten & Sicherheitsinvarianten" in readme_de
+    assert "Zero-Egress" in readme_en and "Zero-Egress" in readme_de
+
+
+def test_security_policy_structure_and_contacts() -> None:
+    """Verify bilingual SECURITY.md structure, SLA, invariants, and contacts."""
+    sec_text = (PROJECT_ROOT / "SECURITY.md").read_text(encoding="utf-8")
+    assert "## English" in sec_text
+    assert "## Deutsch" in sec_text
+    assert "48 hours" in sec_text or "48 Stunden" in sec_text
+    assert "security@open-bricks.org" in sec_text
+    assert "support@lukasgeiger.com" in sec_text
+    assert "Zero-Egress" in sec_text
+    assert "security/advisories" in sec_text
+
+
+def test_ci_workflow_concurrency_and_matrix() -> None:
+    """Verify CI workflow has concurrency cancel-in-progress and multi-OS matrix."""
+    ci_file = PROJECT_ROOT / ".github" / "workflows" / "source-platform-smoke.yml"
+    assert ci_file.exists(), "CI workflow file missing"
+    ci_text = ci_file.read_text(encoding="utf-8")
+    assert "concurrency:" in ci_text
+    assert "cancel-in-progress: true" in ci_text
+    assert "ubuntu-latest" in ci_text
+    assert "macos-latest" in ci_text
+
+
+def test_pyproject_pep621_metadata_and_urls() -> None:
+    """Verify PEP 621 metadata, keywords, classifiers, and project URLs."""
+    pyproject_text = (PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    assert "keywords = [" in pyproject_text
+    assert "Programming Language :: Python :: 3.13" in pyproject_text
+    assert "Topic :: Security" in pyproject_text
+    assert "Documentation = " in pyproject_text

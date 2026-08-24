@@ -6,11 +6,12 @@
 
 [![Org: file-bricks](https://img.shields.io/badge/Org-file--bricks-blue)](https://github.com/file-bricks)
 [![Lizenz: AGPL v3](https://img.shields.io/badge/Lizenz-AGPL%20v3-blue.svg)](LICENSE)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
+[![CI: Plattform-Smoke](https://img.shields.io/badge/CI-Plattform--Smoke-brightgreen.svg)](https://github.com/file-bricks/ProFiler/actions)
+[![Tests: 148 bestanden](https://img.shields.io/badge/tests-148%20bestanden%20%7C%20100%25-brightgreen.svg)]()
+[![Python: 3.10--3.13](https://img.shields.io/badge/python-3.10--3.13-blue.svg)](https://www.python.org/)
 [![GUI: PySide6](https://img.shields.io/badge/GUI-PySide6-green.svg)](https://wiki.qt.io/Qt_for_Python)
-[![Plattform: Windows](https://img.shields.io/badge/Plattform-Windows-lightgrey.svg)]()
-[![Offline-first](https://img.shields.io/badge/offline--first-ja-green.svg)]()
-[![Tests: 144 bestanden](https://img.shields.io/badge/tests-144%20bestanden-brightgreen.svg)]()
+[![Plattform: Windows | Linux | macOS](https://img.shields.io/badge/Plattform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
+[![Datenschutz: 100% Local-First](https://img.shields.io/badge/Datenschutz-100%25%20Local--First-success.svg)]()
 [![Ökosystem: open-bricks](https://img.shields.io/badge/%C3%96kosystem-open--bricks-blueviolet)](https://github.com/open-bricks)
 [![LLM-Kontext: llms.txt](https://img.shields.io/badge/LLM--Kontext-llms.txt-orange)](llms.txt)
 
@@ -22,6 +23,21 @@
 ProFiler Suite ist ein lokaler Desktop-Dateimanager für private Dokumentensammlungen. Die App verbindet Volltext-Indexierung, OCR, PDF-Werkzeuge, Duplikatenerkennung, Datenschutzprüfungen und eine optionale ProSync-Anbindung in einer Windows-orientierten PySide6-Oberfläche.
 
 ProFiler richtet sich an Menschen, die viele lokale Dokumente verwalten und Suche, Vorschau, PDF-Verarbeitung und Datenschutz-Workflows nutzen möchten, ohne Dateien in einen Cloud-Dienst hochzuladen.
+
+---
+
+### Schnellnavigation
+
+- [Architektur](#architektur)
+- [Workflow-Lebenszyklus](#workflow-lebenszyklus)
+- [Kernfähigkeiten & Sicherheitsinvarianten](#kernfähigkeiten--sicherheitsinvarianten)
+- [Highlights](#highlights)
+- [Screenshot](#screenshot)
+- [Wann ProFiler passt](#wann-profiler-passt)
+- [Schnellstart & Einrichtung](#schnellstart)
+- [Ökosystem & Geschwisterwerkzeuge](#ökosystem--geschwisterwerkzeuge)
+
+---
 
 ## Architektur
 
@@ -62,6 +78,50 @@ graph TD
     Verarbeitung --> DatenschutzGate
     DatenschutzGate --> UI
 ```
+
+## Workflow-Lebenszyklus
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Desktop-Benutzer
+    participant UI as PySide6 GUI (UnifiedMainWindow)
+    participant Crawler as Dateisystem-Watchdog & Crawler
+    participant Index as Lokaler SQLite-Index
+    participant OCR as Tesseract OCR / PDF-Engine
+    participant Gate as Datenschutzampel (Mustererkennung)
+    participant Exchange as Redigierter Arbeitsbereich-Austausch
+
+    User->>UI: Dokumentenordner oder Datei auswählen
+    UI->>Crawler: Pfad erfassen & SHA-256 Fingerprint berechnen
+    Crawler->>Index: Metadaten & Versionsstatus persistieren
+    opt Gescanntes Dokument / Bild-PDF
+        UI->>OCR: Tesseract-OCR / Textextraktion anstoßen
+        OCR->>Index: Volltext-Index aktualisieren
+    end
+    User->>UI: Dokumenten-Export / Weitergabe anfordern
+    UI->>Gate: PII- und Sensitivitätsmuster prüfen
+    alt Sensible Daten erkannt
+        Gate-->>UI: Warnung / Schwärzungs-Hinweis (Datenschutzampel ROT/GELB)
+        User->>UI: PDF-Schwärzung anwenden / Arbeitsbereich anonymisieren
+    else Unbedenkliches Dokument
+        Gate-->>UI: Freigabestatus (Datenschutzampel GRÜN)
+    end
+    UI->>Exchange: Redigierten Arbeitsbereich als JSON exportieren (Schema v1)
+    Exchange-->>User: Validiertes, abflusssicheres Übergabe-Artefakt
+```
+
+## Kernfähigkeiten & Sicherheitsinvarianten
+
+| Fähigkeit / Invariante | Garantie & Entwurfsgrenzen | Verifikation & Evidenz |
+|---|---|---|
+| **100% Local-First & Zero-Egress** | Alle SQLite-Datenbanken, Indizes und Dokumenten-Caches verbleiben ausnahmslos auf dem lokalen Rechner. Keine Cloud-Uploads, keine Telemetrie, kein Benutzerkonto erforderlich. | Verifiziert durch netzwerkfreie Testsuite & Dateisystem-Isolation unter Windows/POSIX. |
+| **Session-Only Secrets** | PDF-Passwörter und temporäre Entschlüsselungsschlüssel verbleiben ausschließlich im flüchtigen Arbeitsspeicher und werden niemals persistiert. | Vertraglich getestet in `tests/test_security_hardening.py` (`test_settings_passwords_are_session_only`). |
+| **PII- & Datenschutzampel** | Integrierte Erkennung sensibler Muster (`Datenschutzampel`) markiert persönliche Identifikatoren und vertrauliche Daten vor Weitergabe oder Archivierung. | Validiert in `ProFiler_Datenschutzampel.py` und `tests/test_privacy_compliance.py`. |
+| **Redigierter Arbeitsbereich-Austausch** | Export und Import entsprechen dem JSON-Schema v1; maschinenspezifische absolute Pfade, System-Secrets und Dateizeiger werden bereinigt. | Getestet in `tests/test_workspace_exchange.py` mit BOM-freier UTF-8-Serialisierung. |
+| **Erkennung von Cloud-Platzhaltern** | Erkennt OneDrive- und Cloud-Platzhalterdateien zuverlässig, um unerwünschte automatische Massen-Downloads beim Scannen zu verhindern. | Implementiert im Crawler und getestet in `tests/test_search_hidden_filter.py`. |
+| **Unprivilegierter Betrieb (Non-Elevation)** | Läuft vollständig im unprivilegierten Benutzer-Modus. Konfigurationen und Indizes liegen standardkonform unter `%LOCALAPPDATA%\ProFilerSuite` (bzw. XDG unter POSIX). | Verifiziert in `tests/test_app_paths.py` und `tests/test_platform_smoke_contract.py`. |
+| **Plattformübergreifende Smoke-Integrität** | Headless Offscreen-PySide6-Smokes stellen fehlerfreie GUI-Initialisierung und Code-Integrität unter Windows, Linux und macOS sicher. | Automatisch geprüft bei jedem Push via `.github/workflows/source-platform-smoke.yml`. |
 
 ## Highlights
 
@@ -204,6 +264,9 @@ ProFiler Suite ist Teil der **file-bricks** Desktop-Werkzeugfamilie unter dem Da
 | **TextBrain** | [doc-bricks/TextBrain](https://github.com/doc-bricks/TextBrain) | Dokumenten-Intelligenz, semantische Klassifikation & Zusammenfassungen | Aktiv |
 | **DevCenter** | [dev-bricks/DevCenter](https://github.com/dev-bricks/DevCenter) | Entwickler-Dashboard & Automations-Zentrale | Aktiv |
 | **CodeBox** | [dev-bricks/CodeBox](https://github.com/dev-bricks/CodeBox) | Offline-Snippet-Vault & Code-Runner-Sandbox | Aktiv |
+| **FileCommander MCP** | [ellmos-ai/ellmos-filecommander-mcp](https://github.com/ellmos-ai/ellmos-filecommander-mcp) | Sichere MCP-Dateiverwaltung, Sandboxing & Batch-Verarbeitung | Aktiv |
+| **CodeCommander MCP** | [ellmos-ai/ellmos-codecommander-mcp](https://github.com/ellmos-ai/ellmos-codecommander-mcp) | MCP-Code-Intelligenz, AST-Analyse & Formatreparatur | Aktiv |
+| **SQLite Transit Sync** | [dev-bricks/sqlite-transit-sync](https://github.com/dev-bricks/sqlite-transit-sync) | Verlustfreie Multi-Master-SQLite-Replikation & Synchronisation | Aktiv |
 
 ## Datenschutz- und Schwärzungshinweis
 

@@ -5,6 +5,13 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Geändert / Changed (2026-08-24)
+- **Discoverability & Zweisprachige README-Architektur:** `README.md` und `README_de.md` um strukturierte Schnellnavigation (8 Sprungmarken), Badges für CI-Plattform-Smoke, 148 Tests (100% grün), Python 3.10--3.13, Plattform- und Datenschutz-Attribute, interaktives Mermaid-Sequenzdiagramm für den Workflow-Lebenszyklus (`sequenceDiagram`) sowie Tabelle der Kernfähigkeiten & Sicherheitsinvarianten (Local-First, Zero-Egress, Non-Elevation, Session Passwords, Datenschutzampel) erweitert.
+- **Zweisprachige Sicherheitsrichtlinie (`SECURITY.md`):** Auf zweisprachiges Format (English/Deutsch) mit 48h-SLA, Sicherheitsinvarianten und offiziellen Kontakten (`security@open-bricks.org`, `support@lukasgeiger.com`) gehärtet.
+- **CI Concurrency Control:** `.github/workflows/source-platform-smoke.yml` um automatische Concurrency-Gruppe mit `cancel-in-progress: true` erweitert.
+- **PEP 621 Metadaten & Vertragstests:** `pyproject.toml` um `keywords`, erweiterte Classifiers (Python 3.13, POSIX Linux, MacOS, Topic :: Security) und Dokumentations-URL ergänzt; `tests/test_metadata.py` um 4 neue Vertragstests für Schnellnavigation, Sequenzdiagramme, Sicherheitsrichtlinie, CI-Concurrency und Pyproject-Metadaten erweitert (148/148 Tests 100% grün).
+- **LLM Context Discovery:** `llms.txt` Last-checked Datum auf `2026-08-24`, 148 verifizierte Tests und Sibling-Tools synchronisiert.
+
 ### Beholfen / Fixed (2026-08-23)
 - **Bugsweep — Companion Module Path Normalization (`module_registry.py`)**: `ModuleRegistry._detect_one` verwendet nun die kanonische Pfadnormalisierung `normalize_configured_tool_path` (inkl. Windows `%VAR%`-Umgebungsvariablen- und `~`-Tilde-Expansion sowie Whitespace-Bereinigung), sodass konfigurierte Begleitwerkzeugpfade in den Einstellungen und im Modul-Statusdialog fehlerfrei aufgelöst werden. 3 neue Regressionstests in `tests/test_module_registry.py` hinzugefügt (144/144 Tests 100% grün).
 
