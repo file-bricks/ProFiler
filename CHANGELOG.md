@@ -5,6 +5,12 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Geändert / Changed (2026-09-07)
+- **Security & Vulnerability Hardening (`pyproject.toml`, `requirements.txt`):** Mindestversionsgrenze für `Pillow` von `>=12.2.0` auf `>=12.3.0` angehoben; behebt 26 bekannte Sicherheitslücken (darunter Command Injection via `WindowsViewer.get_command()` GHSA-4x4j-2g7c-83w6 und Decompression-Bomb-Bypass GHSA-45hq-cxwh-f6vc). Optional-Dependency-Block um `dev` mit `pytest>=9.1.1` (Behebung GHSA-6w46-j5rx-g56g / CVE-2025-7117) und `ruff>=0.9.0` ergänzt.
+- **Third-Party & Lizenz-Inventar (`THIRD_PARTY_LICENSES.txt`):** Lizenzinventar auf Stand 2026-09-07 aktualisiert, `pypdf` auf 6.15.0 synchronisiert, transitive Build- und Runtime-Pakete (`packaging`, `pluggy`, `iniconfig`, `altgraph`) inventarisiert und Copyleft-/Distributionsgrenzen verifiziert.
+- **Repository- & Sync-Hygiene (`.gitignore`):** Explizite Ausschlussmuster für Synchronisationskonflikte (`*-WORKSTATION-LG*`, `*-ASUS-GEI*`, `*.conflict`, `*.sync-conflict-*`) gehärtet.
+- **Security & License Contract Testsuite (`tests/test_security_license_contract.py`):** 6 neue automatisierte Vertragstests für Schwachstellengrenzen (Pillow, PySide6, pytest), vollständige Third-Party-Lizenzabdeckung aller Direktabhängigkeiten, Ausschluss von Plaintext-Secrets/API-Keys, Ausschluss hartcodierter Entwicklerpfade, Gitignore-Hygiene sowie bilinguale Sicherheitsrichtlinien mit 48h-SLA (154/154 Tests 100% grün).
+
 ### Geändert / Changed (2026-08-24)
 - **Discoverability & Zweisprachige README-Architektur:** `README.md` und `README_de.md` um strukturierte Schnellnavigation (8 Sprungmarken), Badges für CI-Plattform-Smoke, 148 Tests (100% grün), Python 3.10--3.13, Plattform- und Datenschutz-Attribute, interaktives Mermaid-Sequenzdiagramm für den Workflow-Lebenszyklus (`sequenceDiagram`) sowie Tabelle der Kernfähigkeiten & Sicherheitsinvarianten (Local-First, Zero-Egress, Non-Elevation, Session Passwords, Datenschutzampel) erweitert.
 - **Zweisprachige Sicherheitsrichtlinie (`SECURITY.md`):** Auf zweisprachiges Format (English/Deutsch) mit 48h-SLA, Sicherheitsinvarianten und offiziellen Kontakten (`security@open-bricks.org`, `support@lukasgeiger.com`) gehärtet.

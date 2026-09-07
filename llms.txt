@@ -82,6 +82,6 @@ Part of the **file-bricks** desktop suite under the **open-bricks** umbrella:
 - `ellmos-ai/ellmos-codecommander-mcp`: MCP code intelligence, AST analysis & format repair
 - `dev-bricks/sqlite-transit-sync`: Zero-loss multi-master SQLite replication & synchronization
 
-Test status: 148/148 Python tests passing (100% green).
+Test status: 154/154 Python tests passing (100% green).
 
-## Last-checked: 2026-08-24
+## Last-checked: 2026-09-07

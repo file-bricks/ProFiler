@@ -31,6 +31,12 @@ SKILL.md
 LOCK*.txt
 LOCK.permissions.json
 
+# ---- Synchronisations- & Host-Konflikte ----
+*-WORKSTATION-LG*
+*-ASUS-GEI*
+*.conflict
+*.sync-conflict-*
+
 # ---- Persoenliche / Sensible Daten ----
 _USER/
 .env

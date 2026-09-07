@@ -1,5 +1,5 @@
 ProFiler Suite - Third-Party and Release Inventory
-Last reviewed: 2026-07-22
+Last reviewed: 2026-09-07
 
 Scope
 =====
@@ -15,7 +15,7 @@ Direct runtime dependencies
 Name             Locked version   License / distribution note
 ---------------- ---------------- ---------------------------------------------
 PySide6          6.11.1           LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
-pypdf            6.14.2           BSD-3-Clause
+pypdf            6.15.0           BSD-3-Clause
 pikepdf          10.9.1           MPL-2.0
 PyMuPDF          1.27.2.3         AGPL-3.0-or-later OR commercial Artifex license
 pdf2image        1.17.0           MIT
@@ -30,11 +30,18 @@ to distribution and Store review; replacing the project license statement does
 not replace PyMuPDF's own terms. Preserve license notices for all bundled
 transitive dependencies.
 
-Build-only dependency
-=====================
+Build and test dependencies
+===========================
 
-PyInstaller 6.21.0 - GPL-2.0-or-later with the PyInstaller bootloader exception.
-It is pinned in requirements-build.txt and is not an application feature.
+Name                       Locked version   License / distribution note
+-------------------------- ---------------- ---------------------------------------------
+PyInstaller                6.21.0           GPL-2.0-or-later with bootloader exception
+altgraph                   0.17.4           MIT (PyInstaller graph dependency)
+pyinstaller-hooks-contrib  2025.1           Apache-2.0 (PyInstaller hooks collection)
+packaging                  24.2             Apache-2.0 OR BSD-2-Clause (core metadata)
+pluggy                     1.6.0            MIT (pytest plugin manager)
+iniconfig                  2.1.0            MIT (pytest configuration parser)
+pytest                     9.1.1            MIT (test framework, GHSA-6w46-j5rx-g56g mitigated)
 
 External native tools
 =====================
