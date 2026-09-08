@@ -105,3 +105,81 @@ def test_search_workspaces_expose_screen_reader_context():
 
     search.close()
     app.quit()
+
+
+def test_settings_dialog_exposes_accessible_context_and_umlauts():
+    app = QApplication.instance() or QApplication([])
+    settings = DummySettings()
+    dialog = profiler.SettingsDialog(settings)
+
+    assert dialog.accessibleName() == "Programmeinstellungen"
+    assert "Konfigurationsdialog" in dialog.accessibleDescription()
+
+    tabs = dialog.findChild(profiler.QTabWidget)
+    assert tabs is not None
+    assert tabs.count() == 4
+    assert tabs.tabText(0) == "Allgemein"
+    assert tabs.tabText(1) == "Löschen"
+    assert tabs.tabText(2) == "PDF"
+    assert tabs.tabText(3) == "Externe Tools"
+
+    # Tab 1: Allgemein
+    assert dialog.combo_ui_lang.accessibleName() == "Oberflächensprache"
+    assert dialog.combo_ui_lang.toolTip() == "Oberflächensprache auswählen"
+
+    # Tab 2: Löschen
+    assert dialog.radio_soft.accessibleName() == "Soft-Delete Modus"
+    assert dialog.radio_hard.accessibleName() == "Hard-Delete Modus"
+    assert dialog.radio_safety.accessibleName() == "Safety-Mode"
+    assert dialog.spin_retention.accessibleName() == "Aufbewahrungsdauer im Papierkorb"
+    assert dialog.cb_auto_cleanup.accessibleName() == "Automatisches Aufräumen beim Start"
+    assert dialog.combo_spawn_format.accessibleName() == "Standard-Spawn-Format"
+    assert dialog.cb_rename_filesystem.accessibleName() == "Umbenennung im Dateisystem anwenden"
+
+    # Tab 3: PDF & echte Umlaute
+    assert dialog.master_pwd1.accessibleName() == "Masterpasswort 1 zum Öffnen"
+    assert dialog.cb_show_pwd1.accessibleName() == "Masterpasswort 1 im Klartext anzeigen"
+    assert dialog.cb_show_pwd1.toolTip() == "Masterpasswort 1 im Klartext anzeigen"
+    assert dialog.master_pwd2.accessibleName() == "Masterpasswort 2 zum Speichern"
+    assert dialog.cb_show_pwd2.accessibleName() == "Masterpasswort 2 im Klartext anzeigen"
+    assert dialog.cb_ocr_enabled.accessibleName() == "OCR-Texterkennung aktivieren"
+    assert dialog.combo_ocr_lang.accessibleName() == "OCR-Sprache"
+
+    # Prüfe, dass echte deutsche Umlaute verwendet werden ("Masterpasswörter" statt "Masterpasswrter")
+    groupboxes = [gb.title() for gb in dialog.findChildren(profiler.QGroupBox)]
+    assert "Masterpasswörter" in groupboxes
+    assert "Masterpasswrter" not in groupboxes
+
+    # Tab 4: Externe Tools
+    assert dialog.pythonbox_path.accessibleName() == "PythonBox-Pfad"
+    assert dialog.sqlite_path.accessibleName() == "SQLite-Viewer-Pfad"
+    assert dialog.formconstr_path.accessibleName() == "FormConstructor-Pfad"
+
+    dialog.close()
+    app.quit()
+
+
+def test_pdf_password_dialog_exposes_accessible_context():
+    app = QApplication.instance() or QApplication([])
+    settings = DummySettings()
+
+    # Encrypt-Modus
+    enc_dialog = profiler.PDFPasswordDialog(["sample1.pdf", "sample2.pdf"], mode="encrypt", settings=settings)
+    assert enc_dialog.windowTitle() == "PDF-Verschlüsselung"
+    assert enc_dialog.accessibleName() == "PDF-Passwortdialog"
+    assert enc_dialog.radio_individual.accessibleName() == "Individuelles Passwort wählen"
+    assert enc_dialog.password_input.accessibleName() == "Passworteingabe"
+    assert enc_dialog.password_input.toolTip() == "Passwort für die PDF-Operation eingeben"
+    assert enc_dialog.radio_master.accessibleName() == "Hinterlegtes Masterpasswort verwenden"
+    assert enc_dialog.cb_show_password.accessibleName() == "Passwort im Klartext anzeigen"
+    assert enc_dialog.cb_show_password.toolTip() == "Passwort im Klartext anzeigen"
+
+    # Decrypt-Modus
+    dec_dialog = profiler.PDFPasswordDialog(["sample1.pdf"], mode="decrypt", settings=settings)
+    assert dec_dialog.windowTitle() == "PDF-Entschlüsselung"
+    assert dec_dialog.accessibleName() == "PDF-Passwortdialog"
+
+    enc_dialog.close()
+    dec_dialog.close()
+    app.quit()
+

@@ -2576,8 +2576,10 @@ class PDFPasswordDialog(QDialog):
         self.password = None
         self.use_master = False
         
-        self.setWindowTitle("PDF Verschlüsselung" if mode == "encrypt" else "PDF Entschlüsselung")
+        self.setWindowTitle("PDF-Verschlüsselung" if mode == "encrypt" else "PDF-Entschlüsselung")
         self.resize(500, 250)
+        self.setAccessibleName("PDF-Passwortdialog")
+        self.setAccessibleDescription("Dialog zur Eingabe oder Auswahl des Passworts für PDF-Sicherheitsoperationen")
         
         layout = QVBoxLayout(self)
         
@@ -2585,10 +2587,11 @@ class PDFPasswordDialog(QDialog):
         if mode == "encrypt":
             info_text = f"{len(file_paths)} Datei(en) ausgewählt\n\nPasswort zum Verschlüsseln festlegen:"
         else:
-            info_text = f" {len(file_paths)} verschlüsselte Datei(en)\n\nPasswort zum Entschlüsseln eingeben:"
+            info_text = f"{len(file_paths)} verschlüsselte Datei(en) ausgewählt\n\nPasswort zum Entschlüsseln eingeben:"
         
         info = QLabel(info_text)
         info.setStyleSheet("font-size: 12px; padding: 10px; background-color: #2b2b2b; border-radius: 4px;")
+        info.setAccessibleName("Operationshinweis")
         layout.addWidget(info)
         
         # Passwort-Gruppe
@@ -2596,14 +2599,20 @@ class PDFPasswordDialog(QDialog):
         pwd_layout = QVBoxLayout()
         
         # Individuelles Passwort
-        self.radio_individual = QRadioButton("Individuelles Passwort eingeben")
+        self.radio_individual = QRadioButton("&Individuelles Passwort eingeben")
         self.radio_individual.setChecked(True)
+        self.radio_individual.setAccessibleName("Individuelles Passwort wählen")
+        self.radio_individual.setAccessibleDescription("Aktiviert das Eingabefeld für ein manuell eingegebenes Passwort")
+        self.radio_individual.setToolTip("Eigenes Passwort für diesen Vorgang eingeben")
         self.radio_individual.toggled.connect(self.on_mode_changed)
         pwd_layout.addWidget(self.radio_individual)
         
         self.password_input = QLineEdit()
         self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
         self.password_input.setPlaceholderText("Passwort eingeben...")
+        self.password_input.setAccessibleName("Passworteingabe")
+        self.password_input.setAccessibleDescription("Geben Sie hier das individuelle PDF-Passwort ein")
+        self.password_input.setToolTip("Passwort für die PDF-Operation eingeben")
         pwd_layout.addWidget(self.password_input)
         
         # Masterpasswort
@@ -2614,10 +2623,14 @@ class PDFPasswordDialog(QDialog):
         
         has_master = bool(master_saved)
         
-        self.radio_master = QRadioButton("Masterpasswort verwenden")
+        self.radio_master = QRadioButton("&Masterpasswort verwenden")
         self.radio_master.setEnabled(has_master)
+        self.radio_master.setAccessibleName("Hinterlegtes Masterpasswort verwenden")
+        self.radio_master.setAccessibleDescription("Nutzt das in den Einstellungen hinterlegte Masterpasswort für die Stapelverarbeitung")
         if not has_master:
-            self.radio_master.setToolTip("Kein Masterpasswort hinterlegt. Bitte in Einstellungen konfigurieren.")
+            self.radio_master.setToolTip("Kein Masterpasswort hinterlegt. Bitte in den Einstellungen konfigurieren.")
+        else:
+            self.radio_master.setToolTip("Gespeichertes Masterpasswort verwenden")
         self.radio_master.toggled.connect(self.on_mode_changed)
         pwd_layout.addWidget(self.radio_master)
         
@@ -2625,7 +2638,10 @@ class PDFPasswordDialog(QDialog):
         layout.addWidget(pwd_group)
         
         # Checkbox: Passwort anzeigen
-        self.cb_show_password = QCheckBox("Passwort anzeigen")
+        self.cb_show_password = QCheckBox("Passwort &anzeigen")
+        self.cb_show_password.setAccessibleName("Passwort im Klartext anzeigen")
+        self.cb_show_password.setAccessibleDescription("Schaltet die Passwortanzeige zwischen verdeckten Zeichen und lesbarem Klartext um")
+        self.cb_show_password.setToolTip("Passwort im Klartext anzeigen")
         self.cb_show_password.toggled.connect(self.toggle_password_visibility)
         layout.addWidget(self.cb_show_password)
         
@@ -2926,11 +2942,15 @@ class SettingsDialog(QDialog):
         
         self.setWindowTitle("⚙️ Einstellungen")
         self.resize(600, 500)
+        self.setAccessibleName("Programmeinstellungen")
+        self.setAccessibleDescription("Konfigurationsdialog für Sprache, Löschverhalten, PDF und externe Werkzeuge")
         
         layout = QVBoxLayout(self)
         
         # Tab Widget
         tabs = QTabWidget()
+        tabs.setAccessibleName("Einstellungskategorien")
+        tabs.setAccessibleDescription("Kategorien für Allgemein, Löschen, PDF und externe Werkzeuge")
         
         # Tab 1: Allgemein & Sprache
         general_tab = self.create_general_tab()
@@ -2942,11 +2962,11 @@ class SettingsDialog(QDialog):
         
         # Tab 3: PDF-Einstellungen (NEU!)
         pdf_tab = self.create_pdf_tab()
-        tabs.addTab(pdf_tab, " PDF")
+        tabs.addTab(pdf_tab, "PDF")
         
         # Tab 4: Externe Tools (NEU V13!)
         tools_tab = self.create_tools_tab()
-        tabs.addTab(tools_tab, " Externe Tools")
+        tabs.addTab(tools_tab, "Externe Tools")
         
         layout.addWidget(tabs)
         
@@ -2961,6 +2981,7 @@ class SettingsDialog(QDialog):
     def create_general_tab(self):
         """Tab für allgemeine Einstellungen (Sprache, etc.)"""
         widget = QWidget()
+        widget.setAccessibleName("Allgemeine Einstellungen")
         layout = QVBoxLayout(widget)
 
         # Spracheinstellungen (Tier-2 Multi-Language)
@@ -2968,6 +2989,9 @@ class SettingsDialog(QDialog):
         lang_layout = QFormLayout()
 
         self.combo_ui_lang = QComboBox()
+        self.combo_ui_lang.setAccessibleName("Oberflächensprache")
+        self.combo_ui_lang.setAccessibleDescription("Wählt die Anzeigesprache der Benutzeroberfläche aus")
+        self.combo_ui_lang.setToolTip("Oberflächensprache auswählen")
         if HAS_TRANSLATOR:
             languages = list(TranslationSystem.LANGUAGE_DISPLAY_NAMES.items())
         else:
@@ -2988,7 +3012,9 @@ class SettingsDialog(QDialog):
                 self.combo_ui_lang.setCurrentIndex(i)
                 break
 
-        lang_layout.addRow("Oberflächensprache:", self.combo_ui_lang)
+        lbl_lang = QLabel("&Oberflächensprache:")
+        lbl_lang.setBuddy(self.combo_ui_lang)
+        lang_layout.addRow(lbl_lang, self.combo_ui_lang)
 
         info_label = QLabel("Änderungen der Oberflächensprache werden nach dem Speichern wirksam.")
         info_label.setStyleSheet("color: #888; font-size: 11px; padding-top: 4px;")
@@ -3004,21 +3030,28 @@ class SettingsDialog(QDialog):
     def create_delete_tab(self):
         """Tab für Lösch-Einstellungen"""
         widget = QWidget()
+        widget.setAccessibleName("Löscheinstellungen")
         layout = QVBoxLayout(widget)
         
         # Delete Mode
         mode_group = QGroupBox("Lösch-Modus")
         mode_layout = QVBoxLayout()
         
-        self.radio_soft = QRadioButton("Soft-Delete (Papierkorb)")
+        self.radio_soft = QRadioButton("&Soft-Delete (Papierkorb)")
         self.radio_soft.setToolTip("Dateien werden markiert, können wiederhergestellt werden")
+        self.radio_soft.setAccessibleName("Soft-Delete Modus")
+        self.radio_soft.setAccessibleDescription("Dateien in den internen Papierkorb verschieben; Wiederherstellung ist möglich")
         
-        self.radio_hard = QRadioButton("Hard-Delete (Permanent)")
+        self.radio_hard = QRadioButton("&Hard-Delete (Permanent)")
         self.radio_hard.setToolTip("Dateien werden sofort permanent gelöscht")
+        self.radio_hard.setAccessibleName("Hard-Delete Modus")
+        self.radio_hard.setAccessibleDescription("Dateien sofort und unwiderruflich von der Festplatte entfernen")
         
         # HIER WAR DER FEHLER: Definition muss VOR dem addWidget kommen
-        self.radio_safety = QRadioButton("Safety-Mode (Nur Ausblenden)")
+        self.radio_safety = QRadioButton("&Safety-Mode (Nur Ausblenden)")
         self.radio_safety.setToolTip("Dateien werden NICHT gelöscht, nur in der Ansicht ausgeblendet.\nKeine Änderung auf Festplatte.")
+        self.radio_safety.setAccessibleName("Safety-Mode")
+        self.radio_safety.setAccessibleDescription("Dateien nur in der Ansicht ausblenden ohne Dateiänderungen auf der Festplatte")
         
         # Aktuellen Modus setzen
         mode = self.settings.get("delete_mode", "soft")
@@ -3045,14 +3078,22 @@ class SettingsDialog(QDialog):
         self.spin_retention.setSuffix(" Tage")
         self.spin_retention.setValue(self.settings.get("trash_retention_days", 30))
         self.spin_retention.setSpecialValueText("Unbegrenzt")
+        self.spin_retention.setAccessibleName("Aufbewahrungsdauer im Papierkorb")
+        self.spin_retention.setAccessibleDescription("Anzahl der Tage, die gelöschte Dateien im Papierkorb verbleiben (0 für unbegrenzt)")
+        self.spin_retention.setToolTip("Aufbewahrungsdauer in Tagen festlegen")
         
-        retention_layout.addRow("Gelöschte Dateien behalten:", self.spin_retention)
+        lbl_retention = QLabel("&Gelöschte Dateien behalten:")
+        lbl_retention.setBuddy(self.spin_retention)
+        retention_layout.addRow(lbl_retention, self.spin_retention)
         retention_group.setLayout(retention_layout)
         layout.addWidget(retention_group)
         
         # Auto-Cleanup
-        self.cb_auto_cleanup = QCheckBox("Automatisches Aufräumen beim Start")
+        self.cb_auto_cleanup = QCheckBox("&Automatisches Aufräumen beim Start")
         self.cb_auto_cleanup.setChecked(self.settings.get("auto_cleanup_enabled", True))
+        self.cb_auto_cleanup.setToolTip("Abgelaufene Papierkorb-Einträge beim Programmstart automatisch entfernen")
+        self.cb_auto_cleanup.setAccessibleName("Automatisches Aufräumen beim Start")
+        self.cb_auto_cleanup.setAccessibleDescription("Bereinigt abgelaufene Dateien im Papierkorb automatisch bei jedem Programmstart")
         layout.addWidget(self.cb_auto_cleanup)
         
         # Spawn-Einstellungen (NEU V13.2!)
@@ -3065,8 +3106,13 @@ class SettingsDialog(QDialog):
         index = self.combo_spawn_format.findText(current_format)
         if index >= 0:
             self.combo_spawn_format.setCurrentIndex(index)
+        self.combo_spawn_format.setAccessibleName("Standard-Spawn-Format")
+        self.combo_spawn_format.setAccessibleDescription("Standard-Dateiformat beim Erstellen neuer Dokumente aus der Zwischenablage")
+        self.combo_spawn_format.setToolTip("Dateiformat für Zwischenablage-Inhalte wählen")
         
-        spawn_layout.addRow("Standard-Spawn-Format:", self.combo_spawn_format)
+        lbl_spawn = QLabel("Standard-&Spawn-Format:")
+        lbl_spawn.setBuddy(self.combo_spawn_format)
+        spawn_layout.addRow(lbl_spawn, self.combo_spawn_format)
         spawn_group.setLayout(spawn_layout)
         layout.addWidget(spawn_group)
 
@@ -3076,9 +3122,11 @@ class SettingsDialog(QDialog):
         
         self.cb_rename_filesystem = QCheckBox("Umbenennung wirkt im Dateisystem")
         self.cb_rename_filesystem.setToolTip(
-            " AN: Datei wird auf Festplatte umbenannt\n"
-            " AUS: Nur Anzeigename in ProFiler (Datei bleibt unverändert)"
+            "AN: Datei wird auf Festplatte umbenannt\n"
+            "AUS: Nur Anzeigename in ProFiler (Datei bleibt unverändert)"
         )
+        self.cb_rename_filesystem.setAccessibleName("Umbenennung im Dateisystem anwenden")
+        self.cb_rename_filesystem.setAccessibleDescription("Steuert, ob Umbenennungen die tatsächliche Datei auf der Festplatte ändern")
         self.cb_rename_filesystem.setChecked(self.settings.get("rename_in_filesystem", True))
         
         rename_layout.addWidget(self.cb_rename_filesystem)
@@ -3091,13 +3139,14 @@ class SettingsDialog(QDialog):
     def create_pdf_tab(self):
         """Tab für PDF-Einstellungen (NEU!)"""
         widget = QWidget()
+        widget.setAccessibleName("PDF-Einstellungen")
         layout = QVBoxLayout(widget)
         
-        # Masterpasswrter
-        pwd_group = QGroupBox("Masterpasswrter")
+        # Masterpasswörter (mit echtem Umlaut ö)
+        pwd_group = QGroupBox("Masterpasswörter")
         pwd_layout = QFormLayout()
         
-        info = QLabel("Masterpasswrter für schnelle Batch-Operationen")
+        info = QLabel("Masterpasswörter für schnelle Batch-Operationen")
         info.setStyleSheet("color: #888; font-size: 11px; padding: 5px;")
         pwd_layout.addRow(info)
         
@@ -3106,12 +3155,18 @@ class SettingsDialog(QDialog):
         self.master_pwd1.setEchoMode(QLineEdit.EchoMode.Password)
         self.master_pwd1.setText(self.settings.get("pdf_master_password_open", ""))
         self.master_pwd1.setPlaceholderText("Leer = nicht gesetzt")
+        self.master_pwd1.setAccessibleName("Masterpasswort 1 zum Öffnen")
+        self.master_pwd1.setAccessibleDescription("Passwort zum automatischen Entschlüsseln geschützter PDF-Dateien bei Batch-Operationen")
+        self.master_pwd1.setToolTip("Masterpasswort zum Entschlüsseln eingeben (optional)")
         
         pwd1_layout = QHBoxLayout()
         pwd1_layout.addWidget(self.master_pwd1)
         
         self.cb_show_pwd1 = QCheckBox("")
         self.cb_show_pwd1.setMaximumWidth(40)
+        self.cb_show_pwd1.setToolTip("Masterpasswort 1 im Klartext anzeigen")
+        self.cb_show_pwd1.setAccessibleName("Masterpasswort 1 im Klartext anzeigen")
+        self.cb_show_pwd1.setAccessibleDescription("Blendet das Masterpasswort 1 als sichtbaren Text ein oder maskiert es wieder")
         self.cb_show_pwd1.toggled.connect(
             lambda checked: self.master_pwd1.setEchoMode(
                 QLineEdit.EchoMode.Normal if checked else QLineEdit.EchoMode.Password
@@ -3119,19 +3174,27 @@ class SettingsDialog(QDialog):
         )
         pwd1_layout.addWidget(self.cb_show_pwd1)
         
-        pwd_layout.addRow("Masterpasswort 1 (öffnen):", pwd1_layout)
+        lbl_pwd1 = QLabel("Masterpasswort &1 (öffnen):")
+        lbl_pwd1.setBuddy(self.master_pwd1)
+        pwd_layout.addRow(lbl_pwd1, pwd1_layout)
         
         # Masterpasswort 2 (Speichern)
         self.master_pwd2 = QLineEdit()
         self.master_pwd2.setEchoMode(QLineEdit.EchoMode.Password)
         self.master_pwd2.setText(self.settings.get("pdf_master_password_save", ""))
         self.master_pwd2.setPlaceholderText("Leer = nicht gesetzt")
+        self.master_pwd2.setAccessibleName("Masterpasswort 2 zum Speichern")
+        self.master_pwd2.setAccessibleDescription("Standard-Passwort zum Verschlüsseln neu erzeugter PDF-Dateien")
+        self.master_pwd2.setToolTip("Masterpasswort zum Verschlüsseln eingeben (optional)")
         
         pwd2_layout = QHBoxLayout()
         pwd2_layout.addWidget(self.master_pwd2)
         
         self.cb_show_pwd2 = QCheckBox("")
         self.cb_show_pwd2.setMaximumWidth(40)
+        self.cb_show_pwd2.setToolTip("Masterpasswort 2 im Klartext anzeigen")
+        self.cb_show_pwd2.setAccessibleName("Masterpasswort 2 im Klartext anzeigen")
+        self.cb_show_pwd2.setAccessibleDescription("Blendet das Masterpasswort 2 als sichtbaren Text ein oder maskiert es wieder")
         self.cb_show_pwd2.toggled.connect(
             lambda checked: self.master_pwd2.setEchoMode(
                 QLineEdit.EchoMode.Normal if checked else QLineEdit.EchoMode.Password
@@ -3139,7 +3202,9 @@ class SettingsDialog(QDialog):
         )
         pwd2_layout.addWidget(self.cb_show_pwd2)
         
-        pwd_layout.addRow("Masterpasswort 2 (Speichern):", pwd2_layout)
+        lbl_pwd2 = QLabel("Masterpasswort &2 (Speichern):")
+        lbl_pwd2.setBuddy(self.master_pwd2)
+        pwd_layout.addRow(lbl_pwd2, pwd2_layout)
         
         pwd_group.setLayout(pwd_layout)
         layout.addWidget(pwd_group)
@@ -3150,6 +3215,9 @@ class SettingsDialog(QDialog):
         
         self.cb_ocr_enabled = QCheckBox("OCR aktiviert")
         self.cb_ocr_enabled.setChecked(self.settings.get("ocr_enabled", True))
+        self.cb_ocr_enabled.setToolTip("Tesseract-OCR für Bilddokumente und Scans aktivieren")
+        self.cb_ocr_enabled.setAccessibleName("OCR-Texterkennung aktivieren")
+        self.cb_ocr_enabled.setAccessibleDescription("Aktiviert die Tesseract-Texterkennung für durchsuchbare PDF-Generierung")
         ocr_layout.addRow(self.cb_ocr_enabled)
         
         self.combo_ocr_lang = QComboBox()
@@ -3158,8 +3226,13 @@ class SettingsDialog(QDialog):
         idx = self.combo_ocr_lang.findText(current_lang)
         if idx >= 0:
             self.combo_ocr_lang.setCurrentIndex(idx)
+        self.combo_ocr_lang.setToolTip("Sprachpaket für Tesseract OCR festlegen")
+        self.combo_ocr_lang.setAccessibleName("OCR-Sprache")
+        self.combo_ocr_lang.setAccessibleDescription("Auswahl des Tesseract-Sprachmodells für die Erkennung")
         
-        ocr_layout.addRow("OCR-Sprache:", self.combo_ocr_lang)
+        lbl_ocr = QLabel("&OCR-Sprache:")
+        lbl_ocr.setBuddy(self.combo_ocr_lang)
+        ocr_layout.addRow(lbl_ocr, self.combo_ocr_lang)
         
         ocr_info = QLabel("Benötigt: Tesseract-OCR installiert")
         ocr_info.setStyleSheet("color: #888; font-size: 10px;")
@@ -3175,10 +3248,11 @@ class SettingsDialog(QDialog):
     def create_tools_tab(self):
         """Tab für Externe Tools (NEU!)"""
         widget = QWidget()
+        widget.setAccessibleName("Externe Werkzeuge")
         layout = QVBoxLayout(widget)
         
         # PythonBox
-        pythonbox_group = QGroupBox(" PythonBox")
+        pythonbox_group = QGroupBox("PythonBox")
         pythonbox_layout = QFormLayout()
         
         info = QLabel("Python-Entwicklungsumgebung öffnen")
@@ -3190,16 +3264,27 @@ class SettingsDialog(QDialog):
         self.pythonbox_path = QLineEdit()
         self.pythonbox_path.setText(self.settings.get("pythonbox_path", ""))
         self.pythonbox_path.setPlaceholderText("Pfad zu PythonBox.py")
+        self.pythonbox_path.setToolTip("Pfad zur PythonBox-Skriptdatei oder ausführbaren Datei")
+        self.pythonbox_path.setAccessibleName("PythonBox-Pfad")
+        self.pythonbox_path.setAccessibleDescription("Dateipfad zur PythonBox-Entwicklungsumgebung")
         path_layout.addWidget(self.pythonbox_path)
         
-        btn_browse = QPushButton(" Durchsuchen")
+        btn_browse = QPushButton("Durchsuchen")
+        btn_browse.setToolTip("Dateidialog öffnen, um PythonBox.py auszuwählen")
+        btn_browse.setAccessibleName("PythonBox-Pfad durchsuchen")
+        btn_browse.setAccessibleDescription("Öffnet einen Dateiauswahldialog für die PythonBox-Hauptdatei")
         btn_browse.clicked.connect(self.browse_pythonbox)
         path_layout.addWidget(btn_browse)
         
-        pythonbox_layout.addRow("PythonBox Pfad:", path_layout)
+        lbl_pybox = QLabel("PythonBox-&Pfad:")
+        lbl_pybox.setBuddy(self.pythonbox_path)
+        pythonbox_layout.addRow(lbl_pybox, path_layout)
         
         # Test Button
-        btn_test = QPushButton(" Test")
+        btn_test = QPushButton("Test")
+        btn_test.setToolTip("Testet den hinterlegten Pfad und startet PythonBox zur Probe")
+        btn_test.setAccessibleName("PythonBox-Start testen")
+        btn_test.setAccessibleDescription("Prüft die Verfügbarkeit und führt einen Teststart von PythonBox durch")
         btn_test.clicked.connect(self.test_pythonbox)
         pythonbox_layout.addRow(btn_test)
         
@@ -3207,44 +3292,60 @@ class SettingsDialog(QDialog):
         layout.addWidget(pythonbox_group)
         
         # SQLiteViewer
-        sqlite_group = QGroupBox(" SQLite Viewer")
+        sqlite_group = QGroupBox("SQLite Viewer")
         sqlite_layout = QFormLayout()
         
         path_layout2 = QHBoxLayout()
         self.sqlite_path = QLineEdit()
         self.sqlite_path.setText(self.settings.get("sqlite_viewer_path", ""))
         self.sqlite_path.setPlaceholderText("Pfad zu SQLiteViewer.py")
+        self.sqlite_path.setToolTip("Pfad zum SQLite-Viewer-Werkzeug")
+        self.sqlite_path.setAccessibleName("SQLite-Viewer-Pfad")
+        self.sqlite_path.setAccessibleDescription("Dateipfad zum integrierten oder externen SQLite-Viewer")
         path_layout2.addWidget(self.sqlite_path)
         
-        btn_browse2 = QPushButton(" Durchsuchen")
+        btn_browse2 = QPushButton("Durchsuchen")
+        btn_browse2.setToolTip("Dateidialog öffnen, um SQLiteViewer.py auszuwählen")
+        btn_browse2.setAccessibleName("SQLite-Viewer-Pfad durchsuchen")
+        btn_browse2.setAccessibleDescription("Öffnet einen Dateiauswahldialog für den SQLite-Viewer")
         btn_browse2.clicked.connect(self.browse_sqlite)
         path_layout2.addWidget(btn_browse2)
         
-        sqlite_layout.addRow("SQLiteViewer Pfad:", path_layout2)
+        lbl_sqlite = QLabel("&SQLiteViewer-Pfad:")
+        lbl_sqlite.setBuddy(self.sqlite_path)
+        sqlite_layout.addRow(lbl_sqlite, path_layout2)
         sqlite_group.setLayout(sqlite_layout)
         layout.addWidget(sqlite_group)
         
         # FormConstructor
-        form_group = QGroupBox(" Form Constructor")
+        form_group = QGroupBox("Form Constructor")
         form_layout = QFormLayout()
         
         path_layout3 = QHBoxLayout()
         self.formconstr_path = QLineEdit()
         self.formconstr_path.setText(self.settings.get("formconstructor_path", ""))
         self.formconstr_path.setPlaceholderText("Pfad zu FormConstructor_V1_5.py")
+        self.formconstr_path.setToolTip("Pfad zum Form-Constructor-Werkzeug")
+        self.formconstr_path.setAccessibleName("FormConstructor-Pfad")
+        self.formconstr_path.setAccessibleDescription("Dateipfad zum Form-Constructor-Generator")
         path_layout3.addWidget(self.formconstr_path)
         
-        btn_browse3 = QPushButton(" Durchsuchen")
+        btn_browse3 = QPushButton("Durchsuchen")
+        btn_browse3.setToolTip("Dateidialog öffnen, um FormConstructor_V1_5.py auszuwählen")
+        btn_browse3.setAccessibleName("FormConstructor-Pfad durchsuchen")
+        btn_browse3.setAccessibleDescription("Öffnet einen Dateiauswahldialog für den FormConstructor")
         btn_browse3.clicked.connect(self.browse_formconstructor)
         path_layout3.addWidget(btn_browse3)
         
-        form_layout.addRow("FormConstructor Pfad:", path_layout3)
+        lbl_form = QLabel("&FormConstructor-Pfad:")
+        lbl_form.setBuddy(self.formconstr_path)
+        form_layout.addRow(lbl_form, path_layout3)
         form_group.setLayout(form_layout)
         layout.addWidget(form_group)
 
         # Modul-Status (auto-detection via ModuleRegistry)
         if _MODULE_REGISTRY_AVAILABLE:
-            status_group = QGroupBox(" Modul-Status (automatische Erkennung)")
+            status_group = QGroupBox("Modul-Status (automatische Erkennung)")
             status_layout = QFormLayout()
             status_layout.setHorizontalSpacing(12)
 

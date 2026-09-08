@@ -5,6 +5,13 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Geändert / Changed (2026-09-09)
+- **Accessibility & UX (`Profiler_Suite_V15.py`, `tests/test_ui_accessibility.py`):**
+  - `SettingsDialog`: Vollständige Screenreader-Semantik (`accessibleName`, `accessibleDescription`), Tooltips für kompakte Steuerelemente und Tastatur-Mnemonics mit `setBuddy`-Fokusverknüpfungen für Formularfelder (Sprache, Löschmodus, Aufbewahrung, Zwischenablage-Spawning, Masterpasswörter, OCR, externe Tools) ergänzt.
+  - Typografie & Umlaute: Tippfehler `"Masterpasswrter"` im Einstellungsdialog zu echtem deutschen Umlaut `"Masterpasswörter"` korrigiert; führende Leerzeichen in Reiterbezeichnungen (`"PDF"`, `"Externe Tools"`), Gruppenrahmen und Aktionsschaltflächen bereinigt.
+  - `PDFPasswordDialog`: `accessibleName` ("PDF-Passwortdialog"), `accessibleDescription`, Feldbeschreibungen, Tastatur-Mnemonics und Tooltips für Kennwortanzeige- und Modus-Auswahl ergänzt sowie führende Leerzeichen in Hinweistexten bereinigt.
+  - Testsuite: 2 neue Barrierefreiheits- und Umlaut-Prüfungen in `tests/test_ui_accessibility.py` integriert (160/160 Tests 100% grün).
+
 ### Geändert / Changed (2026-09-07)
 - **Security & Vulnerability Hardening (`pyproject.toml`, `requirements.txt`):** Mindestversionsgrenze für `Pillow` von `>=12.2.0` auf `>=12.3.0` angehoben; behebt 26 bekannte Sicherheitslücken (darunter Command Injection via `WindowsViewer.get_command()` GHSA-4x4j-2g7c-83w6 und Decompression-Bomb-Bypass GHSA-45hq-cxwh-f6vc). Optional-Dependency-Block um `dev` mit `pytest>=9.1.1` (Behebung GHSA-6w46-j5rx-g56g / CVE-2025-7117) und `ruff>=0.9.0` ergänzt.
 - **Third-Party & Lizenz-Inventar (`THIRD_PARTY_LICENSES.txt`):** Lizenzinventar auf Stand 2026-09-07 aktualisiert, `pypdf` auf 6.15.0 synchronisiert, transitive Build- und Runtime-Pakete (`packaging`, `pluggy`, `iniconfig`, `altgraph`) inventarisiert und Copyleft-/Distributionsgrenzen verifiziert.
