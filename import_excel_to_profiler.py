@@ -90,6 +90,7 @@ class ProfilerAutismoImporter:
         self._validate_root_boundary()
         self.conn = sqlite3.connect(self.db_path)
         self.cursor = self.conn.cursor()
+        self._columns_cache: dict[str, set[str]] = {}
 
     def __enter__(self) -> "ProfilerAutismoImporter":
         return self
@@ -98,9 +99,34 @@ class ProfilerAutismoImporter:
         self.close()
 
     def close(self) -> None:
+        if self.cursor is not None:
+            try:
+                self.cursor.close()
+            except Exception:
+                pass
+            self.cursor = None
         if self.conn is not None:
-            self.conn.close()
+            try:
+                self.conn.close()
+            except Exception:
+                pass
             self.conn = None
+
+    def _table_columns(self, table_name: str) -> set[str]:
+        if table_name in self._columns_cache:
+            return self._columns_cache[table_name]
+        if self.cursor is None:
+            return set()
+        try:
+            self.cursor.execute(f"PRAGMA table_info({table_name})")
+            cols = {row[1] for row in self.cursor.fetchall()}
+            self._columns_cache[table_name] = cols
+            return cols
+        except sqlite3.OperationalError:
+            return set()
+
+    def _has_table(self, table_name: str) -> bool:
+        return bool(self._table_columns(table_name))
 
     @property
     def marker_path(self) -> Path:
@@ -167,14 +193,16 @@ class ProfilerAutismoImporter:
             self.conn.execute("BEGIN")
             version_ids = [row[0] for row in version_rows]
             file_ids = sorted({row[1] for row in version_rows})
-            self.cursor.executemany(
-                "DELETE FROM collection_items WHERE version_id = ?",
-                [(version_id,) for version_id in version_ids],
-            )
+            if self._has_table("collection_items"):
+                self.cursor.executemany(
+                    "DELETE FROM collection_items WHERE version_id = ?",
+                    [(version_id,) for version_id in version_ids],
+                )
             self.cursor.executemany(
                 "DELETE FROM versions WHERE id = ?",
                 [(version_id,) for version_id in version_ids],
             )
+            has_tags = self._has_table("tags")
             for file_id in file_ids:
                 still_used = self.cursor.execute(
                     "SELECT 1 FROM versions WHERE file_id = ? LIMIT 1",
@@ -182,7 +210,8 @@ class ProfilerAutismoImporter:
                 ).fetchone()
                 if still_used:
                     continue
-                self.cursor.execute("DELETE FROM tags WHERE file_id = ?", (file_id,))
+                if has_tags:
+                    self.cursor.execute("DELETE FROM tags WHERE file_id = ?", (file_id,))
                 self.cursor.execute("DELETE FROM files WHERE id = ?", (file_id,))
             self.conn.commit()
         except Exception as exc:
@@ -207,19 +236,32 @@ class ProfilerAutismoImporter:
         clean_name = safe_str(name)
         if not clean_name:
             return None
+        coll_cols = self._table_columns("collections")
+        if not coll_cols:
+            return None
         self.cursor.execute("SELECT id FROM collections WHERE name = ?", (clean_name,))
         existing = self.cursor.fetchone()
         if existing:
             return int(existing[0])
         timestamp = datetime.now(timezone.utc).isoformat()
+        coll_payload: dict[str, Any] = {"name": clean_name}
+        if "description" in coll_cols:
+            coll_payload["description"] = "Importiert aus Excel"
+        if "created_at" in coll_cols:
+            coll_payload["created_at"] = timestamp
+        c_cols = [c for c in coll_payload if c in coll_cols] or list(coll_payload.keys())
+        c_names = ", ".join(c_cols)
+        c_placeholders = ", ".join("?" for _ in c_cols)
         self.cursor.execute(
-            "INSERT INTO collections (name, description, created_at) VALUES (?, ?, ?)",
-            (clean_name, "Importiert aus Excel", timestamp),
+            f"INSERT INTO collections ({c_names}) VALUES ({c_placeholders})",
+            [coll_payload[c] for c in c_cols],
         )
         self.conn.commit()
         return int(self.cursor.lastrowid)
 
     def add_tags(self, file_id: int, tags_list: list[str]) -> None:
+        if not self._has_table("tags"):
+            return
         for tag in tags_list:
             clean_tag = tag.strip()
             if clean_tag:
@@ -247,36 +289,69 @@ class ProfilerAutismoImporter:
         if existing:
             file_id = int(existing[0])
         else:
+            files_cols = self._table_columns("files")
+            f_payload: dict[str, Any] = {
+                "content_hash": content_hash,
+                "size": stat.st_size,
+                "mime": "text/plain",
+                "first_seen": modified_at,
+            }
+            if "pdf_encrypted" in files_cols:
+                f_payload["pdf_encrypted"] = 0
+            if "pdf_has_text" in files_cols:
+                f_payload["pdf_has_text"] = 1
+            f_cols = [c for c in f_payload if c in files_cols] or list(f_payload.keys())
+            f_names = ", ".join(f_cols)
+            f_placeholders = ", ".join("?" for _ in f_cols)
             self.cursor.execute(
-                "INSERT INTO files (content_hash, size, mime, first_seen, pdf_encrypted, pdf_has_text) "
-                "VALUES (?, ?, ?, ?, 0, 1)",
-                (content_hash, stat.st_size, "text/plain", modified_at),
+                f"INSERT INTO files ({f_names}) VALUES ({f_placeholders})",
+                [f_payload[c] for c in f_cols],
             )
             file_id = int(self.cursor.lastrowid)
 
-        try:
-            self.cursor.execute(
-                "INSERT INTO versions "
-                "(file_id, name, path, mtime, ctime, version_index, source_side, is_deleted, display_name) "
-                "VALUES (?, ?, ?, ?, ?, 1, 'source', 0, ?)",
-                (file_id, path.name, str(path), modified_at, modified_at, display_name),
-            )
-        except sqlite3.OperationalError:
-            self.cursor.execute(
-                "INSERT INTO versions "
-                "(file_id, name, path, mtime, ctime, version_index, source_side, is_deleted) "
-                "VALUES (?, ?, ?, ?, ?, 1, 'source', 0)",
-                (file_id, path.name, str(path), modified_at, modified_at),
-            )
+        versions_cols = self._table_columns("versions")
+        v_payload: dict[str, Any] = {
+            "file_id": file_id,
+            "name": path.name,
+            "path": str(path),
+            "mtime": modified_at,
+            "ctime": modified_at,
+            "version_index": 1,
+        }
+        if "source_side" in versions_cols:
+            v_payload["source_side"] = "source"
+        elif "source_folder" in versions_cols:
+            v_payload["source_folder"] = "source"
+        if "is_deleted" in versions_cols:
+            v_payload["is_deleted"] = 0
+        if "display_name" in versions_cols:
+            v_payload["display_name"] = display_name
+
+        v_cols = [c for c in v_payload if c in versions_cols] or list(v_payload.keys())
+        v_names = ", ".join(v_cols)
+        v_placeholders = ", ".join("?" for _ in v_cols)
+        self.cursor.execute(
+            f"INSERT INTO versions ({v_names}) VALUES ({v_placeholders})",
+            [v_payload[c] for c in v_cols],
+        )
         version_id = int(self.cursor.lastrowid)
 
         if category_id:
-            timestamp = datetime.now(timezone.utc).isoformat()
-            self.cursor.execute(
-                "INSERT OR IGNORE INTO collection_items (collection_id, version_id, added_at) "
-                "VALUES (?, ?, ?)",
-                (category_id, version_id, timestamp),
-            )
+            ci_cols = self._table_columns("collection_items")
+            if ci_cols:
+                ci_payload: dict[str, Any] = {
+                    "collection_id": category_id,
+                    "version_id": version_id,
+                }
+                if "added_at" in ci_cols:
+                    ci_payload["added_at"] = datetime.now(timezone.utc).isoformat()
+                ci_cols_list = [c for c in ci_payload if c in ci_cols] or list(ci_payload.keys())
+                ci_names = ", ".join(ci_cols_list)
+                ci_placeholders = ", ".join("?" for _ in ci_cols_list)
+                self.cursor.execute(
+                    f"INSERT OR IGNORE INTO collection_items ({ci_names}) VALUES ({ci_placeholders})",
+                    [ci_payload[c] for c in ci_cols_list],
+                )
         self.add_tags(file_id, tags_list)
         self.conn.commit()
         print(f"  -> {display_name}")
