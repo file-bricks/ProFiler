@@ -9,7 +9,15 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from workspace_exchange import SCHEMA_NAME, build_workspace_export, import_workspace
+from workspace_exchange import (
+    SCHEMA_NAME,
+    PathRedactor,
+    WorkspaceFormatError,
+    _redacted_root,
+    build_workspace_export,
+    import_workspace,
+    load_workspace,
+)
 
 
 class FakeSearchManager:
@@ -195,6 +203,36 @@ class WorkspaceExchangeTests(unittest.TestCase):
             privacy_config=self.privacy_config,
         )
         self.assertEqual(payload["indexes"][0]["status"], "missing")
+
+    def test_build_workspace_export_normalizes_hard_delete_mode(self):
+        settings = FakeSettingsManager({"delete_mode": "hard", "theme": "dark"})
+        payload = build_workspace_export(
+            FakeSearchManager([]),
+            settings,
+            FakeConnectionManager([]),
+            privacy_config=self.privacy_config,
+        )
+        self.assertEqual(payload["settings"]["delete_mode"], "soft")
+
+    def test_load_workspace_rejects_invalid_utf8_encoding_as_workspace_format_error(self):
+        bad_file = self.root / "bad_encoding.json"
+        bad_file.write_bytes(b"{\xff\xfe: 123}")
+        with self.assertRaises(WorkspaceFormatError) as ctx:
+            load_workspace(str(bad_file))
+        self.assertIn("Workspace-Datei konnte nicht gelesen werden", str(ctx.exception))
+
+    def test_redacted_root_handles_empty_none_and_relative_sources(self):
+        redactor = PathRedactor()
+        self.assertEqual(_redacted_root({"sources": [""]}, redactor), "[source-root-unknown]")
+        self.assertEqual(_redacted_root({"sources": [None]}, redactor), "[source-root-unknown]")
+        self.assertEqual(_redacted_root({"sources": ["relative_folder"]}, redactor), "[source-root-1]")
+        self.assertEqual(_redacted_root({"sources": ["", "C:\\valid\\path"]}, redactor), "[source-root-2]")
+
+    def test_path_redactor_reuses_reference_across_slash_styles(self):
+        redactor = PathRedactor()
+        ref1 = redactor.redact(r"C:\Users\User\Documents", "source-root")
+        ref2 = redactor.redact("C:/Users/User/Documents/", "source-root")
+        self.assertEqual(ref1, ref2)
 
 
 if __name__ == "__main__":

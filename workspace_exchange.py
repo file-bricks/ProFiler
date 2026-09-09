@@ -82,11 +82,12 @@ class PathRedactor:
         return f"[{ref}]"
 
     def _register(self, original: str, preferred_prefix: str) -> str:
-        if original in self._refs:
-            return self._refs[original]
+        key = original.replace("\\", "/").rstrip("/")
+        if key in self._refs:
+            return self._refs[key]
         self._counters[preferred_prefix] += 1
         ref = f"{preferred_prefix}-{self._counters[preferred_prefix]}"
-        self._refs[original] = ref
+        self._refs[key] = ref
         return ref
 
     @staticmethod
@@ -197,7 +198,7 @@ def load_workspace(input_path: str) -> dict[str, Any]:
                 f"Workspace-Datei ist größer als {MAX_WORKSPACE_BYTES} Bytes"
             )
         payload = json.loads(source.read_text(encoding="utf-8-sig"))
-    except (OSError, json.JSONDecodeError) as exc:
+    except (OSError, ValueError) as exc:
         raise WorkspaceFormatError(f"Workspace-Datei konnte nicht gelesen werden: {exc}") from exc
 
     _validate_workspace_payload(payload)
@@ -325,6 +326,10 @@ def _build_settings_payload(settings_data: dict[str, Any]) -> dict[str, Any]:
     for key in SAFE_EXPORT_SETTINGS:
         if key in settings_data:
             payload[key] = settings_data[key]
+
+    delete_mode = payload.get("delete_mode")
+    if delete_mode is not None and delete_mode not in {"soft", "safety"}:
+        payload["delete_mode"] = "soft"
 
     ocr_language = settings_data.get("ocr_language")
     if ocr_language:
@@ -475,7 +480,7 @@ def _load_json_file(path: Path) -> dict[str, Any]:
         return {}
     try:
         return json.loads(read_path.read_text(encoding="utf-8-sig"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, ValueError):
         return {}
 
 
@@ -487,9 +492,15 @@ def _list_connections(connection_manager: Any) -> Iterable[dict[str, Any]]:
 
 def _redacted_root(connection: dict[str, Any], redactor: PathRedactor) -> str:
     sources = list(connection.get("sources", []) or [])
-    if not sources:
-        return "[source-root-unknown]"
-    return str(redactor.redact(sources[0], "source-root"))
+    for raw in sources:
+        if isinstance(raw, str) and raw.strip():
+            candidate = raw.strip()
+            redacted = redactor.redact(candidate, "source-root")
+            if str(redacted).startswith("[") and str(redacted).endswith("]"):
+                return str(redacted)
+            ref = redactor._register(candidate, "source-root")
+            return f"[{ref}]"
+    return "[source-root-unknown]"
 
 
 def _table_columns(conn: sqlite3.Connection, table_name: str) -> list[str]:
