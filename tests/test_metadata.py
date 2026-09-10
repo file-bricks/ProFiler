@@ -152,3 +152,72 @@ def test_pyproject_pep621_metadata_and_urls() -> None:
     assert "Programming Language :: Python :: 3.13" in pyproject_text
     assert "Topic :: Security" in pyproject_text
     assert "Documentation = " in pyproject_text
+    assert '"Parent Organization" = ' in pyproject_text
+    assert '"Umbrella Ecosystem" = ' in pyproject_text
+    assert "Changelog = " in pyproject_text
+    assert "Security = " in pyproject_text
+
+
+def test_gitignore_hygiene_patterns() -> None:
+    """Verify comprehensive gitignore hygiene: sync conflicts, locks, caches, and temps."""
+    gi_text = (PROJECT_ROOT / ".gitignore").read_text(encoding="utf-8")
+    # Multi-host sync conflicts
+    for pat in ["*-WORKSTATION-LG*", "*-ASUS-GEI*", "*-conflict-*", "*-CONFLIT-*", "*.conflict", "*.sync-conflict-*", "*.sync-temp-*"]:
+        assert pat in gi_text, f"Missing sync conflict pattern in .gitignore: {pat}"
+    # Multi-agent locks
+    for pat in ["LOCK", "LOCK.*", "*.lock", "LOCK*.txt", "LOCK.permissions.json"]:
+        assert pat in gi_text, f"Missing lock pattern in .gitignore: {pat}"
+    # Test, coverage and wheelhouse caches
+    for pat in [".pytest_cache/", ".ruff_cache/", ".coverage", "coverage/", "htmlcov/", "wheelhouse/", ".wheel-smoke/"]:
+        assert pat in gi_text, f"Missing cache pattern in .gitignore: {pat}"
+    # Temp and editor files
+    for pat in ["*.tmp", "*.bak", "*.swp"]:
+        assert pat in gi_text, f"Missing temp pattern in .gitignore: {pat}"
+
+
+def test_pytest_configuration_and_flags() -> None:
+    """Verify pytest ini_options configuration has standard flags -ra -v."""
+    pyproject_text = (PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    assert "[tool.pytest.ini_options]" in pyproject_text
+    assert 'addopts = "-ra -v"' in pyproject_text
+    assert 'testpaths = ["tests", "."]' in pyproject_text
+
+
+def test_security_policy_slas_and_contacts() -> None:
+    """Verify bilingual SECURITY.md provides 48h response SLA, 5d triage, and official contacts."""
+    sec_text = (PROJECT_ROOT / "SECURITY.md").read_text(encoding="utf-8")
+    assert "48 hours" in sec_text and "48 Stunden" in sec_text
+    assert "5 business days" in sec_text and "5 Werktagen" in sec_text
+    assert "security@open-bricks.org" in sec_text
+    assert "lukas@open-bricks.org" in sec_text
+    assert "support@lukasgeiger.com" in sec_text
+    assert "15.0.x" in sec_text
+
+
+def test_ci_workflow_hardening() -> None:
+    """Verify CI workflow includes Python bytecode compilation gate and verbose pytest."""
+    ci_file = PROJECT_ROOT / ".github" / "workflows" / "source-platform-smoke.yml"
+    assert ci_file.exists(), "CI workflow file missing"
+    ci_text = ci_file.read_text(encoding="utf-8")
+    assert "python -m compileall -q ." in ci_text
+    assert "pytest -ra -v" in ci_text
+
+
+def test_changelog_release_entry() -> None:
+    """Verify CHANGELOG.md contains 15.0.1 release entry with technical hygiene notes."""
+    cl_text = (PROJECT_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    assert "## [15.0.1] - 2026-09-10" in cl_text
+    assert "Technische Hygiene" in cl_text or "Pfad A" in cl_text
+    assert "15.0.1.0" in cl_text
+
+
+def test_readme_badges_parity() -> None:
+    """Verify README.md and README_de.md badges parity for version, SLA, Ruff, and tests."""
+    readme_en = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    readme_de = (PROJECT_ROOT / "README_de.md").read_text(encoding="utf-8")
+
+    for doc in [readme_en, readme_de]:
+        assert "version-15.0.1-blue.svg" in doc
+        assert "48h%20Response%20%2F%205d%20Triage" in doc or "48h%20Antwort%20%2F%205d%20Triage" in doc
+        assert "code%20style-ruff" in doc
+        assert "ecosystem-open--bricks" in doc or "%C3%96kosystem-open--bricks" in doc

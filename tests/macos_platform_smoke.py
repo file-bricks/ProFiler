@@ -34,6 +34,7 @@ from PySide6.QtWidgets import QApplication
 import app_paths
 import sibling_launcher
 import translator
+from version import APP_VERSION
 import workspace_exchange
 
 
@@ -186,7 +187,7 @@ def test_macos_workspace_exchange_without_bom_or_secrets() -> None:
         )
 
         assert export_data["schema"] == "profiler-workspace-v1"
-        assert export_data["app"]["version"] == "15.0.0"
+        assert export_data["app"]["version"] == APP_VERSION
         # Secrets müssen ausgeschlossen sein
         assert "pdf_master_password_open" not in export_data["settings"]
         assert "pdf_user_password_open" not in export_data["settings"]

@@ -1,10 +1,10 @@
-﻿# =============================================================================
+# =============================================================================
 # .gitignore Template fuer Software Entwicklung Projekte
 # Kopieren und als .gitignore im Projektroot ablegen
 # Projektspezifische Eintraege am Ende anfuegen
 # =============================================================================
 
-# ---- Python ----
+# ---- Python & Test Caches ----
 __pycache__/
 *.py[cod]
 *$py.class
@@ -13,6 +13,13 @@ __pycache__/
 .eggs/
 dist/
 build/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage/
+htmlcov/
+wheelhouse/
+.wheel-smoke/
 
 # ---- Virtuelle Umgebungen ----
 venv/
@@ -28,14 +35,20 @@ TESTERGEBNISSE.txt
 BUGREPORT.md
 DIAGNOSE_REPORT.md
 SKILL.md
+LOCK
+LOCK.*
+*.lock
 LOCK*.txt
 LOCK.permissions.json
 
 # ---- Synchronisations- & Host-Konflikte ----
 *-WORKSTATION-LG*
 *-ASUS-GEI*
+*-conflict-*
+*-CONFLIT-*
 *.conflict
 *.sync-conflict-*
+*.sync-temp-*
 
 # ---- Persoenliche / Sensible Daten ----
 _USER/
@@ -85,9 +98,11 @@ _WARTUNG/
 _Wartung/
 _alt/
 
-# ---- Logs ----
+# ---- Logs & Temporäre Dateien ----
 *.log
 *.bak
+*.tmp
+*.swp
 
 # ---- Projektspezifisch ----
 

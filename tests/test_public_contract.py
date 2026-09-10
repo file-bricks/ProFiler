@@ -16,7 +16,7 @@ def test_runtime_and_store_use_one_version_contract() -> None:
     workspace_src = (PROJECT_ROOT / "workspace_exchange.py").read_text(encoding="utf-8")
     package = json.loads((PROJECT_ROOT / "store_package.json").read_text(encoding="utf-8"))
 
-    assert version == "15.0.0"
+    assert version == "15.0.1"
     assert "from version import APP_VERSION" in main_src
     assert "from version import APP_VERSION" in workspace_src
     assert "ProFiler Suite V14.3" not in main_src

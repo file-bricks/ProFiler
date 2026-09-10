@@ -5,7 +5,7 @@ Stand: 2026-08-14
 ## Erledigt
 
 - `store_package.json` mit vollständigen Metadaten (`languages: ["de-DE", "en-US"]`, Logo-Pfad, Publisher-ID, AGPL-Lizenz) gepflegt
-- Windows Store Packaging Staging unter `store_package/ProFiler/AppxManifest.xml` mit Identity `Geiger.ProFilerSuite`, Publisher `CN=52596601-BAB4-4F3F-B182-E8F3F273B202`, Version `15.0.0.0`, Capability `runFullTrust` und mehrsprachigen Ressourcen (`de-de`, `en-us`) angelegt
+- Windows Store Packaging Staging unter `store_package/ProFiler/AppxManifest.xml` mit Identity `Geiger.ProFilerSuite`, Publisher `CN=52596601-BAB4-4F3F-B182-E8F3F273B202`, Version `15.0.1.0`, Capability `runFullTrust` und mehrsprachigen Ressourcen (`de-de`, `en-us`) angelegt
 - Vollständiges Set an hochauflösenden MSIX-Tile- und Logo-Assets generiert:
   - `icon_44x44.png` (Square44x44Logo / Square71x71Logo)
   - `icon_50x50.png` (Square50x50Logo / StoreLogo)

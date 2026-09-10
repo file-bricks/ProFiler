@@ -24,7 +24,7 @@ Stand: 2026-07-22
   "exported_at": "2026-06-03T12:00:00Z",
   "app": {
     "name": "ProFiler Suite",
-    "version": "15.0.0"
+    "version": "15.0.1"
   },
   "workspace": {
     "name": "ProFiler Workspace (2 Verbindungen)",

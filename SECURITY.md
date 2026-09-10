@@ -26,11 +26,11 @@
 If you discover a security vulnerability, please report it privately:
 
 1. **GitHub Security Advisories**: Navigate to the [Security tab](https://github.com/file-bricks/ProFiler/security/advisories) of this repository and select **Report a vulnerability**.
-2. **Direct Contact**: If GitHub reporting is unavailable, contact the security team via `security@open-bricks.org` or `support@lukasgeiger.com`.
+2. **Direct Contact**: If GitHub reporting is unavailable, contact the security team via `security@open-bricks.org`, `lukas@open-bricks.org`, or `support@lukasgeiger.com`.
 
 **Please do not open public issues for security vulnerabilities.**
 
-We acknowledge receipt of vulnerability reports within **48 hours** and provide regular progress updates until a patch is released.
+We acknowledge receipt of vulnerability reports within **48 hours** and provide a formal triage assessment within **5 business days**, with regular progress updates until a patch is released.
 
 ### Security Updates
 
@@ -60,11 +60,11 @@ Security fixes are released promptly upon confirmation and documented in [CHANGE
 Wenn Sie eine Sicherheitslücke entdecken, melden Sie diese bitte vertraulich:
 
 1. **GitHub Security Advisories**: Über den Reiter [Security](https://github.com/file-bricks/ProFiler/security/advisories) im Repository -> **Report a vulnerability**.
-2. **Direktkontakt**: Falls GitHub nicht nutzbar ist, per E-Mail an `security@open-bricks.org` oder `support@lukasgeiger.com`.
+2. **Direktkontakt**: Falls GitHub nicht nutzbar ist, per E-Mail an `security@open-bricks.org`, `lukas@open-bricks.org` oder `support@lukasgeiger.com`.
 
 **Bitte eröffnen Sie keine öffentlichen Issues für Sicherheitslücken.**
 
-Wir bestätigen den Eingang innerhalb von **48 Stunden** und informieren regelmäßig über den Fortschritt bis zur Veröffentlichung eines Patches.
+Wir bestätigen den Eingang innerhalb von **48 Stunden**, führen innerhalb von **5 Werktagen** eine strukturierte Triage durch und informieren regelmäßig über den Fortschritt bis zur Veröffentlichung eines Patches.
 
 ### Sicherheits-Updates
 

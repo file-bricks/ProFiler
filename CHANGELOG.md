@@ -5,6 +5,17 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+## [15.0.1] - 2026-09-10
+
+### Geändert / Changed (2026-09-10)
+- **Technische Hygiene & Versionsanhebung (Pfad A):** Version auf `15.0.1` (Windows Store Package `15.0.1.0`) über `version.py`, `pyproject.toml`, `store_package.json`, `AppxManifest.xml`, Dokumentation, `llms.txt` und Vertragstests synchronisiert.
+- **Repository- & Multi-Host-Sync-Hygiene (`.gitignore`):** Umfassende Ausschlussmuster für Synchronisationskonflikte (`*-conflict-*`, `*.sync-conflict-*`, `*.conflict`, `*-CONFLIT-*`, `*.sync-temp-*`, `*-ASUS-GEI.*`, `*-WORKSTATION-LG.*`), Multi-Agent-Locks (`LOCK`, `LOCK.*`, `*.lock`, `LOCK*.txt`, `LOCK.permissions.json`), Test- und Cache-Verzeichnisse (`.pytest_cache/`, `.ruff_cache/`, `.coverage`, `coverage/`, `htmlcov/`, `wheelhouse/`, `.wheel-smoke/`) sowie temporäre Editor-Dateien (`*.tmp`, `*.bak`, `*.swp`, `*~`, `*.log`) gehärtet.
+- **Pyproject & Toolchain Standardisierung (`pyproject.toml`):** PEP 621 Standard-URLs für Parent Organization (`https://github.com/file-bricks`), Umbrella Ecosystem (`https://github.com/open-bricks`), Changelog und Security ergänzt; `[tool.pytest.ini_options]` um `addopts = "-ra -v"` erweitert.
+- **CI-Workflow-Härtung (`.github/workflows/source-platform-smoke.yml`):** Um Python-Bytecode-Kompilierungsgate (`python -m compileall -q .`) und standardisierte Testausführung `pytest -ra -v` erweitert.
+- **Zweisprachige Sicherheitsrichtlinie (`SECURITY.md`):** Um verbindliche 5-Werktage-Triage-Zusage (5 business days / 5 Werktage) neben dem 48-Stunden-Reaktions-SLA sowie offizielle Sicherheitskontakte (`security@open-bricks.org`, `lukas@open-bricks.org`, `support@lukasgeiger.com`) präzisiert.
+- **Vertragstestsuite (`tests/test_metadata.py`):** Neue automatisierte Vertragstests für Pfad A Technische Hygiene (`test_gitignore_hygiene_patterns`, `test_pytest_configuration_and_flags`, `test_security_policy_slas_and_contacts`, `test_ci_workflow_hardening`, `test_changelog_release_entry`, `test_readme_badges_parity`) implementiert.
+- **Badges & LLM Context:** Shields.io Badges in `README.md` und `README_de.md` auf Version `15.0.1`, Teststand, Security SLA (`48h Response / 5d Triage`) und Ruff Code Style synchronisiert; `llms.txt` aktualisiert (Stand 2026-09-10).
+
 ### Geändert / Changed (2026-09-09)
 - **Accessibility & UX (`Profiler_Suite_V15.py`, `tests/test_ui_accessibility.py`):**
   - `SettingsDialog`: Vollständige Screenreader-Semantik (`accessibleName`, `accessibleDescription`), Tooltips für kompakte Steuerelemente und Tastatur-Mnemonics mit `setBuddy`-Fokusverknüpfungen für Formularfelder (Sprache, Löschmodus, Aufbewahrung, Zwischenablage-Spawning, Masterpasswörter, OCR, externe Tools) ergänzt.

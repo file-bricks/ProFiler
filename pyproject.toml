@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "profiler-suite"
-version = "15.0.0"
+version = "15.0.1"
 description = "Local-first desktop file and document manager with search, preview, and privacy inspection."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -67,12 +67,16 @@ Homepage = "https://github.com/file-bricks/ProFiler"
 Repository = "https://github.com/file-bricks/ProFiler"
 Issues = "https://github.com/file-bricks/ProFiler/issues"
 Documentation = "https://github.com/file-bricks/ProFiler#readme"
+"Parent Organization" = "https://github.com/file-bricks"
+"Umbrella Ecosystem" = "https://github.com/open-bricks"
+Changelog = "https://github.com/file-bricks/ProFiler/blob/master/CHANGELOG.md"
+Security = "https://github.com/file-bricks/ProFiler/blob/master/SECURITY.md"
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests", "."]
 python_files = ["test_*.py", "*_test.py"]
-addopts = "-ra"
+addopts = "-ra -v"
 
 [tool.ruff]
 line-length = 120
