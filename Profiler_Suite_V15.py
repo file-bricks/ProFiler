@@ -43,6 +43,40 @@ from sibling_launcher import (
 )
 from version import APP_VERSION
 
+
+def load_app_icon() -> QIcon:
+    """Lädt das Anwendungs-Icon mit Multi-Pfad-Fallback.
+
+    Unterstützt Quelltext-Ausführung, PyInstaller (_MEIPASS) und
+    verschiedene Asset-Pfade (assets/app_icon.ico, assets/icon.ico,
+    assets/icon.png, ICO.ico, ProFiler.ico).
+    """
+    base_dir = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+    candidates = [
+        base_dir / "assets" / "app_icon.ico",
+        base_dir / "assets" / "icon.ico",
+        base_dir / "assets" / "profiler.ico",
+        base_dir / "assets" / "icon.png",
+        base_dir / "assets" / "DesktopIcon.ico",
+        base_dir / "ICO.ico",
+        base_dir / "ProFiler.ico",
+        base_dir / "DesktopIcon.ico",
+        base_dir / "icon.ico",
+        base_dir / "icon.png",
+        Path(__file__).resolve().parent / "assets" / "app_icon.ico",
+        Path(__file__).resolve().parent / "ICO.ico",
+    ]
+    for candidate in candidates:
+        if candidate.is_file():
+            icon = QIcon(str(candidate))
+            if not icon.isNull():
+                return icon
+    return QIcon()
+
+
+get_app_icon = load_app_icon
+
+
 # Optionale Bibliotheken
 try:
     # pypdf ist der gepflegte Nachfolger von PyPDF2. PyPDF2 wurde eingestellt
@@ -8713,6 +8747,7 @@ class UnifiedMainWindow(QMainWindow):
         super().__init__()
         
         self.setWindowTitle(f"ProFiler Suite {APP_VERSION} - Auto-Sync Watchdog")
+        self.setWindowIcon(load_app_icon())
         self.resize(1400, 900)
         
         # Managers
@@ -8780,7 +8815,8 @@ class UnifiedMainWindow(QMainWindow):
     def init_tray(self):
         """System-Tray"""
         self.tray_icon = QSystemTrayIcon(self)
-        self.tray_icon.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_FileIcon))
+        _icon = load_app_icon()
+        self.tray_icon.setIcon(_icon if not _icon.isNull() else self.style().standardIcon(QStyle.StandardPixmap.SP_FileIcon))
         
         tray_menu = QMenu(self)
         tray_menu.addAction("Anzeigen", self.show)
@@ -9049,6 +9085,7 @@ class UnifiedMainWindow(QMainWindow):
 def main():
     app = QApplication(sys.argv)
     app.setApplicationName(f"ProFiler Suite {APP_VERSION}")
+    app.setWindowIcon(load_app_icon())
     
     # Check Dependencies
     warnings = []
