@@ -5,6 +5,18 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Geändert / Changed (2026-09-11)
+- **Anonymization & Bugfix (`Profiler_Suite_V15.py`, `tests/test_anonymization.py`):**
+  - Bugfix `show_anonymization_settings`: Der zuvor als unvollständiger `pass`-Stub deklarierte Aufruf in `SearchWidget` wurde mit dem vollständigen `AnonymizationSettingsDialog(self.settings, self)` verdrahtet, sodass das Hinzufügen von Begriffen bei leerer Blacklist während der Dateianonymisierung oder PDF-Schwärzung direkt funktioniert.
+  - Bugfix `export_collection_list`: Ein versehentlich in den `except Exception as e:`-Block des Sammlungs-PDF-Exports hineinkopierter Aufruf von `AnonymizationSettingsDialog` wurde rückstandslos entfernt.
+  - Integration `SettingsDialog` & Hauptmenü: `SettingsDialog` im Tab „PDF“ um den Abschnitt „Datenschutz & Anonymisierung“ mit dedizierter Schaltfläche zur Konfiguration der Anonymisierungs-Filter erweitert; im Hauptmenü unter „Tools“ den Eintrag „🔒 Anonymisierungs-Einstellungen...“ ergänzt; Menüeintrag „über“ zu „Über“ typografisch korrigiert.
+  - Barrierefreiheit & UX: `AnonymizationSettingsDialog` mit vollständiger Screenreader-Semantik (`accessibleName`, `accessibleDescription`), Tooltips für alle Eingabefelder und Schaltflächen, Tastatur-Mnemonics (`&Hinzufügen`, `&Entfernen`, `&Importieren...`, `&Exportieren...`, `Liste &leeren`), Bereinigung führender Leerzeichen in Reitern sowie `setBuddy`-Fokusverknüpfung für den Platzhalter ergänzt.
+  - Transaktionssicherheit: Dialog arbeitet auf Kopien der Blacklist/Whitelist und persistiert Änderungen erst bei Bestätigung (`save_and_close`).
+  - Neue Testsuite `tests/test_anonymization.py`: 9 automatisierte Tests für Barrierefreiheit, Blacklist/Whitelist-Operationen, Platzhalter, Import/Export, Bestätigungsdialoge, Menü- und Einstellungsanbindung sowie AST-Regressionstest gegen versehentliche Dialogaufrufe im Sammlungs-Export.
+- **Plattform & Governance Contract (`tests/test_strange_new_worlds_contract.py`):**
+  - Vertragstests für die Strange New Worlds Plattform-Invarianten `SNW-PROFILER-01` bis `04` implementiert (Windows Desktop als Hauptlinie, macOS/Linux als Source-Smokes, Web/PWA/Android/iOS/Server-Sync als Nicht-Ziele, Evidenzpflicht für Store-Gates, Invarianten des Austauschformats `profiler-workspace-v1.json` sowie Schutz vor unautorisierten Port-Ableitungen).
+  - Gesamttestsuite auf 183 Tests ausgebaut (100% grün).
+
 ## [15.0.1] - 2026-09-10
 
 ### Geändert / Changed (2026-09-10)

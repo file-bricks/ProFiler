@@ -8,7 +8,7 @@
 [![Org: file-bricks](https://img.shields.io/badge/Org-file--bricks-blue)](https://github.com/file-bricks)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 [![CI: Platform Smoke](https://img.shields.io/badge/CI-Platform%20Smoke-brightgreen.svg)](https://github.com/file-bricks/ProFiler/actions)
-[![Tests: 170 passed](https://img.shields.io/badge/tests-170%20passed%20%7C%20100%25-brightgreen.svg)]()
+[![Tests: 183 passed](https://img.shields.io/badge/tests-183%20passed%20%7C%20100%25-brightgreen.svg)]()
 [![Code Style: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![Security SLA: 48h Response / 5d Triage](https://img.shields.io/badge/Security%20SLA-48h%20Response%20%2F%205d%20Triage-blue.svg)](SECURITY.md)
 [![Python: 3.10--3.13](https://img.shields.io/badge/python-3.10--3.13-blue.svg)](https://www.python.org/)

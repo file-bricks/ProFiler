@@ -3241,6 +3241,18 @@ class SettingsDialog(QDialog):
         ocr_group.setLayout(ocr_layout)
         layout.addWidget(ocr_group)
         
+        # Datenschutz & Anonymisierung
+        anon_group = QGroupBox("Datenschutz & Anonymisierung")
+        anon_layout = QVBoxLayout()
+        self.btn_open_anon = QPushButton("🔒 &Anonymisierungs-Filter konfigurieren...")
+        self.btn_open_anon.setAccessibleName("Anonymisierungs-Filter konfigurieren")
+        self.btn_open_anon.setAccessibleDescription("Öffnet den Dialog zur Verwaltung von Blacklist, Whitelist und Platzhaltern")
+        self.btn_open_anon.setToolTip("Blacklist, Whitelist und Platzhalter für Dokumenten-Anonymisierung bearbeiten")
+        self.btn_open_anon.clicked.connect(self.open_anonymization_dialog)
+        anon_layout.addWidget(self.btn_open_anon)
+        anon_group.setLayout(anon_layout)
+        layout.addWidget(anon_group)
+
         layout.addStretch()
         return widget
     
@@ -3422,6 +3434,10 @@ class SettingsDialog(QDialog):
         except Exception as e:
             QMessageBox.critical(self, "Fehler", f"Start fehlgeschlagen:\n{str(e)}")
 
+    def open_anonymization_dialog(self):
+        """Öffnet den Anonymisierungs- und Schwärzungsdialog aus den Einstellungen"""
+        dialog = AnonymizationSettingsDialog(self.settings, self)
+        dialog.exec()
 
     def save_and_close(self):
         """Speichert Einstellungen"""
@@ -3870,10 +3886,12 @@ class AnonymizationSettingsDialog(QDialog):
         super().__init__(parent)
         self.settings = settings
         self.setWindowTitle("Anonymisierungs-Einstellungen")
+        self.setAccessibleName("Anonymisierungs-Einstellungen")
+        self.setAccessibleDescription("Dialog zur Verwaltung von Blacklist, Whitelist und Platzhaltern für die Anonymisierung")
         self.resize(700, 600)
         
-        self.blacklist = self.settings.get("anonymization_blacklist", [])
-        self.whitelist = self.settings.get("anonymization_whitelist", [])
+        self.blacklist = list(self.settings.get("anonymization_blacklist", []))
+        self.whitelist = list(self.settings.get("anonymization_whitelist", []))
         
         self.init_ui()
     
@@ -3882,17 +3900,26 @@ class AnonymizationSettingsDialog(QDialog):
         
         # Tabs für Blacklist/Whitelist
         tabs = QTabWidget()
+        tabs.setAccessibleName("Anonymisierungs-Kategorien")
+        tabs.setAccessibleDescription("Tabs zur Verwaltung von Blacklist und Whitelist")
         
         # === BLACKLIST TAB ===
         blacklist_widget = QWidget()
+        blacklist_widget.setAccessibleName("Blacklist-Verwaltung")
         bl_layout = QVBoxLayout(blacklist_widget)
         
         # Input
         input_layout = QHBoxLayout()
         self.blacklist_input = QLineEdit()
         self.blacklist_input.setPlaceholderText("Wort zur Blacklist hinzufügen...")
+        self.blacklist_input.setAccessibleName("Blacklist-Begriffeingabe")
+        self.blacklist_input.setAccessibleDescription("Begriff zur Blacklist für automatische Anonymisierung oder Schwärzung hinzufügen")
+        self.blacklist_input.setToolTip("Zu schwärzenden Begriff eingeben")
         self.blacklist_input.returnPressed.connect(self.add_to_blacklist)
-        btn_add_bl = QPushButton(" Hinzufügen")
+        btn_add_bl = QPushButton("&Hinzufügen")
+        btn_add_bl.setAccessibleName("Begriff zur Blacklist hinzufügen")
+        btn_add_bl.setAccessibleDescription("Fügt den eingegebenen Begriff zur Blacklist hinzu")
+        btn_add_bl.setToolTip("Gibt den eingegebenen Begriff in die Blacklist ein")
         btn_add_bl.clicked.connect(self.add_to_blacklist)
         input_layout.addWidget(self.blacklist_input)
         input_layout.addWidget(btn_add_bl)
@@ -3900,17 +3927,34 @@ class AnonymizationSettingsDialog(QDialog):
         # Liste
         self.blacklist_widget = QListWidget()
         self.blacklist_widget.setSelectionMode(QListWidget.SelectionMode.ExtendedSelection)
+        self.blacklist_widget.setAccessibleName("Blacklist-Begriffsliste")
+        self.blacklist_widget.setAccessibleDescription("Liste aller Begriffe, die bei Anonymisierung geschwärzt oder ersetzt werden")
         self.update_blacklist_display()
         
         # Buttons
         btn_layout = QHBoxLayout()
-        btn_import_bl = QPushButton(" Importieren...")
+        btn_import_bl = QPushButton("&Importieren...")
+        btn_import_bl.setAccessibleName("Blacklist importieren")
+        btn_import_bl.setAccessibleDescription("Blacklist aus externer Textdatei importieren")
+        btn_import_bl.setToolTip("Blacklist aus Datei importieren")
         btn_import_bl.clicked.connect(lambda: self.import_list("blacklist"))
-        btn_export_bl = QPushButton("Exportieren...")
+        
+        btn_export_bl = QPushButton("&Exportieren...")
+        btn_export_bl.setAccessibleName("Blacklist exportieren")
+        btn_export_bl.setAccessibleDescription("Blacklist in Textdatei exportieren")
+        btn_export_bl.setToolTip("Blacklist in Textdatei exportieren")
         btn_export_bl.clicked.connect(lambda: self.export_list("blacklist"))
-        btn_remove_bl = QPushButton("Ausgewählte entfernen")
+        
+        btn_remove_bl = QPushButton("Ausgewählte &entfernen")
+        btn_remove_bl.setAccessibleName("Ausgewählte Blacklist-Begriffe entfernen")
+        btn_remove_bl.setAccessibleDescription("Entfernt die markierten Begriffe aus der Blacklist")
+        btn_remove_bl.setToolTip("Markierte Begriffe aus der Blacklist entfernen")
         btn_remove_bl.clicked.connect(self.remove_from_blacklist)
-        btn_clear_bl = QPushButton(" Liste leeren")
+        
+        btn_clear_bl = QPushButton("Liste &leeren")
+        btn_clear_bl.setAccessibleName("Blacklist vollständig leeren")
+        btn_clear_bl.setAccessibleDescription("Löscht alle Einträge aus der Blacklist nach Bestätigung")
+        btn_clear_bl.setToolTip("Alle Begriffe aus der Blacklist entfernen")
         btn_clear_bl.clicked.connect(lambda: self.clear_list("blacklist"))
         btn_clear_bl.setStyleSheet("background-color: #d9534f; color: white;")
         
@@ -3925,14 +3969,21 @@ class AnonymizationSettingsDialog(QDialog):
         
         # === WHITELIST TAB ===
         whitelist_widget = QWidget()
+        whitelist_widget.setAccessibleName("Whitelist-Verwaltung")
         wl_layout = QVBoxLayout(whitelist_widget)
         
         # Input
         input_layout2 = QHBoxLayout()
         self.whitelist_input = QLineEdit()
         self.whitelist_input.setPlaceholderText("Wort zur Whitelist hinzufügen...")
+        self.whitelist_input.setAccessibleName("Whitelist-Begriffeingabe")
+        self.whitelist_input.setAccessibleDescription("Begriff zur Whitelist hinzufügen, der von der Anonymisierung ausgenommen bleibt")
+        self.whitelist_input.setToolTip("Ausnahmebegriff eingeben")
         self.whitelist_input.returnPressed.connect(self.add_to_whitelist)
-        btn_add_wl = QPushButton(" Hinzufügen")
+        btn_add_wl = QPushButton("&Hinzufügen")
+        btn_add_wl.setAccessibleName("Begriff zur Whitelist hinzufügen")
+        btn_add_wl.setAccessibleDescription("Fügt den Ausnahmebegriff zur Whitelist hinzu")
+        btn_add_wl.setToolTip("Gibt den Ausnahmebegriff in die Whitelist ein")
         btn_add_wl.clicked.connect(self.add_to_whitelist)
         input_layout2.addWidget(self.whitelist_input)
         input_layout2.addWidget(btn_add_wl)
@@ -3940,17 +3991,34 @@ class AnonymizationSettingsDialog(QDialog):
         # Liste
         self.whitelist_widget = QListWidget()
         self.whitelist_widget.setSelectionMode(QListWidget.SelectionMode.ExtendedSelection)
+        self.whitelist_widget.setAccessibleName("Whitelist-Begriffsliste")
+        self.whitelist_widget.setAccessibleDescription("Liste aller geschützten Begriffe, die niemals anonymisiert werden")
         self.update_whitelist_display()
         
         # Buttons
         btn_layout2 = QHBoxLayout()
-        btn_import_wl = QPushButton(" Importieren...")
+        btn_import_wl = QPushButton("&Importieren...")
+        btn_import_wl.setAccessibleName("Whitelist importieren")
+        btn_import_wl.setAccessibleDescription("Whitelist aus externer Textdatei importieren")
+        btn_import_wl.setToolTip("Whitelist aus Datei importieren")
         btn_import_wl.clicked.connect(lambda: self.import_list("whitelist"))
-        btn_export_wl = QPushButton("Exportieren...")
+        
+        btn_export_wl = QPushButton("&Exportieren...")
+        btn_export_wl.setAccessibleName("Whitelist exportieren")
+        btn_export_wl.setAccessibleDescription("Whitelist in Textdatei exportieren")
+        btn_export_wl.setToolTip("Whitelist in Textdatei exportieren")
         btn_export_wl.clicked.connect(lambda: self.export_list("whitelist"))
-        btn_remove_wl = QPushButton("Ausgewählte entfernen")
+        
+        btn_remove_wl = QPushButton("Ausgewählte &entfernen")
+        btn_remove_wl.setAccessibleName("Ausgewählte Whitelist-Begriffe entfernen")
+        btn_remove_wl.setAccessibleDescription("Entfernt die markierten Begriffe aus der Whitelist")
+        btn_remove_wl.setToolTip("Markierte Begriffe aus der Whitelist entfernen")
         btn_remove_wl.clicked.connect(self.remove_from_whitelist)
-        btn_clear_wl = QPushButton(" Liste leeren")
+        
+        btn_clear_wl = QPushButton("Liste &leeren")
+        btn_clear_wl.setAccessibleName("Whitelist vollständig leeren")
+        btn_clear_wl.setAccessibleDescription("Löscht alle Einträge aus der Whitelist nach Bestätigung")
+        btn_clear_wl.setToolTip("Alle Begriffe aus der Whitelist entfernen")
         btn_clear_wl.clicked.connect(lambda: self.clear_list("whitelist"))
         btn_clear_wl.setStyleSheet("background-color: #d9534f; color: white;")
         
@@ -3964,7 +4032,7 @@ class AnonymizationSettingsDialog(QDialog):
         wl_layout.addLayout(btn_layout2)
         
         tabs.addTab(blacklist_widget, "Blacklist")
-        tabs.addTab(whitelist_widget, " Whitelist")
+        tabs.addTab(whitelist_widget, "Whitelist")
         
         # === EINSTELLUNGEN ===
         settings_group = QGroupBox("⚙️ Einstellungen")
@@ -3972,7 +4040,12 @@ class AnonymizationSettingsDialog(QDialog):
         
         self.placeholder_input = QLineEdit()
         self.placeholder_input.setText(self.settings.get("anonymization_placeholder", "[-----]"))
-        settings_layout.addRow("Platzhalter:", self.placeholder_input)
+        self.placeholder_input.setAccessibleName("Anonymisierungs-Platzhalter")
+        self.placeholder_input.setAccessibleDescription("Zeichenkette, die anstelle gefundener Blacklist-Begriffe eingesetzt wird")
+        self.placeholder_input.setToolTip("Ersatztext für geschwärzte Begriffe (z. B. [-----])")
+        lbl_placeholder = QLabel("&Platzhalter:")
+        lbl_placeholder.setBuddy(self.placeholder_input)
+        settings_layout.addRow(lbl_placeholder, self.placeholder_input)
         
         settings_group.setLayout(settings_layout)
         
@@ -6519,7 +6592,9 @@ class SearchWidgetHybrid(QWidget):
     # ========================================================================
     
     def show_anonymization_settings(self):
-        pass  # TODO: Implement anonymization settings dialog
+        """Zeigt Anonymisierungs-Einstellungen Dialog"""
+        dialog = AnonymizationSettingsDialog(self.settings, self)
+        return dialog.exec()
     
     def export_collection_list(self, collection_item):
         """Exportiert Sammlung als PDF (NEU V13.3!)"""
@@ -6661,9 +6736,6 @@ class SearchWidgetHybrid(QWidget):
                 "Fehler",
                 f"Export fehlgeschlagen:\n{str(e)}\n\nTraceback:\n{traceback.format_exc()}"
             )
-        """Zeigt Anonymisierungs-Einstellungen Dialog"""
-        dialog = AnonymizationSettingsDialog(self.settings, self)
-        dialog.exec()
     
     def anonymize_file(self):
         """Anonymisiert ausgewählte Datei(en) mit Platzhalter"""
@@ -6672,7 +6744,7 @@ class SearchWidgetHybrid(QWidget):
             QMessageBox.warning(self, "Keine Auswahl", "Bitte wählen Sie mindestens eine Datei aus")
             return
         
-        # Prfe ob Blacklist leer ist
+        # Prüfe ob Blacklist leer ist
         blacklist = self.settings.get("anonymization_blacklist", [])
         if not blacklist:
             reply = QMessageBox.question(
@@ -8637,7 +8709,7 @@ class AutoSyncWidget(QWidget):
 class UnifiedMainWindow(QMainWindow):
     """Haupt-Fenster mit System-Tray"""
     
-    def __init__(self):
+    def __init__(self, settings=None):
         super().__init__()
         
         self.setWindowTitle(f"ProFiler Suite {APP_VERSION} - Auto-Sync Watchdog")
@@ -8646,7 +8718,7 @@ class UnifiedMainWindow(QMainWindow):
         # Managers
         self.search_config = SearchConfigManager()
         self.sync_config = SyncConfigManager(SYNC_CONFIG_PATH)
-        self.settings = SettingsManager()
+        self.settings = settings if settings is not None else SettingsManager()
         
         # Auto-Cleanup
         #if self.settings.get("auto_cleanup_enabled", True):
@@ -8700,9 +8772,10 @@ class UnifiedMainWindow(QMainWindow):
         tools_menu.addAction("🚦 Datenschutzampel starten...", self.start_datenschutzampel)
         tools_menu.addAction("FormConstructor öffnen...", self.launch_form_constructor)
         tools_menu.addAction("ProSync öffnen...", self.launch_prosync)
+        tools_menu.addAction("🔒 Anonymisierungs-Einstellungen...", self.show_anonymization_settings)
 
         help_menu = menubar.addMenu("Hilfe")
-        help_menu.addAction("über", self.show_about)
+        help_menu.addAction("Über", self.show_about)
     
     def init_tray(self):
         """System-Tray"""
@@ -8801,6 +8874,11 @@ class UnifiedMainWindow(QMainWindow):
         """Zeigt Einstellungen"""
         dialog = SettingsDialog(self.settings, self)
         dialog.exec()
+    
+    def show_anonymization_settings(self):
+        """Zeigt Anonymisierungs-Einstellungen"""
+        dialog = AnonymizationSettingsDialog(self.settings, self)
+        return dialog.exec()
     
     def show_about(self):
         """Über-Dialog"""
