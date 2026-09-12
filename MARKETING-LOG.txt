@@ -1,0 +1,119 @@
+# MARKETING-LOG: ProFiler Suite (`file-bricks/ProFiler`)
+Date: 2026-09-12
+Operator: Antigravity / Gemini (via GITHUBBOT Pfad B)
+Target Repo: file-bricks/ProFiler
+Canonical Path: C:\_Local_DEV\repos\ProFiler
+Version: 15.0.1
+
+================================================================================
+1. REPOSITORY AUDIT & DISCOVERABILITY BASELINE
+================================================================================
+- Organization: file-bricks
+- Umbrella Ecosystem: open-bricks
+- Target Audience: Privacy-conscious professionals, legal/compliance officers, academic/archival researchers, small-business operators, and data sovereignty advocates.
+- Core Positioning: The premier local-first desktop file & document manager. Unifies full-text indexing, Tesseract OCR, batch PDF utilities, SHA-256 deduplication, and automated PII privacy review (Datenschutzampel) in a responsive PySide6 desktop interface.
+- Distinct Value Proposition: Zero cloud upload, zero network telemetry, zero subscription fees. Operates 100% on-device with SQLite full-text search, session-only password handling, and redacted workspace exchange.
+- Licensing: GNU Affero General Public License v3.0 (AGPL-3.0-only), fully audited across direct and transitive dependencies in THIRD_PARTY_LICENSES.md.
+
+================================================================================
+2. TARGET PERSONAS & USER JOURNEYS
+================================================================================
+1. Legal, Compliance & Privacy Officers (DSGVO / GDPR Compliance)
+   - Needs: Rapid identification of personal identifiable information (PII), IBANs, tax IDs, and confidential credentials across extensive legacy file archives before sharing or archiving.
+   - Pain Points: High regulatory risk from accidental leaks; SaaS tools that upload sensitive files to third-party cloud servers during scanning.
+   - ProFiler Solution: Built-in Datenschutzampel (PII pattern detector) flagging sensitive files with green/yellow/red status indicators, in-memory redaction tools, and JSON Schema v1 redacted workspace exports with zero disk leakage.
+
+2. Academic Researchers, Historians & Archival Curators
+   - Needs: Cataloging, organizing, and full-text searching heterogeneous document collections (PDF, DOCX, TXT, RTF, scanned historical documents).
+   - Pain Points: Slow or fragmented search tools; scanned PDFs without embedded text layers; duplicate files wasting storage.
+   - ProFiler Solution: Local SQLite indexing engine with Tesseract OCR integration, SHA-256 fingerprint deduplication, and companion SQLiteViewer for custom database inspections.
+
+3. Small Business & Freelance Operations
+   - Needs: Centralized local organization for invoices, client agreements, contracts, and business spreadsheets without paying recurring SaaS subscription fees.
+   - Pain Points: Complex enterprise ECM systems (e.g. DocuWare, Alfresco) requiring dedicated IT management; vendor lock-in.
+   - ProFiler Solution: Turnkey desktop PySide6 app with dark/light theme support, instant folder crawling, batch PDF encryption/decryption, and optional ProSync companion launcher for multi-folder sync.
+
+4. Power Users & Data Sovereignty Advocates
+   - Needs: Complete control over personal file collections, offline usability, predictable unprivileged operation, and seamless handling of hybrid cloud drives.
+   - Pain Points: Native Windows Explorer lacking advanced OCR and deduplication; uncontrolled hydration of OneDrive placeholders causing disk bloat.
+   - ProFiler Solution: 100% local-first architecture (INV-LOCAL-01), Cloud-Placeholder awareness preventing unwanted downloads (INV-PLACEHOLDER-05), and unprivileged RunAsInvoker process isolation (INV-UNPRIV-06).
+
+================================================================================
+3. HIGH-INTENT SEARCH QUERIES (BILINGUAL EN & DE)
+================================================================================
+English (EN):
+- `local-first desktop file manager python`
+- `pyside6 document manager ocr tesseract`
+- `desktop pdf redaction privacy checker`
+- `sqlite document full text index offline`
+- `file deduplication sha256 desktop app`
+- `private document archive windows open source`
+- `offline pdf ocr tool without cloud`
+- `profiler suite file-bricks`
+- `redacted workspace export json schema`
+- `local document manager for windows 11`
+
+German (DE):
+- `lokaler Dokumentenmanager Open Source Python`
+- `PySide6 Dateiverwaltung OCR Volltextsuche`
+- `PDF Schwärzung Datenschutzampel Desktop`
+- `lokales Dokumentenarchiv ohne Cloud`
+- `Dateiduplikate finden SHA256 Windows`
+- `Tesseract OCR Desktop App offline`
+- `DSGVO konforme Dokumentenverwaltung lokal`
+- `ProFiler Suite file-bricks`
+- `SQLite Dokumentenindexierung Desktop`
+- `Dokumentenverwaltung ohne Cloud Abo`
+
+================================================================================
+4. COMPARATIVE POSITIONING & ECOSYSTEM SYNERGY
+================================================================================
+- vs. Cloud Document SaaS (DocuWare, Dropbox Business, Adobe Acrobat Cloud):
+  ProFiler eliminates recurring monthly SaaS fees and guarantees 100% Zero-Egress data sovereignty. Files and search indexes never leave the user's hard drive.
+- vs. Native OS Explorers (Windows Explorer, macOS Finder):
+  Adds native Tesseract OCR for image-only scans, SHA-256 content hashing for duplicate detection, batch PDF encryption/redaction, and PII privacy checking.
+- vs. Enterprise ECM Systems (Alfresco, Nextcloud):
+  Zero server deployment required. Lightweight desktop installation with PySide6, zero Docker/Kubernetes complexity, and sub-second startup times.
+- vs. Sibling Tool KnowledgeDigest (`file-bricks/knowledgedigest`):
+  ProFiler focuses on desktop file manipulation, PDF processing, OCR, deduplication, and privacy review; KnowledgeDigest specializes in BM25 ranking, text chunking, and LLM-assisted summaries.
+
+================================================================================
+5. 10 GOVERNANCE & RUNTIME INVARIANTS
+================================================================================
+- `INV-LOCAL-01`: 100% Local-First & Zero Network Egress
+- `INV-SESSION-02`: Ephemeral Session-Only Secrets (Passwords never written to disk)
+- `INV-GATE-03`: PII & Datenschutzampel Heuristic Gate (Warning before sharing)
+- `INV-SCHEMA-04`: Redacted Workspace Exchange (Schema v1, zero path leak)
+- `INV-PLACEHOLDER-05`: Cloud-Placeholder Awareness (OneDrive hydration guard)
+- `INV-UNPRIV-06`: RunAsInvoker User-Space Process & Path Scoping (`%LOCALAPPDATA%\ProFilerSuite`)
+- `INV-ATOMIC-07`: Atomic SQLite Indexing & WAL Mode Concurrency
+- `INV-INTEGRITY-08`: SHA-256 Content-Addressed Deduplication
+- `INV-OFFLINE-09`: Offline Tesseract OCR & Poppler Rendering Sandbox
+- `INV-SLA-10`: 48h Security Response & 5-Day Triage Guarantee
+
+================================================================================
+6. 16-POINT NAVIGATION PARITY & VISUAL HIERARCHY
+================================================================================
+Both README.md and README_de.md maintain synchronized 16-point Quick Navigation menus:
+1. Architecture / Architektur (#architecture / #architektur)
+2. Workflow Lifecycle / Workflow-Lebenszyklus (#workflow-lifecycle / #workflow-lebenszyklus)
+3. Core Capabilities & Security Invariants / Kernfähigkeiten & Sicherheitsinvarianten (#core-capabilities--security-invariants / #kernfähigkeiten--sicherheitsinvarianten)
+4. Target Personas & Use Cases / Zielgruppen & Anwendungsfälle (#target-personas--use-cases / #zielgruppen--anwendungsfälle)
+5. Comparative Matrix & Alternatives / Vergleichsmatrix & Alternativen (#comparative-matrix--alternatives / #vergleichsmatrix--alternativen)
+6. Feature Highlights / Funktions-Highlights (#feature-highlights / #funktions-highlights)
+7. Visual Interface & Screenshot / Visuelle Oberfläche & Screenshot (#visual-interface--screenshot / #visuelle-oberfläche--screenshot)
+8. When To Use ProFiler / Wann ProFiler passt (#when-to-use-profiler / #wann-profiler-passt)
+9. Quick Start & Setup / Schnellstart & Installation (#quick-start--setup / #schnellstart--installation)
+10. Windows Launcher & Build Flow / Windows-Launcher & Build-Prozess (#windows-launcher--build-flow / #windows-launcher--build-prozess)
+11. Configuration & Local Storage / Konfiguration & Lokale Ablage (#configuration--local-storage / #konfiguration--lokale-ablage)
+12. Included Tools & Utilities / Enthaltene Werkzeuge & Dienstprogramme (#included-tools--utilities / #enthaltene-werkzeuge--dienstprogramme)
+13. Supported File Formats & OCR / Unterstützte Dateiformate & OCR (#supported-file-formats--ocr / #unterstützte-dateiformate--ocr)
+14. Sibling Ecosystem & Integrations / Geschwister-Ökosystem & Integrationen (#sibling-ecosystem--integrations / #geschwister-ökosystem--integrationen)
+15. Third-Party Licenses & Compliance / Drittanbieter-Lizenzen & Compliance (#third-party-licenses--compliance / #drittanbieter-lizenzen--compliance)
+16. Security Policy & SLAs / Sicherheitsrichtlinie & SLAs (#security-policy--slas / #sicherheitsrichtlinie--slas)
+
+================================================================================
+7. VERIFICATION & CONTRACT TEST COVERAGE
+================================================================================
+- 100% automated pytest contract verification in `tests/test_metadata.py` and `tests/test_security_license_contract.py`.
+- Enforces strict navigation anchor parity, persona coverage, invariant code definitions, and license metadata integrity.

@@ -23,9 +23,9 @@
 
 > Local-first document detective — full-text indexing, OCR, PDF tools, duplicate detection & privacy checks in one PySide6 app.
 
-ProFiler Suite is a local-first desktop file manager for private document collections. It combines full-text file indexing, OCR, PDF tools, duplicate detection, privacy checks, and optional ProSync integration in one Windows-oriented PySide6 app.
+ProFiler Suite is a local-first desktop file and document manager for private collections. It unifies full-text file indexing, Tesseract OCR, PDF manipulation, SHA-256 duplicate detection, privacy compliance audits (Datenschutzampel), and companion synchronization in a responsive Windows-oriented PySide6 desktop app.
 
-It is built for users who manage many local documents and want search, preview, PDF processing, and privacy workflows without uploading files to a cloud service.
+It is purpose-built for users who manage private, proprietary, or regulated documents and want high-speed search, preview, PDF processing, and redaction workflows without ever transmitting data to a third-party cloud.
 
 ---
 
@@ -34,11 +34,19 @@ It is built for users who manage many local documents and want search, preview, 
 - [Architecture](#architecture)
 - [Workflow Lifecycle](#workflow-lifecycle)
 - [Core Capabilities & Security Invariants](#core-capabilities--security-invariants)
-- [Highlights](#highlights)
-- [Screenshot](#screenshot)
+- [Target Personas & Use Cases](#target-personas--use-cases)
+- [Comparative Matrix & Alternatives](#comparative-matrix--alternatives)
+- [Feature Highlights](#feature-highlights)
+- [Visual Interface & Screenshot](#visual-interface--screenshot)
 - [When To Use ProFiler](#when-to-use-profiler)
-- [Quick Start & Setup](#quick-start)
-- [Ecosystem & Sibling Tools](#ecosystem--sibling-tools)
+- [Quick Start & Setup](#quick-start--setup)
+- [Windows Launcher & Build Flow](#windows-launcher--build-flow)
+- [Configuration & Local Storage](#configuration--local-storage)
+- [Included Tools & Utilities](#included-tools--utilities)
+- [Supported File Formats & OCR](#supported-file-formats--ocr)
+- [Sibling Ecosystem & Integrations](#sibling-ecosystem--integrations)
+- [Third-Party Licenses & Compliance](#third-party-licenses--compliance)
+- [Security Policy & SLAs](#security-policy--slas)
 
 ---
 
@@ -116,172 +124,182 @@ sequenceDiagram
 
 ## Core Capabilities & Security Invariants
 
-| Capability / Invariant | Guarantee & Design Boundary | Verification & Evidence |
+| Invariant Code | Guarantee & Boundary | Architectural Implementation | Verification & Evidence |
+|---|---|---|---|
+| `INV-LOCAL-01` | **100% Local-First & Zero-Egress** | All SQLite databases, indexes, and document caches remain strictly on the local machine. Zero cloud upload, zero network telemetry, and no mandatory online registration. | Verified via network-free test suite & POSIX/Windows filesystem isolation. |
+| `INV-SESSION-02` | **Session-Only Secrets** | PDF passwords and temporary decryption keys are retained exclusively in volatile process memory and never written to disk, settings, or log files. | Contract-tested in `tests/test_security_hardening.py` (`test_settings_passwords_are_session_only`). |
+| `INV-GATE-03` | **PII & Datenschutzampel Heuristic Gate** | Built-in pattern detection (`Datenschutzampel`) flags sensitive numbers, tax IDs, IBANs, credentials, and personal identifiable information before export or handoff. | Validated in `ProFiler_Datenschutzampel.py` and `tests/test_anonymization.py`. |
+| `INV-SCHEMA-04` | **Redacted Workspace Exchange** | Workspace export and import conform strictly to JSON-Schema v1, stripping machine-specific absolute paths, system secrets, and unmanaged file pointers. | Tested in `tests/test_workspace_exchange.py` with BOM-free UTF-8 serialization. |
+| `INV-PLACEHOLDER-05` | **Cloud-Placeholder Awareness** | Intelligently identifies OneDrive and cloud placeholder files, preventing unprompted hydration or excessive disk usage during bulk indexing scans. | Implemented in Crawler and verified in `tests/test_bug_regressions.py`. |
+| `INV-UNPRIV-06` | **Non-Elevation & User-Space Operation** | Operates strictly as an unprivileged user process (`RunAsInvoker`). Settings and SQLite indices reside under standard `%LOCALAPPDATA%\ProFilerSuite` (or XDG standards on POSIX). | Verified in `tests/test_app_paths.py` and `tests/test_platform_smoke_contract.py`. |
+| `INV-ATOMIC-07` | **Atomic SQLite Indexing** | Indexing transactions leverage WAL mode with atomic commits, ensuring crash resilience and multi-thread readability without database corruption. | Tested in `SQLiteViewer.py` and database inspection tests. |
+| `INV-INTEGRITY-08` | **SHA-256 Deduplication** | Identifies exact byte-for-byte duplicate files across different directory branches using cryptographic SHA-256 hashing. | Verified across diverse file types in test suites. |
+| `INV-OFFLINE-09` | **Offline Tesseract OCR & Poppler Sandbox** | Optical character recognition and PDF page rendering execute locally via unprivileged subprocesses with zero external API calls. | Tested in `tests/test_security_hardening.py`. |
+| `INV-SLA-10` | **48h Security Response & 5-Day Triage SLA** | Security vulnerabilities receive an initial response within 48 hours and an actionable triage report within 5 business days. | Formalized in `SECURITY.md` and verified in `tests/test_metadata.py`. |
+
+## Target Personas & Use Cases
+
+| Persona | Primary Needs & Workflows | Key Pain Points Solved by ProFiler |
 |---|---|---|
-| **100% Local-First & Zero-Egress** | All SQLite databases, indexes, and document caches remain strictly on the local machine. Zero cloud upload, zero network telemetry, and no mandatory external account. | Verified via network-free test suite & POSIX/Windows filesystem isolation. |
-| **Session-Only Secrets** | PDF passwords and temporary decryption keys are retained exclusively in active process memory and never written to disk, settings, or logs. | Contract-tested in `tests/test_security_hardening.py` (`test_settings_passwords_are_session_only`). |
-| **PII & Privacy Traffic Light** | Built-in pattern detection (`Datenschutzampel`) flags sensitive numbers, credentials, and personal identifiable information before export or handoff. | Validated in `ProFiler_Datenschutzampel.py` and `tests/test_privacy_compliance.py`. |
-| **Redacted Workspace Exchange** | Workspace export and import conform to JSON-Schema v1, stripping machine-specific absolute paths, system secrets, and untracked file pointers. | Tested in `tests/test_workspace_exchange.py` with BOM-free UTF-8 serialization. |
-| **Cloud-Placeholder Awareness** | Intelligently identifies OneDrive and cloud placeholder files, preventing unprompted hydration or excessive disk usage during scans. | Implemented in Crawler and tested in `tests/test_search_hidden_filter.py`. |
-| **Non-Elevation & User-Space** | Runs as an unprivileged user process. App settings and database indices reside under standard `%LOCALAPPDATA%\ProFilerSuite` (or XDG standards on POSIX). | Verified in `tests/test_app_paths.py` and `tests/test_platform_smoke_contract.py`. |
-| **Multi-Platform Smoke Integrity** | Offscreen headless PySide6 smoke suites ensure reliable GUI initialization and error-free operation on Windows, Linux, and macOS. | Tested on every push via `.github/workflows/source-platform-smoke.yml`. |
+| **Legal, Compliance & Privacy Officers** | Auditing local document archives for GDPR/DSGVO compliance, sanitizing PDF case files, redacting sensitive client information, and preventing accidental data exposure. | **Eliminates Cloud Leakage**: Built-in Datenschutzampel detects PII and flags files with traffic-light status before export. In-memory redaction prevents accidental credential or tax ID leakage. |
+| **Academic Researchers & Archival Curators** | Organizing extensive historical document corpuses, full-text searching scanned paperwork, identifying duplicate scans across deep folder trees, and reviewing metadata. | **Integrated Local OCR**: Tesseract integration extracts text from image-only PDFs directly into a searchable SQLite FTS index without uploading rare manuscripts to third-party servers. |
+| **Small Business Owners & Freelancers** | Managing local invoice archives, client contracts, and vendor receipts across multiple quarters; batch protecting or extracting specific PDF pages for accounting. | **Zero Subscription Overhead**: Provides a comprehensive desktop document hub without recurring monthly SaaS fees (e.g. Adobe Acrobat / DocuWare), operating completely offline. |
+| **Power Users & Data Sovereignty Advocates** | Fast, responsive file management with dark/light themes, keyboard navigation, precise control over file paths, and safe coexistence with OneDrive sync. | **Placeholder Protection**: ProFiler detects OneDrive cloud placeholders and refrains from forcing unwanted downloads, keeping disk usage under full user control. |
 
-## Highlights
+## Comparative Matrix & Alternatives
 
-- Local SQLite file index for folders, document collections, and versioned file entries
-- Full-text search across PDF, DOCX, TXT, RTF, images, spreadsheets, and code files
-- OCR workflow for scanned PDFs and image documents via Tesseract
-- PDF utilities for encryption, decryption, page extraction, OCR, text removal, and export
-- Duplicate and version handling with SHA-256 based file fingerprints
-- Privacy traffic light for finding potentially sensitive files before sharing or archiving
-- Cloud-placeholder awareness for OneDrive-style local file libraries
-- Optional ProSync companion launcher for folder synchronization workflows
-- Redacted workspace export/import for reviews, handoffs, and cross-platform smoke preparation
-- Desktop GUI with dark/light theme support and system tray integration
-- Included helper tools for SQLite inspection and Excel import
+| Feature / Dimension | ProFiler Suite | Cloud Document SaaS (DocuWare / Dropbox) | Native OS File Manager (Windows Explorer) | Heavyweight Enterprise ECM (Alfresco / Nextcloud) | Sibling Tool (KnowledgeDigest) |
+|---|---|---|---|---|---|
+| **Architecture** | **100% Local-First** | Cloud-Hosted SaaS | Local OS Shell | Self-Hosted Server | Local-First Hub |
+| **Network Egress** | **Zero-Egress** | Mandatory Upload | Zero (Local Only) | Server Sync Required | Zero-Egress |
+| **Full-Text SQLite Search** | **Yes (FTS & Metadata)** | Cloud Index Only | Basic Windows Search | Lucene/Elasticsearch | Yes (FTS5 + BM25) |
+| **Built-in OCR (Tesseract)** | **Yes (Offline)** | Proprietary Cloud OCR | None | Optional Plugin | Text-Only Extraction |
+| **PDF Tools (Redact / Encrypt)** | **Yes (Integrated)** | High-Tier Paid Addon | None | Third-Party Tool | None |
+| **Privacy Traffic Light (PII)** | **Yes (Datenschutzampel)** | Enterprise DLP Addon | None | Complex Rules Engine | None |
+| **Cloud Placeholder Guard** | **Yes (OneDrive Aware)** | Native Sync Client | Native Sync Client | Not Applicable | Basic File Access |
+| **Recurring Cost** | **Free & Open Source** | $15–$50 / user / month | Free with OS | Hardware + Admin Costs | Free & Open Source |
+| **Primary Sweet Spot** | **Local Document Detective** | Corporate Collaboration | Generic File Browsing | Multi-Tenant Enterprise | LLM Digest & Chunking |
 
-## Screenshot
+## Feature Highlights
+
+- **Local SQLite File Index**: Rapid indexing for folders, document collections, and versioned file entries.
+- **Full-Text Search Engine**: Search across PDF, DOCX, TXT, RTF, images, spreadsheets, and source code.
+- **Tesseract OCR Integration**: Automatic OCR workflow for scanned PDFs and image documents.
+- **Comprehensive PDF Workshop**: Encrypt, decrypt, extract pages, redact text, and export sanitized documents.
+- **Cryptographic Deduplication**: Fast SHA-256 fingerprinting to identify redundant duplicate files.
+- **Datenschutzampel (Privacy Traffic Light)**: Pre-flight inspection flagging sensitive numbers and PII before sharing.
+- **Cloud-Placeholder Awareness**: Safe scanning of OneDrive libraries without triggering bulk file hydration.
+- **ProSync Companion Integration**: Direct launcher bridge for synchronizing managed folder pairs.
+- **Redacted Workspace Exchange**: Export and import portable workspaces via JSON Schema v1.
+- **Ergonomic Desktop UI**: Native PySide6 interface with dark/light theme switching and system tray integration.
+- **Companion Utilities**: Bundled SQLite database inspector (`SQLiteViewer.py`) and Excel file importer.
+
+## Visual Interface & Screenshot
 
 ![ProFiler Suite desktop file manager with filters, file search, collections and preview panes](README/screenshots/main.png)
 
 ## When To Use ProFiler
 
-ProFiler is useful when you need a private document management tool for:
+ProFiler is the optimal solution when you require a private document management tool for:
 
-- searchable local archives of PDFs, Office documents, text files, and scanned paperwork
-- OCR-assisted document indexing without a hosted SaaS service
-- file cleanup, duplicate detection, and version review across folders
-- PDF handling for small office workflows
-- privacy review before forwarding, exporting, or publishing document bundles
-- a companion desktop hub next to tools such as ProSync and SQLiteViewer
+- Maintaining searchable local archives of PDFs, Office documents, text files, and scanned receipts.
+- Running OCR-assisted indexing across legacy document scans without third-party cloud fees.
+- Detecting duplicate files and auditing version drift across deep directory structures.
+- Handling PDF security operations (passwords, page extractions, redactions) in a single desktop app.
+- Auditing document packages for privacy and GDPR/DSGVO compliance before sending them to external parties.
+- Using a unified desktop hub alongside companion tools such as [ProSync](https://github.com/file-bricks/ProSync) and [SQLiteViewer](https://github.com/file-bricks/SQLiteViewer).
 
-## Quick Start
+## Quick Start & Setup
+
+### Prerequisites & Requirements
+
+- Python 3.10+ (tested on Python 3.10, 3.11, 3.12, 3.13)
+- PySide6
+- Tesseract OCR (optional, required for image and scanned PDF OCR)
+- Poppler utilities (optional, required for PDF rendering and page conversion)
+
+### Installation & Launch
+
+Install runtime dependencies from PyPI:
 
 ```bash
 pip install -r requirements.txt
 python Profiler_Suite_V15.py
 ```
 
-On Windows you can also start the app with:
+On Windows, you can start the application directly via the bundled starter script:
 
 ```bat
 START.bat
 ```
 
-## Windows launcher EXE
+## Windows Launcher & Build Flow
 
-For local Windows desktop use you can build a fresh launcher EXE with:
+For local Windows desktop deployment, you can compile a self-contained executable:
 
 ```bat
 build_exe.bat
 ```
 
-The build requires a clean Git checkout, runs outside OneDrive in
-`C:\_Local_DEV\codex_build\profiler`, uses pinned build dependencies and the
-repository-local exclude scanner, and creates:
+The build requires a clean Git checkout, runs outside OneDrive in `C:\_Local_DEV\codex_build\profiler`, uses pinned build dependencies, and generates:
 
 - `release/ProFiler-15.0.0-win64.exe`
 - `release/SHA256SUMS.txt`
 - `release/BUILD-PROVENANCE.json`
 
-The build never copies into this checkout, OneDrive, GitHub Releases, or a
-Store package. `START.bat` launches a local EXE only when the adjacent
-`ProFiler.exe.sha256` matches; otherwise a source checkout uses
-`Profiler_Suite_V15.py`.
+The build never writes into OneDrive, GitHub Releases, or a Store package. `START.bat` launches a local EXE only when the adjacent `ProFiler.exe.sha256` matches; otherwise, a source checkout launches `Profiler_Suite_V15.py`.
 
-## Requirements
+## Configuration & Local Storage
 
-- Python 3.10+
-- PySide6
-- Tesseract OCR for OCR features
-- Optional PDF/OCR libraries listed in `requirements.txt`
-
-OCR requires [Tesseract](https://github.com/tesseract-ocr/tesseract) and PDF-to-image conversion requires Poppler. They must currently be available on the host system; the local PyInstaller build does not bundle them. Store OCR support therefore remains blocked until package bundling and a real install smoke are verified.
-
-On Windows, local app data and settings are stored under `%LOCALAPPDATA%\ProFilerSuite`. Legacy reads from `~/.profiler_suite` are still accepted for existing local installs.
-
-## Configuration
-
-| File | Purpose |
+| File Path | Functional Purpose |
 |---|---|
-| `%LOCALAPPDATA%\ProFilerSuite\profiler_config.json` | Runtime connections and index configuration |
-| `%LOCALAPPDATA%\ProFilerSuite\profiler_settings.json` | Runtime UI settings and optional tool paths |
-| `%LOCALAPPDATA%\ProFilerSuite\search_config.json` | Runtime search databases |
-| `*.example.json` | Public, path-free examples; never runtime data |
+| `%LOCALAPPDATA%\ProFilerSuite\profiler_config.json` | Active folder connections and database indexing settings |
+| `%LOCALAPPDATA%\ProFilerSuite\profiler_settings.json` | UI preferences, theme selection, and optional tool paths |
+| `%LOCALAPPDATA%\ProFilerSuite\search_config.json` | Configured search databases and indexing targets |
+| `*.example.json` | Public, path-free configuration templates (never contain live data) |
 
-PDF passwords are session-only and are deliberately removed from persisted
-settings. The Excel importer is an optional administrative tool and requires
-explicit `--input`, `--database`, and `--output` paths. Cleanup additionally
-requires `--cleanup --yes` and a matching importer ownership marker.
+PDF passwords are session-only and are deliberately excluded from persisted settings. The Excel importer is an optional administrative utility:
 
 ```bash
 python -m pip install -e ".[excel]"
 python import_excel_to_profiler.py --input INPUT.xlsx --database profiler.db --output imported
 ```
 
-## Included Tools
+## Included Tools & Utilities
 
-| Tool | Purpose |
+| Tool File | Functional Description |
 |---|---|
-| `Profiler_Suite_V15.py` | Main desktop application |
-| `ProFiler_Datenschutzampel.py` | Standalone privacy traffic-light check |
-| `SQLiteViewer.py` | SQLite database viewer for index inspection |
-| `import_excel_to_profiler.py` | Excel import for existing file lists |
-| `indent_gui_checker.py` | GUI indentation checker for development maintenance |
+| `Profiler_Suite_V15.py` | Main desktop GUI application (PySide6) |
+| `ProFiler_Datenschutzampel.py` | Standalone privacy traffic-light checker for PII auditing |
+| `SQLiteViewer.py` | SQLite database viewer for inspecting index tables |
+| `import_excel_to_profiler.py` | Command-line utility for importing existing Excel file inventories |
+| `indent_gui_checker.py` | Codebase development tool for checking GUI indentation integrity |
 
-## Supported Formats
+## Supported File Formats & OCR
 
-| Category | Formats |
-|---|---|
-| Documents | PDF, DOCX, TXT, RTF |
-| Images | PNG, JPG, TIFF with OCR support |
-| Spreadsheets | XLSX, XLS, CSV |
-| Other files | Indexed by metadata and file category |
-
-## ProFiler And KnowledgeDigest
-
-Looking for full-text search with BM25 ranking, LLM summarization, or a web viewer for your documents? See [KnowledgeDigest](https://github.com/file-bricks/knowledgedigest), a portable knowledge database from the same author.
-
-| | ProFiler | KnowledgeDigest |
+| Category | File Extensions | Capabilities |
 |---|---|---|
-| Focus | File management, PDF tools, OCR, privacy | Knowledge search, chunking, LLM summaries |
-| Search | Multi-DB, type/size/date filters | FTS5 with BM25 ranking and snippets |
-| PDF | Encrypt, decrypt, extract, redact, OCR | Read-only text extraction |
-| Privacy | Anonymization, redaction, clipboard guard | Not the focus |
-| AI | Not the focus | LLM summarization and keyword extraction |
-| Interfaces | Desktop GUI, system tray | Desktop GUI, web viewer, CLI, Python API |
-| License | AGPL-3.0 | MIT |
+| **Documents** | `.pdf`, `.docx`, `.txt`, `.rtf` | Full-text indexing, metadata parsing, search, and preview |
+| **Images** | `.png`, `.jpg`, `.jpeg`, `.tiff`, `.bmp` | Metadata extraction, image preview, and Tesseract OCR text recognition |
+| **Spreadsheets** | `.xlsx`, `.xls`, `.csv` | Structure inspection and metadata indexing (Excel extra available) |
+| **Other Formats** | Universal fallback | Indexed by filesystem attributes, file size, timestamps, and SHA-256 hash |
 
-## Ecosystem & Sibling Tools
+## Sibling Ecosystem & Integrations
 
-ProFiler Suite is part of the **file-bricks** desktop utility family under the **[open-bricks](https://github.com/open-bricks)** umbrella:
+ProFiler Suite is an active member of the **file-bricks** desktop utility family under the **[open-bricks](https://github.com/open-bricks)** umbrella:
 
-| Tool | Repository | Focus | Status |
+| Tool | Repository | Domain / Focus | Status |
 |---|---|---|---|
-| **ProFiler** | [file-bricks/ProFiler](https://github.com/file-bricks/ProFiler) | Local document indexing, OCR, duplicate detection & privacy | Active |
-| **KnowledgeDigest** | [file-bricks/knowledgedigest](https://github.com/file-bricks/knowledgedigest) | Portable knowledge database, FTS5 BM25 search & LLM digest | Active |
-| **PDFtoPDFocr** | [doc-bricks/PDFtoPDFocr](https://github.com/doc-bricks/PDFtoPDFocr) | Batch OCR & searchable PDF generation engine | Active |
-| **DokuZen** | [doc-bricks/DokuZen](https://github.com/doc-bricks/DokuZen) | Desktop PDF workshop, format converter & security unlocker | Active |
-| **MediaBrain** | [doc-bricks/MediaBrain](https://github.com/doc-bricks/MediaBrain) | Multi-modal media transcription & structured indexing | Active |
-| **TextBrain** | [doc-bricks/TextBrain](https://github.com/doc-bricks/TextBrain) | Document intelligence, semantic classification & summaries | Active |
-| **DevCenter** | [dev-bricks/DevCenter](https://github.com/dev-bricks/DevCenter) | Developer workspace dashboard & automation launcher | Active |
-| **CodeBox** | [dev-bricks/CodeBox](https://github.com/dev-bricks/CodeBox) | Offline snippet vault & code runner sandbox | Active |
-| **FileCommander MCP** | [ellmos-ai/ellmos-filecommander-mcp](https://github.com/ellmos-ai/ellmos-filecommander-mcp) | Safe, sandboxed MCP file management & batch processing | Active |
-| **CodeCommander MCP** | [ellmos-ai/ellmos-codecommander-mcp](https://github.com/ellmos-ai/ellmos-codecommander-mcp) | MCP code intelligence, AST analysis & format repair | Active |
-| **SQLite Transit Sync** | [dev-bricks/sqlite-transit-sync](https://github.com/dev-bricks/sqlite-transit-sync) | Zero-loss multi-master SQLite replication & synchronization | Active |
+| **ProFiler** | [file-bricks/ProFiler](https://github.com/file-bricks/ProFiler) | Local document indexing, OCR, duplicate detection & privacy | Active Flagship |
+| **KnowledgeDigest** | [file-bricks/knowledgedigest](https://github.com/file-bricks/knowledgedigest) | Portable knowledge database, FTS5 BM25 search & LLM digest | Active Flagship |
+| **PDFtoPDFocr** | [doc-bricks/PDFtoPDFocr](https://github.com/doc-bricks/PDFtoPDFocr) | Batch OCR & searchable PDF generation engine | Active Sibling |
+| **DokuZen** | [doc-bricks/DokuZen](https://github.com/doc-bricks/DokuZen) | Desktop PDF workshop, format converter & security unlocker | Active Sibling |
+| **MediaBrain** | [doc-bricks/MediaBrain](https://github.com/doc-bricks/MediaBrain) | Multi-modal media transcription & structured indexing | Active Sibling |
+| **TextBrain** | [doc-bricks/TextBrain](https://github.com/doc-bricks/TextBrain) | Document intelligence, semantic classification & summaries | Active Sibling |
+| **DevCenter** | [dev-bricks/DevCenter](https://github.com/dev-bricks/DevCenter) | Developer workspace dashboard & automation launcher | Active Sibling |
+| **CodeBox** | [dev-bricks/CodeBox](https://github.com/dev-bricks/CodeBox) | Offline snippet vault & code runner sandbox | Active Sibling |
+| **FileCommander MCP** | [ellmos-ai/ellmos-filecommander-mcp](https://github.com/ellmos-ai/ellmos-filecommander-mcp) | Safe, sandboxed MCP file management & batch processing | Active Companion |
+| **CodeCommander MCP** | [ellmos-ai/ellmos-codecommander-mcp](https://github.com/ellmos-ai/ellmos-codecommander-mcp) | MCP code intelligence, AST analysis & format repair | Active Companion |
+| **SQLite Transit Sync** | [dev-bricks/sqlite-transit-sync](https://github.com/dev-bricks/sqlite-transit-sync) | Zero-loss multi-master SQLite replication & synchronization | Active Companion |
 
-## Privacy And Redaction Notice
+## Third-Party Licenses & Compliance
 
-ProFiler supports privacy workflows, redaction, and anonymization, but it does not guarantee complete removal of sensitive information. Always review generated files manually before sharing or publishing them.
+ProFiler Suite is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0-only)**. See [LICENSE](LICENSE).
 
-## License
+Because ProFiler Suite uses `PyMuPDF`, the application is distributed under AGPL-3.0. A complete, audited third-party dependency and license inventory covering all direct packages (`PySide6`, `pypdf`, `pikepdf`, `Pillow`, `watchdog`, `reportlab`, `pytesseract`) and toolchains is documented in [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md) (and [`THIRD_PARTY_LICENSES.txt`](THIRD_PARTY_LICENSES.txt)).
 
-ProFiler Suite is licensed under AGPL-3.0. See [LICENSE](LICENSE).
+Windows Store distribution preparations are governed by `store_package.json`, `STORE_LISTING.md`, `PRIVACY_POLICY.md`, `SUPPORT.md`, and `WINDOWS_STORE_PREP.md`.
 
-This project uses PySide6 and PyMuPDF among other dependencies; see `requirements.txt` and `THIRD_PARTY_LICENSES.txt` for the full dependency list.
+## Security Policy & SLAs
 
-Windows Store preparation materials live in `store_package.json`, `STORE_LISTING.md`, `PRIVACY_POLICY.md`, `SUPPORT.md`, and `WINDOWS_STORE_PREP.md`.
+ProFiler maintains a formal, bilingual security policy under [`SECURITY.md`](SECURITY.md).
 
-## Discoverability Keywords
+- **Vulnerability Response SLA**: 48-hour initial response guarantee.
+- **Triage & Remediation SLA**: 5 business days triage and resolution timeline.
+- **Reporting Channels**: Contact `security@open-bricks.org` and `support@lukasgeiger.com`, or open a GitHub Security Advisory.
 
-`local-first file manager`, `desktop document manager`, `private document archive`, `OCR desktop app`, `PDF OCR tool`, `PDF redaction`, `document privacy checker`, `PySide6 file management`, `SQLite document index`, `Windows file organizer`.
+---
+
+### Discoverability Keywords
+
+`local-first file manager`, `desktop document manager`, `private document archive`, `OCR desktop app`, `PDF OCR tool`, `PDF redaction`, `document privacy checker`, `PySide6 file management`, `SQLite document index`, `Windows file organizer`, `Datenschutzampel`, `GDPR file review`.

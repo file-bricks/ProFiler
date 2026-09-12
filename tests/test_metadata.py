@@ -55,6 +55,8 @@ def test_required_documentation_and_manifests_exist() -> None:
         "WINDOWS_STORE_PREP.md",
         "store_package.json",
         "pyproject.toml",
+        "THIRD_PARTY_LICENSES.md",
+        "MARKETING-LOG.txt",
     ]
     for filename in required_files:
         path = PROJECT_ROOT / filename
@@ -221,3 +223,135 @@ def test_readme_badges_parity() -> None:
         assert "48h%20Response%20%2F%205d%20Triage" in doc or "48h%20Antwort%20%2F%205d%20Triage" in doc
         assert "code%20style-ruff" in doc
         assert "ecosystem-open--bricks" in doc or "%C3%96kosystem-open--bricks" in doc
+
+
+def test_readme_16_points_quick_navigation_parity() -> None:
+    """Verify exact 16-point quick navigation parity between English and German READMEs."""
+    readme_en = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    readme_de = (PROJECT_ROOT / "README_de.md").read_text(encoding="utf-8")
+
+    expected_anchors_en = [
+        "(#architecture)",
+        "(#workflow-lifecycle)",
+        "(#core-capabilities--security-invariants)",
+        "(#target-personas--use-cases)",
+        "(#comparative-matrix--alternatives)",
+        "(#feature-highlights)",
+        "(#visual-interface--screenshot)",
+        "(#when-to-use-profiler)",
+        "(#quick-start--setup)",
+        "(#windows-launcher--build-flow)",
+        "(#configuration--local-storage)",
+        "(#included-tools--utilities)",
+        "(#supported-file-formats--ocr)",
+        "(#sibling-ecosystem--integrations)",
+        "(#third-party-licenses--compliance)",
+        "(#security-policy--slas)",
+    ]
+    expected_anchors_de = [
+        "(#architektur)",
+        "(#workflow-lebenszyklus)",
+        "(#kernfähigkeiten--sicherheitsinvarianten)",
+        "(#zielgruppen--anwendungsfälle)",
+        "(#vergleichsmatrix--alternativen)",
+        "(#funktions-highlights)",
+        "(#visuelle-oberfläche--screenshot)",
+        "(#wann-profiler-passt)",
+        "(#schnellstart--installation)",
+        "(#windows-launcher--build-prozess)",
+        "(#konfiguration--lokale-ablage)",
+        "(#enthaltene-werkzeuge--dienstprogramme)",
+        "(#unterstützte-dateiformate--ocr)",
+        "(#geschwister-ökosystem--integrationen)",
+        "(#drittanbieter-lizenzen--compliance)",
+        "(#sicherheitsrichtlinie--slas)",
+    ]
+
+    for anchor in expected_anchors_en:
+        assert anchor in readme_en, f"Missing English navigation anchor: {anchor}"
+
+    for anchor in expected_anchors_de:
+        assert anchor in readme_de, f"Missing German navigation anchor: {anchor}"
+
+
+def test_governance_invariants_table_parity() -> None:
+    """Verify all 10 governance invariants (INV-LOCAL-01 to INV-SLA-10) are present in both READMEs."""
+    readme_en = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    readme_de = (PROJECT_ROOT / "README_de.md").read_text(encoding="utf-8")
+
+    invariant_codes = [
+        "INV-LOCAL-01",
+        "INV-SESSION-02",
+        "INV-GATE-03",
+        "INV-SCHEMA-04",
+        "INV-PLACEHOLDER-05",
+        "INV-UNPRIV-06",
+        "INV-ATOMIC-07",
+        "INV-INTEGRITY-08",
+        "INV-OFFLINE-09",
+        "INV-SLA-10",
+    ]
+
+    for code in invariant_codes:
+        assert code in readme_en, f"Missing {code} in English README"
+        assert code in readme_de, f"Missing {code} in German README"
+
+
+def test_target_personas_and_use_cases_parity() -> None:
+    """Verify presence of all 4 target personas in English and German READMEs."""
+    readme_en = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    readme_de = (PROJECT_ROOT / "README_de.md").read_text(encoding="utf-8")
+
+    assert "Legal, Compliance & Privacy Officers" in readme_en
+    assert "Academic Researchers & Archival Curators" in readme_en
+    assert "Small Business Owners & Freelancers" in readme_en
+    assert "Power Users & Data Sovereignty Advocates" in readme_en
+
+    assert "Datenschutzbeauftragte, Juristen & Compliance" in readme_de
+    assert "Wissenschaftler, Archive & Historiker" in readme_de
+    assert "Freiberufler & Kleinunternehmen" in readme_de
+    assert "Power-User & Datenschutz-Enthusiasten" in readme_de
+
+
+def test_comparative_matrix_parity() -> None:
+    """Verify presence of comprehensive comparative matrix against cloud and local alternatives."""
+    readme_en = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    readme_de = (PROJECT_ROOT / "README_de.md").read_text(encoding="utf-8")
+
+    for doc in [readme_en, readme_de]:
+        assert "KnowledgeDigest" in doc
+        assert "DocuWare" in doc or "Dropbox" in doc
+        assert "Alfresco" in doc or "Nextcloud" in doc
+        assert "Windows Explorer" in doc
+
+
+def test_third_party_licenses_markdown_audit() -> None:
+    """Verify THIRD_PARTY_LICENSES.md contains SPDX identifiers, packages, and copyleft analysis."""
+    lic_md = PROJECT_ROOT / "THIRD_PARTY_LICENSES.md"
+    assert lic_md.exists(), "THIRD_PARTY_LICENSES.md missing"
+    content = lic_md.read_text(encoding="utf-8")
+
+    assert "AGPL-3.0-only" in content
+    assert "open-bricks" in content
+    assert "PySide6" in content
+    assert "PyMuPDF" in content
+    assert "pypdf" in content
+    assert "Pillow" in content
+    assert "pytesseract" in content
+    assert "Tesseract OCR" in content
+    assert "Poppler" in content
+
+
+def test_marketing_log_parity() -> None:
+    """Verify local MARKETING-LOG.txt registers Pfad B run, personas, invariants, and queries."""
+    m_log = PROJECT_ROOT / "MARKETING-LOG.txt"
+    assert m_log.exists(), "MARKETING-LOG.txt missing"
+    content = m_log.read_text(encoding="utf-8")
+
+    assert "file-bricks/ProFiler" in content
+    assert "15.0.1" in content
+    assert "2026-09-12" in content
+    assert "INV-LOCAL-01" in content
+    assert "INV-SLA-10" in content
+    assert "Datenschutzampel" in content
+
