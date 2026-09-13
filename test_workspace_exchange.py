@@ -234,6 +234,41 @@ class WorkspaceExchangeTests(unittest.TestCase):
         ref2 = redactor.redact("C:/Users/User/Documents/", "source-root")
         self.assertEqual(ref1, ref2)
 
+    def test_build_workspace_export_tool_links_datenschutzampel_from_explicit_privacy_config(self):
+        payload = build_workspace_export(
+            self.search,
+            self.settings,
+            self.connections,
+            privacy_config=self.privacy_config,
+        )
+        self.assertTrue(
+            payload["tool_links"]["datenschutzampel"]["configured"],
+            "datenschutzampel should be marked configured when explicit privacy_config is provided",
+        )
+
+    def test_build_workspace_export_tool_links_datenschutzampel_from_legacy_config(self):
+        with tempfile.TemporaryDirectory() as temp_home:
+            home = Path(temp_home)
+            legacy_dir = home / ".profiler_suite"
+            legacy_dir.mkdir(parents=True, exist_ok=True)
+            legacy_cfg = legacy_dir / "datenschutzampel.json"
+            legacy_cfg.write_text(json.dumps({"blacklist": ["altes_geheimnis"]}), encoding="utf-8")
+
+            import unittest.mock as mock
+            with mock.patch("workspace_exchange.resolve_read_path") as mock_resolve:
+                mock_resolve.return_value = legacy_cfg
+                payload = build_workspace_export(
+                    self.search,
+                    self.settings,
+                    self.connections,
+                    privacy_config=None,
+                )
+                self.assertTrue(
+                    payload["tool_links"]["datenschutzampel"]["configured"],
+                    "datenschutzampel should be marked configured when resolved from legacy config path",
+                )
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+

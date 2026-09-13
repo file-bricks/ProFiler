@@ -152,5 +152,15 @@ class TestD5FileActionControlFlow(unittest.TestCase):
         self.assertIn("db.safety_hide_version(vid)", block)
 
 
+class TestBugsweepDatenschutzampelToolLinks(unittest.TestCase):
+    """BUGSWEEP-2026-09-13: _build_tool_links muss privacy_data und resolve_read_path unterstützen."""
+
+    def test_build_tool_links_source_has_privacy_data_fallback(self):
+        src = (Path(__file__).parent.parent / "workspace_exchange.py").read_text(encoding="utf-8")
+        self.assertIn("def _build_tool_links(", src)
+        self.assertIn("privacy_data: dict[str, Any] | None = None", src)
+        self.assertIn("resolve_read_path(PRIVACY_CONFIG_PATH.name).exists()", src)
+
+
 if __name__ == "__main__":
     unittest.main()

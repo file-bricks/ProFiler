@@ -145,7 +145,7 @@ def build_workspace_export(
         "settings": _build_settings_payload(settings_data),
         "indexes": _build_index_payload(getattr(search_manager, "dbs", []), connections, redactor),
         "privacy_summary": _build_privacy_summary(privacy_data),
-        "tool_links": _build_tool_links(settings_data),
+        "tool_links": _build_tool_links(settings_data, privacy_data),
         "redactions": {
             "paths": True,
             "secrets": True,
@@ -441,7 +441,18 @@ def _build_privacy_summary(privacy_data: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _build_tool_links(settings_data: dict[str, Any]) -> dict[str, Any]:
+def _build_tool_links(
+    settings_data: dict[str, Any],
+    privacy_data: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    privacy_configured = False
+    if privacy_data:
+        privacy_configured = bool(
+            privacy_data.get("blacklist") or privacy_data.get("whitelist")
+        )
+    if not privacy_configured:
+        privacy_configured = resolve_read_path(PRIVACY_CONFIG_PATH.name).exists()
+
     return {
         "prosync": {
             "enabled": True,
@@ -454,7 +465,7 @@ def _build_tool_links(settings_data: dict[str, Any]) -> dict[str, Any]:
             "configured": bool(settings_data.get("formconstructor_path")),
         },
         "datenschutzampel": {
-            "configured": PRIVACY_CONFIG_PATH.exists(),
+            "configured": privacy_configured,
         },
     }
 
