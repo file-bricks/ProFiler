@@ -351,7 +351,107 @@ def test_marketing_log_parity() -> None:
     assert "file-bricks/ProFiler" in content
     assert "15.0.1" in content
     assert "2026-09-12" in content
+    assert "2026-09-16" in content
     assert "INV-LOCAL-01" in content
     assert "INV-SLA-10" in content
     assert "Datenschutzampel" in content
+    assert "18-POINT NAVIGATION PARITY" in content
 
+
+def test_readme_18_points_quick_navigation_parity() -> None:
+    """Verify exact 18-point quick navigation parity and dual HTML anchors between English and German READMEs."""
+    readme_en = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    readme_de = (PROJECT_ROOT / "README_de.md").read_text(encoding="utf-8")
+
+    expected_anchors_en_18 = [
+        "(#architecture)",
+        "(#workflow-lifecycle)",
+        "(#core-capabilities--security-invariants)",
+        "(#target-personas--use-cases)",
+        "(#comparative-matrix--alternatives)",
+        "(#feature-highlights)",
+        "(#visual-interface--screenshot)",
+        "(#when-to-use-profiler)",
+        "(#quick-start--setup)",
+        "(#windows-launcher--build-flow)",
+        "(#configuration--local-storage)",
+        "(#included-tools--utilities)",
+        "(#supported-file-formats--ocr)",
+        "(#sibling-ecosystem--integrations)",
+        "(#third-party-licenses--compliance)",
+        "(#security-policy--slas)",
+        "(#target-personas--high-intent-seo)",
+        "(#verification--test-suite)",
+    ]
+    expected_anchors_de_18 = [
+        "(#architektur)",
+        "(#workflow-lebenszyklus)",
+        "(#kernfähigkeiten--sicherheitsinvarianten)",
+        "(#zielgruppen--anwendungsfälle)",
+        "(#vergleichsmatrix--alternativen)",
+        "(#funktions-highlights)",
+        "(#visuelle-oberfläche--screenshot)",
+        "(#wann-profiler-passt)",
+        "(#schnellstart--installation)",
+        "(#windows-launcher--build-prozess)",
+        "(#konfiguration--lokale-ablage)",
+        "(#enthaltene-werkzeuge--dienstprogramme)",
+        "(#unterstützte-dateiformate--ocr)",
+        "(#geschwister-ökosystem--integrationen)",
+        "(#drittanbieter-lizenzen--compliance)",
+        "(#sicherheitsrichtlinie--slas)",
+        "(#zielgruppen--high-intent-seo)",
+        "(#verifikation--test-suite)",
+    ]
+
+    for anchor in expected_anchors_en_18:
+        assert anchor in readme_en, f"Missing English 18-point navigation anchor: {anchor}"
+
+    for anchor in expected_anchors_de_18:
+        assert anchor in readme_de, f"Missing German 18-point navigation anchor: {anchor}"
+
+    # Verify dual HTML anchor tags are present
+    assert '<a id="1-architecture"></a>' in readme_en
+    assert '<a id="18-verification--test-suite"></a>' in readme_en
+    assert '<a id="1-architektur"></a>' in readme_de
+    assert '<a id="18-verifikation--test-suite"></a>' in readme_de
+
+
+def test_pyproject_pep621_extended_urls() -> None:
+    """Verify pyproject.toml PEP 621 URLs include Third-Party Licenses, Marketing Log, and LLM Ready."""
+    pyproj_path = PROJECT_ROOT / "pyproject.toml"
+    assert pyproj_path.exists(), "pyproject.toml missing"
+    content = pyproj_path.read_text(encoding="utf-8")
+
+    assert '"Third-Party Licenses" = "https://github.com/file-bricks/ProFiler/blob/master/THIRD_PARTY_LICENSES.md"' in content
+    assert '"Marketing Log" = "https://github.com/file-bricks/ProFiler/blob/master/MARKETING-LOG.txt"' in content
+    assert '"LLM Ready" = "https://github.com/file-bricks/ProFiler/blob/master/llms.txt"' in content
+
+
+def test_third_party_licenses_audit_and_user_assets_guarantee() -> None:
+    """Verify THIRD_PARTY_LICENSES.md audit date, zero-copyleft guarantee, and PySide6 dynamic linking."""
+    lic_md = PROJECT_ROOT / "THIRD_PARTY_LICENSES.md"
+    assert lic_md.exists(), "THIRD_PARTY_LICENSES.md missing"
+    content = lic_md.read_text(encoding="utf-8")
+
+    assert "2026-09-16" in content
+    assert "LGPL-3.0 § 4" in content
+    assert "Zero-Copyleft" in content
+    assert "RunAsInvoker" in content
+    assert "INV-LOCAL-01" in content
+    assert "INV-SLA-10" in content
+
+
+def test_readme_extended_badges_parity() -> None:
+    """Verify extended badges in English and German READMEs."""
+    readme_en = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    readme_de = (PROJECT_ROOT / "README_de.md").read_text(encoding="utf-8")
+
+    for doc in [readme_en, readme_de]:
+        assert "RunAsInvoker" in doc
+        assert any(x in doc for x in ["201%2B%20", "201+", "197%2B%20", "197+"])
+
+    assert "third--party-audited-brightgreen.svg" in readme_en
+    assert "marketing%20log-active-blue.svg" in readme_en
+    assert "Drittanbieter-auditiert-brightgreen.svg" in readme_de
+    assert "Marketing--Log-aktiv-blue.svg" in readme_de

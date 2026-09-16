@@ -22,9 +22,11 @@ ProFiler Suite is a local-first desktop file manager for private document collec
 
 ## Important Files
 
-- `README.md` — English overview with setup, features, and supported formats
-- `README_de.md` — German overview
-- `SECURITY.md` — bilingual security policy and vulnerability reporting
+- `README.md` — English overview with setup, features, and 18-point quick navigation
+- `README_de.md` — German overview with 18-point quick navigation
+- `SECURITY.md` — bilingual security policy, 48h response / 5-day triage SLA
+- `THIRD_PARTY_LICENSES.md` — audited third-party dependency inventory, zero-copyleft user data guarantee
+- `MARKETING-LOG.txt` — Pfad B discoverability audit, target personas, SEO queries, governance invariants
 - `Profiler_Suite_V15.py` — main desktop application
 - `ProFiler_Datenschutzampel.py` — standalone privacy traffic-light helper
 - `SQLiteViewer.py` — local SQLite index viewer
@@ -82,6 +84,6 @@ Part of the **file-bricks** desktop suite under the **open-bricks** umbrella:
 - `ellmos-ai/ellmos-codecommander-mcp`: MCP code intelligence, AST analysis & format repair
 - `dev-bricks/sqlite-transit-sync`: Zero-loss multi-master SQLite replication & synchronization
 
-Test status: 183/183 Python tests passing (100% green).
+Test status: 201+ Python tests and 18 subtests passing (100% green).
 
-## Last-checked: 2026-09-11
+## Last-checked: 2026-09-16

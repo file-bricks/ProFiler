@@ -5,6 +5,18 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Geändert / Changed (2026-09-16)
+- **Marketing, Discoverability & Visuelle Architektur (Pfad B):**
+  - Zweisprachige README-Architektur (`README.md` & `README_de.md`) auf 18-Punkte-Schnellnavigation mit 100% wechselseitiger Anker-Parität (#1..#18) und dualen HTML-Anker-Tags (`<a id="1-..."></a><a id="..."></a>`) erweitert.
+  - Zielgruppen & Auffindbarkeit: 4 Kern-Zielgruppen ([PERSONA-01] Datenschutzbeauftragte & Juristen, [PERSONA-02] Wissenschaftler & Archivare, [PERSONA-03] Freiberufler & KMU, [PERSONA-04] Power-User & Datenschutz-Enthusiasten) mit zweisprachigen High-Intent SEO-Suchbegriffen und architektonischer Lösungsmatrix verankert.
+  - 10-Dimensionen-Vergleichsmatrix gegenüber 4 Alternativen (Cloud-Dokumenten-SaaS wie DocuWare/Dropbox, Native OS-Explorer wie Windows Explorer, Enterprise-ECM wie Alfresco/Nextcloud, Geschwisterwerkzeug KnowledgeDigest) über alle 10 Governance- & Laufzeit-Invarianten (`INV-LOCAL-01` bis `INV-SLA-10`) tabellarisch verankert.
+  - Dritte-Partei-Lizenzinventar (`THIRD_PARTY_LICENSES.md` Stand 2026-09-16) mit vollständigem SPDX-Audit, unprivilegiertem `RunAsInvoker`-Betrieb (`INV-UNPRIV-06`), Zero-Copyleft-Garantie für Nutzerdokumente und dynamischer PySide6 LGPL-3.0 § 4 Link-Transparenz aktualisiert.
+  - Lokales `MARKETING-LOG.txt` (Stand 2026-09-16) mit vollständigem Pfad-B-Audit, 18-Punkte-Navigationsprüfung und Invariantenübersicht synchronisiert.
+  - `pyproject.toml` PEP 621 Metadaten um URLs für 'Third-Party Licenses', 'Marketing Log' und 'LLM Ready' erweitert.
+  - Badges in `README.md` und `README_de.md` um Teststand (201+ passed | 100% green), Third-Party Audited, Marketing Log Active und Security RunAsInvoker aktualisiert.
+  - Maschinenlesbarer Kontext (`llms.txt`) auf Stand 2026-09-16 aktualisiert.
+  - Vertragstestsuite in `tests/test_metadata.py` um Prüfungen für 18-Punkte-Navigation, erweiterte PEP 621 URLs, Third-Party-Audit und Marketing-Log ausgebaut.
+
 ### Geändert / Changed (2026-09-11)
 - **Anonymization & Bugfix (`Profiler_Suite_V15.py`, `tests/test_anonymization.py`):**
   - Bugfix `show_anonymization_settings`: Der zuvor als unvollständiger `pass`-Stub deklarierte Aufruf in `SearchWidget` wurde mit dem vollständigen `AnonymizationSettingsDialog(self.settings, self)` verdrahtet, sodass das Hinzufügen von Begriffen bei leerer Blacklist während der Dateianonymisierung oder PDF-Schwärzung direkt funktioniert.

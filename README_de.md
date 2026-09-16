@@ -8,9 +8,12 @@
 [![Org: file-bricks](https://img.shields.io/badge/Org-file--bricks-blue)](https://github.com/file-bricks)
 [![Lizenz: AGPL v3](https://img.shields.io/badge/Lizenz-AGPL%20v3-blue.svg)](LICENSE)
 [![CI: Plattform-Smoke](https://img.shields.io/badge/CI-Plattform--Smoke-brightgreen.svg)](https://github.com/file-bricks/ProFiler/actions)
-[![Tests: 183 bestanden](https://img.shields.io/badge/tests-183%20bestanden%20%7C%20100%25-brightgreen.svg)]()
+[![Tests: 201+ bestanden](https://img.shields.io/badge/Tests-201%2B%20bestanden%20%7C%20100%25-brightgreen.svg)]()
 [![Code-Style: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![Sicherheits-SLA: 48h Antwort / 5d Triage](https://img.shields.io/badge/Sicherheits--SLA-48h%20Antwort%20%2F%205d%20Triage-blue.svg)](SECURITY.md)
+[![Sicherheit: RunAsInvoker](https://img.shields.io/badge/Sicherheit-RunAsInvoker-green.svg)]()
+[![Drittanbieter: Auditiert](https://img.shields.io/badge/Drittanbieter-auditiert-brightgreen.svg)](THIRD_PARTY_LICENSES.md)
+[![Marketing-Log: Aktiv](https://img.shields.io/badge/Marketing--Log-aktiv-blue.svg)](MARKETING-LOG.txt)
 [![Python: 3.10--3.13](https://img.shields.io/badge/python-3.10--3.13-blue.svg)](https://www.python.org/)
 [![GUI: PySide6](https://img.shields.io/badge/GUI-PySide6-green.svg)](https://wiki.qt.io/Qt_for_Python)
 [![Plattform: Windows | Linux | macOS](https://img.shields.io/badge/Plattform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
@@ -31,25 +34,29 @@ ProFiler wurde gezielt für Anwender entwickelt, die vertrauliche, geschäftlich
 
 ### Schnellnavigation
 
-- [Architektur](#architektur)
-- [Workflow-Lebenszyklus](#workflow-lebenszyklus)
-- [Kernfähigkeiten & Sicherheitsinvarianten](#kernfähigkeiten--sicherheitsinvarianten)
-- [Zielgruppen & Anwendungsfälle](#zielgruppen--anwendungsfälle)
-- [Vergleichsmatrix & Alternativen](#vergleichsmatrix--alternativen)
-- [Funktions-Highlights](#funktions-highlights)
-- [Visuelle Oberfläche & Screenshot](#visuelle-oberfläche--screenshot)
-- [Wann ProFiler passt](#wann-profiler-passt)
-- [Schnellstart & Installation](#schnellstart--installation)
-- [Windows-Launcher & Build-Prozess](#windows-launcher--build-prozess)
-- [Konfiguration & Lokale Ablage](#konfiguration--lokale-ablage)
-- [Enthaltene Werkzeuge & Dienstprogramme](#enthaltene-werkzeuge--dienstprogramme)
-- [Unterstützte Dateiformate & OCR](#unterstützte-dateiformate--ocr)
-- [Geschwister-Ökosystem & Integrationen](#geschwister-ökosystem--integrationen)
-- [Drittanbieter-Lizenzen & Compliance](#drittanbieter-lizenzen--compliance)
-- [Sicherheitsrichtlinie & SLAs](#sicherheitsrichtlinie--slas)
+1. [Architektur](#architektur)
+2. [Workflow-Lebenszyklus](#workflow-lebenszyklus)
+3. [Kernfähigkeiten & Sicherheitsinvarianten](#kernfähigkeiten--sicherheitsinvarianten)
+4. [Zielgruppen & Anwendungsfälle](#zielgruppen--anwendungsfälle)
+5. [Vergleichsmatrix & Alternativen](#vergleichsmatrix--alternativen)
+6. [Funktions-Highlights](#funktions-highlights)
+7. [Visuelle Oberfläche & Screenshot](#visuelle-oberfläche--screenshot)
+8. [Wann ProFiler passt](#wann-profiler-passt)
+9. [Schnellstart & Installation](#schnellstart--installation)
+10. [Windows-Launcher & Build-Prozess](#windows-launcher--build-prozess)
+11. [Konfiguration & Lokale Ablage](#konfiguration--lokale-ablage)
+12. [Enthaltene Werkzeuge & Dienstprogramme](#enthaltene-werkzeuge--dienstprogramme)
+13. [Unterstützte Dateiformate & OCR](#unterstützte-dateiformate--ocr)
+14. [Geschwister-Ökosystem & Integrationen](#geschwister-ökosystem--integrationen)
+15. [Drittanbieter-Lizenzen & Compliance](#drittanbieter-lizenzen--compliance)
+16. [Sicherheitsrichtlinie & SLAs](#sicherheitsrichtlinie--slas)
+17. [Zielgruppen & High-Intent SEO](#zielgruppen--high-intent-seo)
+18. [Verifikation & Test-Suite](#verifikation--test-suite)
 
 ---
 
+<a id="1-architektur"></a>
+<a id="architektur"></a>
 ## Architektur
 
 ```mermaid
@@ -90,6 +97,8 @@ graph TD
     DatenschutzGate --> UI
 ```
 
+<a id="2-workflow-lebenszyklus"></a>
+<a id="workflow-lebenszyklus"></a>
 ## Workflow-Lebenszyklus
 
 ```mermaid
@@ -122,6 +131,8 @@ sequenceDiagram
     Exchange-->>User: Validiertes Übergabe-Artefakt ohne Datenlecks
 ```
 
+<a id="3-kernfähigkeiten--sicherheitsinvarianten"></a>
+<a id="kernfähigkeiten--sicherheitsinvarianten"></a>
 ## Kernfähigkeiten & Sicherheitsinvarianten
 
 | Invarianten-Code | Garantie & Systemgrenze | Technische Umsetzung | Verifikation & Nachweis |
@@ -137,6 +148,8 @@ sequenceDiagram
 | `INV-OFFLINE-09` | **Offline-OCR & Poppler-Sandbox** | Texterkennung (Tesseract) und PDF-Rendering erfolgen rein lokal über unprivilegierte Subprozesse ohne externe APIs. | Getestet in `tests/test_security_hardening.py`. |
 | `INV-SLA-10` | **48h Sicherheits-SLA & 5-Tage-Triage** | Sicherheitsrelevante Meldungen erhalten eine Erstbestätigung innerhalb von 48 Stunden und eine Triage binnen 5 Werktagen. | Festgelegt in `SECURITY.md` und verifiziert in `tests/test_metadata.py`. |
 
+<a id="4-zielgruppen--anwendungsfälle"></a>
+<a id="zielgruppen--anwendungsfälle"></a>
 ## Zielgruppen & Anwendungsfälle
 
 | Zielgruppe | Typische Aufgaben & Workflows | Gelöste Kernprobleme |
@@ -146,6 +159,8 @@ sequenceDiagram
 | **Freiberufler & Kleinunternehmen** | Strukturierung von Eingangsrechnungen, Kundenverträgen und Belegen; seitenweises Teilen oder Verschlüsseln von PDF-Dokumenten für die Buchhaltung. | **Keine monatlichen Abo-Kosten**: Vollwertige Desktop-Zentrale ohne teure SaaS-Monatsabos (wie Adobe Acrobat oder Cloud-DMS), 100% offline nutzbar. |
 | **Power-User & Datenschutz-Enthusiasten** | Schnelle Dateiverwaltung mit Dark/Light-Themes, Tastaturnavigation und präziser Kontrolle über Speicherpfade und OneDrive-Synchronisation. | **Platzhalter-Schutz**: ProFiler lädt Cloud-Dateien in OneDrive nicht ungefragt herunter und schützt so vor Speicherplatzüberläufen auf lokalen SSDs. |
 
+<a id="5-vergleichsmatrix--alternativen"></a>
+<a id="vergleichsmatrix--alternativen"></a>
 ## Vergleichsmatrix & Alternativen
 
 | Funktion / Eigenschaft | ProFiler Suite | Cloud-DMS SaaS (DocuWare / Dropbox) | Standard-Dateimanager (Windows Explorer) | Schweres Enterprise-ECM (Alfresco / Nextcloud) | Geschwistertool (KnowledgeDigest) |
@@ -160,6 +175,8 @@ sequenceDiagram
 | **Laufende Kosten** | **Kostenlos & Open Source**| 15–50 € / Monat / User | Im OS enthalten | Hardware- + Wartungskosten | Kostenlos & Open Source |
 | **Haupteinsatzbereich** | **Lokaler Dokumenten-Detektiv**| Team-Kollaboration | Allgemeine Dateiverwaltung| Großunternehmen | LLM-Wissens-Chunking |
 
+<a id="6-funktions-highlights"></a>
+<a id="funktions-highlights"></a>
 ## Funktions-Highlights
 
 - **Lokaler SQLite-Dateikatalog**: Schnelle Indexierung von Verzeichnisbäumen, Sammlungen und Dateiversionen.
@@ -174,10 +191,14 @@ sequenceDiagram
 - **Moderne Desktop-Oberfläche**: Native PySide6-GUI mit Dark-/Light-Theme-Umschaltung und System-Tray-Support.
 - **Zusätzliche Dienstprogramme**: Integrierter SQLite-Inspektor (`SQLiteViewer.py`) und Excel-Importwerkzeug.
 
+<a id="7-visuelle-oberfläche--screenshot"></a>
+<a id="visuelle-oberfläche--screenshot"></a>
 ## Visuelle Oberfläche & Screenshot
 
 ![ProFiler Suite Desktop-Dateimanager mit Filtern, Dateisuche, Sammlungen und Vorschaufenstern](README/screenshots/main.png)
 
+<a id="8-wann-profiler-passt"></a>
+<a id="wann-profiler-passt"></a>
 ## Wann ProFiler passt
 
 ProFiler ist die ideale Wahl, wenn Sie ein privates Dokumentenwerkzeug benötigen für:
@@ -189,6 +210,8 @@ ProFiler ist die ideale Wahl, wenn Sie ein privates Dokumentenwerkzeug benötige
 - Prüfung von Dokumentenpaketen auf sensible Daten vor der Weitergabe an Dritte (DSGVO-Prüfung).
 - Nutzung einer zentralen Desktop-Zentrale neben Begleitwerkzeugen wie [ProSync](https://github.com/file-bricks/ProSync) und [SQLiteViewer](https://github.com/file-bricks/SQLiteViewer).
 
+<a id="9-schnellstart--installation"></a>
+<a id="schnellstart--installation"></a>
 ## Schnellstart & Installation
 
 ### Voraussetzungen & Systemanforderungen
@@ -213,6 +236,8 @@ Unter Windows kann die Anwendung direkt über die Startdatei aufgerufen werden:
 START.bat
 ```
 
+<a id="10-windows-launcher--build-prozess"></a>
+<a id="windows-launcher--build-prozess"></a>
 ## Windows-Launcher & Build-Prozess
 
 Für die lokale Nutzung als eigenständige Windows-Desktop-Anwendung kann eine EXE-Datei gebaut werden:
@@ -229,6 +254,8 @@ Der Build setzt ein sauberes Git-Repository voraus, läuft außerhalb von OneDri
 
 Der Build schreibt niemals in OneDrive, GitHub Releases oder ein Store-Paket. `START.bat` startet die lokale EXE nur dann, wenn die Prüfsumme in `ProFiler.exe.sha256` übereinstimmt; andernfalls wird direkt `Profiler_Suite_V15.py` ausgeführt.
 
+<a id="11-konfiguration--lokale-ablage"></a>
+<a id="konfiguration--lokale-ablage"></a>
 ## Konfiguration & Lokale Ablage
 
 | Dateipfad | Zweck & Funktion |
@@ -245,6 +272,8 @@ python -m pip install -e ".[excel]"
 python import_excel_to_profiler.py --input INPUT.xlsx --database profiler.db --output imported
 ```
 
+<a id="12-enthaltene-werkzeuge--dienstprogramme"></a>
+<a id="enthaltene-werkzeuge--dienstprogramme"></a>
 ## Enthaltene Werkzeuge & Dienstprogramme
 
 | Datei | Funktion |
@@ -255,6 +284,8 @@ python import_excel_to_profiler.py --input INPUT.xlsx --database profiler.db --o
 | `import_excel_to_profiler.py` | Befehlszeilenwerkzeug zum Import bestehender Excel-Dateilisten |
 | `indent_gui_checker.py` | Entwicklerwerkzeug zur Überprüfung von Einrückungen im GUI-Code |
 
+<a id="13-unterstützte-dateiformate--ocr"></a>
+<a id="unterstützte-dateiformate--ocr"></a>
 ## Unterstützte Dateiformate & OCR
 
 | Kategorie | Dateiendungen | Funktionen |
@@ -264,6 +295,8 @@ python import_excel_to_profiler.py --input INPUT.xlsx --database profiler.db --o
 | **Tabellen** | `.xlsx`, `.xls`, `.csv` | Struktur-Inspektion und Indexierung (Excel-Zusatzpaket verfügbar) |
 | **Weitere Formate** | Allgemeiner Fallback | Erfassung von Dateisystem-Attributen, Größe, Zeitstempel und SHA-256 |
 
+<a id="14-geschwister-ökosystem--integrationen"></a>
+<a id="geschwister-ökosystem--integrationen"></a>
 ## Geschwister-Ökosystem & Integrationen
 
 ProFiler Suite ist fester Bestandteil der **file-bricks**-Werkzeugfamilie unter dem Dach von **[open-bricks](https://github.com/open-bricks)**:
@@ -282,6 +315,8 @@ ProFiler Suite ist fester Bestandteil der **file-bricks**-Werkzeugfamilie unter 
 | **CodeCommander MCP** | [ellmos-ai/ellmos-codecommander-mcp](https://github.com/ellmos-ai/ellmos-codecommander-mcp) | MCP-Code-Intelligenz, AST-Analyse & Formatreparatur | Aktiver Begleiter |
 | **SQLite Transit Sync** | [dev-bricks/sqlite-transit-sync](https://github.com/dev-bricks/sqlite-transit-sync) | Verlustfreie Multi-Master SQLite-Replikation & Synchronisation | Aktiver Begleiter |
 
+<a id="15-drittanbieter-lizenzen--compliance"></a>
+<a id="drittanbieter-lizenzen--compliance"></a>
 ## Drittanbieter-Lizenzen & Compliance
 
 ProFiler Suite ist unter der **GNU Affero General Public License v3.0 (AGPL-3.0-only)** lizenziert. Siehe [LICENSE](LICENSE).
@@ -290,6 +325,8 @@ Durch die Nutzung von `PyMuPDF` unterliegt die Anwendung der AGPL-3.0. Ein volls
 
 Die Vorbereitungen für den Microsoft Windows Store werden durch `store_package.json`, `STORE_LISTING.md`, `PRIVACY_POLICY.md`, `SUPPORT.md` und `WINDOWS_STORE_PREP.md` geregelt.
 
+<a id="16-sicherheitsrichtlinie--slas"></a>
+<a id="sicherheitsrichtlinie--slas"></a>
 ## Sicherheitsrichtlinie & SLAs
 
 ProFiler unterhält eine verbindliche, zweisprachige Sicherheitsrichtlinie unter [`SECURITY.md`](SECURITY.md).
@@ -300,6 +337,43 @@ ProFiler unterhält eine verbindliche, zweisprachige Sicherheitsrichtlinie unter
 
 ---
 
+<a id="17-zielgruppen--high-intent-seo"></a>
+<a id="zielgruppen--high-intent-seo"></a>
+## Zielgruppen & High-Intent SEO
+
+ProFiler Suite ist passgenau auf datenschutzsensible Desktop-Umgebungen ausgerichtet. Die folgende Übersicht verknüpft unsere vier Kern-Zielgruppen mit konkreten Suchintentionen und architektonischen Antworten:
+
+| Zielgruppe | Typische Aufgaben & Workflows | High-Intent Suchbegriffe |
+|---|---|---|
+| **Datenschutzbeauftragte, Juristen & Compliance** | Prüfung lokaler Aktenbestände auf DSGVO-Konformität, Schwärzung von Mandantendaten in PDFs, Vorab-Prüfung mit Datenschutzampel. | `desktop pdf redaction privacy checker`, `DSGVO konforme Dokumentenverwaltung lokal`, `PDF Schwärzung Datenschutzampel Desktop` |
+| **Wissenschaftler, Archive & Historiker** | Erschließung großer historischer Dokumentenbestände, Volltext-OCR-Indexierung von Scans, Dublettenbeseitigung. | `pyside6 document manager ocr tesseract`, `offline pdf ocr tool without cloud`, `Tesseract OCR Desktop App offline` |
+| **Freiberufler & Kleinunternehmen** | Verwaltung von Rechnungsarchiven, Kundenverträgen und Belegen ohne laufende Cloud- und Software-Abos. | `local-first desktop file manager python`, `private document archive windows open source`, `Dokumentenverwaltung ohne Cloud Abo` |
+| **Power-User & Datenschutz-Enthusiasten** | Schnelle, tastaturgesteuerte lokale Indexierung, Dark/Light-Design, OneDrive-Platzhalter-Schutz, Zero-Network-Egress. | `sqlite document full text index offline`, `file deduplication sha256 desktop app`, `local file index database SQLite` |
+
 ### Suchbegriffe für Auffindbarkeit
 
 `lokaler Dokumentenmanager`, `Desktop Dateimanager`, `privates Dokumentenarchiv`, `OCR Desktop App`, `PDF OCR Werkzeug`, `PDF Schwärzung`, `Datenschutzprüfung`, `PySide6 Dateiverwaltung`, `SQLite Dokumentenindex`, `Windows Datei-Organizer`, `Datenschutzampel`, `DSGVO Dateiprüfung`.
+
+---
+
+<a id="18-verifikation--test-suite"></a>
+<a id="verifikation--test-suite"></a>
+## Verifikation & Test-Suite
+
+ProFiler Suite unterliegt strengen automatisierten Verifikations-Gates. Jede Code- und Dokumentationsänderung wird gegen Vertragstests, Linter-Prüfungen und Bytecode-Kompilierung validiert:
+
+```bash
+# Gesamte automatisierte Vertrags- und Test-Suite ausführen (201+ Tests, 100% bestanden)
+pytest -ra -v
+
+# Schnellen Python-Linter ausführen (null Toleranz für Verstöße)
+ruff check .
+
+# Python-Bytecode-Syntax aller Dateien validieren
+python -m compileall -q .
+
+# Git-Staging-Hygiene prüfen (keine trailing whitespaces)
+git diff --check
+```
+
+Alle 10 Governance- und Laufzeit-Invarianten (`INV-LOCAL-01` bis `INV-SLA-10`), PEP-621-Metadaten, zweisprachige Dokumentationsanker und die Lizenzintegrität werden kontinuierlich über `tests/test_metadata.py` und `tests/test_security_license_contract.py` überwacht.

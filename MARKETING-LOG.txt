@@ -1,5 +1,5 @@
 # MARKETING-LOG: ProFiler Suite (`file-bricks/ProFiler`)
-Date: 2026-09-12
+Date: 2026-09-16 (Initial Pfad B: 2026-09-12)
 Operator: Antigravity / Gemini (via GITHUBBOT Pfad B)
 Target Repo: file-bricks/ProFiler
 Canonical Path: C:\_Local_DEV\repos\ProFiler
@@ -92,9 +92,9 @@ German (DE):
 - `INV-SLA-10`: 48h Security Response & 5-Day Triage Guarantee
 
 ================================================================================
-6. 16-POINT NAVIGATION PARITY & VISUAL HIERARCHY
+6. 18-POINT NAVIGATION PARITY & VISUAL HIERARCHY
 ================================================================================
-Both README.md and README_de.md maintain synchronized 16-point Quick Navigation menus:
+Both README.md and README_de.md maintain synchronized 18-point Quick Navigation menus with dual HTML anchor tags (`<a id="1-..."></a><a id="..."></a>`):
 1. Architecture / Architektur (#architecture / #architektur)
 2. Workflow Lifecycle / Workflow-Lebenszyklus (#workflow-lifecycle / #workflow-lebenszyklus)
 3. Core Capabilities & Security Invariants / Kernfähigkeiten & Sicherheitsinvarianten (#core-capabilities--security-invariants / #kernfähigkeiten--sicherheitsinvarianten)
@@ -111,9 +111,12 @@ Both README.md and README_de.md maintain synchronized 16-point Quick Navigation 
 14. Sibling Ecosystem & Integrations / Geschwister-Ökosystem & Integrationen (#sibling-ecosystem--integrations / #geschwister-ökosystem--integrationen)
 15. Third-Party Licenses & Compliance / Drittanbieter-Lizenzen & Compliance (#third-party-licenses--compliance / #drittanbieter-lizenzen--compliance)
 16. Security Policy & SLAs / Sicherheitsrichtlinie & SLAs (#security-policy--slas / #sicherheitsrichtlinie--slas)
+17. Target Personas & High-Intent SEO / Zielgruppen & High-Intent SEO (#target-personas--high-intent-seo / #zielgruppen--high-intent-seo)
+18. Verification & Test Suite / Verifikation & Test-Suite (#verification--test-suite / #verifikation--test-suite)
 
 ================================================================================
 7. VERIFICATION & CONTRACT TEST COVERAGE
 ================================================================================
 - 100% automated pytest contract verification in `tests/test_metadata.py` and `tests/test_security_license_contract.py`.
-- Enforces strict navigation anchor parity, persona coverage, invariant code definitions, and license metadata integrity.
+- 201+ tests and 18 subtests passing (100% green).
+- Enforces strict 18-point bilingual navigation anchor parity, persona coverage, 10 invariant definitions, PEP 621 extended URLs, and license metadata integrity.
