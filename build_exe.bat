@@ -10,11 +10,14 @@ set "ICON_PATH=%PROJECT_ROOT%\ICO.ico"
 set "SCANNER=%PROJECT_ROOT%\scripts\build_exclude_scanner.py"
 set "PROVENANCE_WRITER=%PROJECT_ROOT%\scripts\write_build_provenance.py"
 set "VERSION_WRITER=%PROJECT_ROOT%\scripts\write_windows_version_info.py"
+set "OCR_ARGS_WRITER=%PROJECT_ROOT%\scripts\write_ocr_bundle_args.py"
 set "BUILD_REQUIREMENTS=%PROJECT_ROOT%\requirements-build.txt"
+set "OCR_RUNTIME_ROOT=%PROJECT_ROOT%\runtime"
 if not defined BUILD_ROOT set "BUILD_ROOT=C:\_Local_DEV\codex_build\profiler"
 if not defined BUILD_VENV set "BUILD_VENV=C:\_Local_DEV\venvs\profiler_build"
 set "BUILD_PYTHON=%BUILD_VENV%\Scripts\python.exe"
 set "EXCLUDE_ARGS=%BUILD_ROOT%\pyinstaller_excludes.txt"
+set "OCR_BUNDLE_ARGS=%BUILD_ROOT%\pyinstaller_ocr_args.txt"
 set "VERSION_FILE=%BUILD_ROOT%\windows_version_info.txt"
 set "RELEASE_OUTPUT=%BUILD_ROOT%\release"
 set "PROVENANCE_FILE=%RELEASE_OUTPUT%\BUILD-PROVENANCE.json"
@@ -28,6 +31,23 @@ for /f "delims=" %%D in ('git status --porcelain --untracked-files^=all') do set
 if defined DIRTY_TREE (
     echo [FEHLER] Der Git-Arbeitsbaum ist nicht sauber. Kein Release-Build.
     git status --short
+    exit /b 1
+)
+
+if not exist "%OCR_RUNTIME_ROOT%\tesseract\tesseract.exe" (
+    echo [FEHLER] OCR-Bundle fehlt: %OCR_RUNTIME_ROOT%\tesseract\tesseract.exe
+    exit /b 1
+)
+if not exist "%OCR_RUNTIME_ROOT%\tesseract\tessdata" (
+    echo [FEHLER] OCR-Bundle fehlt: %OCR_RUNTIME_ROOT%\tesseract\tessdata
+    exit /b 1
+)
+if not exist "%OCR_RUNTIME_ROOT%\poppler\pdftoppm.exe" (
+    echo [FEHLER] Poppler-Bundle fehlt: %OCR_RUNTIME_ROOT%\poppler\pdftoppm.exe
+    exit /b 1
+)
+if not exist "%OCR_RUNTIME_ROOT%\poppler\pdfinfo.exe" (
+    echo [FEHLER] Poppler-Bundle fehlt: %OCR_RUNTIME_ROOT%\poppler\pdfinfo.exe
     exit /b 1
 )
 
@@ -58,6 +78,13 @@ if errorlevel 1 (
 )
 set /p EXCLUDES=<"%EXCLUDE_ARGS%"
 
+"%BUILD_PYTHON%" "%OCR_ARGS_WRITER%" --runtime-root "%OCR_RUNTIME_ROOT%" > "%OCR_BUNDLE_ARGS%"
+if errorlevel 1 (
+    echo [FEHLER] OCR-/Poppler-Bundle-Manifest fehlgeschlagen.
+    exit /b 1
+)
+set /p OCR_BUNDLE=<"%OCR_BUNDLE_ARGS%"
+
 "%BUILD_PYTHON%" "%VERSION_WRITER%" --output "%VERSION_FILE%"
 if errorlevel 1 exit /b 1
 
@@ -70,6 +97,7 @@ if errorlevel 1 exit /b 1
   --icon "%ICON_PATH%" ^
   --version-file "%VERSION_FILE%" ^
   --add-data "%PROJECT_ROOT%\locales;locales" ^
+  %OCR_BUNDLE% ^
   %EXCLUDES% ^
   --distpath "%BUILD_ROOT%\dist" ^
   --workpath "%BUILD_ROOT%\build" ^

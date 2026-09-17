@@ -21,6 +21,7 @@ Stand: 2026-09-10 (Version 15.0.1.0)
 - App-Datenpfad auf Windows für Store-/Desktop-Readiness auf `%LOCALAPPDATA%\ProFilerSuite` umgestellt
 - Legacy-Lese-Fallback für alte `~/.profiler_suite`-Dateien bleibt erhalten
 - `THIRD_PARTY_LICENSES.txt` bildet die direkten Runtime-Abhängigkeiten manifestnah ab
+- Der Release-Build erwartet für die lokale OCR-Bündelung den expliziten Vertrag `runtime/tesseract/tesseract.exe`, `runtime/tesseract/tessdata/`, `runtime/poppler/pdftoppm.exe` und `runtime/poppler/pdfinfo.exe`; ohne diese Dateien beendet sich `build_exe.bat` vor PyInstaller.
 - Privacy- und Support-Links zeigen auf den realen Default-Branch `master`
 
 ## Vor der Einreichung im Partner Center (externe Gates)

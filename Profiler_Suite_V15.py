@@ -41,6 +41,7 @@ from sibling_launcher import (
     launch_prosync as _sibling_launch_prosync,
     LaunchResult as _LaunchResult,
 )
+from ocr_runtime import configure_ocr_runtime
 from version import APP_VERSION
 
 
@@ -194,6 +195,17 @@ def app_base_dir():
     if getattr(sys, "frozen", False):
         return os.path.dirname(sys.executable)
     return os.path.dirname(os.path.abspath(__file__))
+
+
+OCR_RUNTIME = configure_ocr_runtime()
+POPPLER_PATH = str(OCR_RUNTIME.poppler_dir) if OCR_RUNTIME.poppler_dir else None
+
+
+def convert_pdf_to_images(input_path):
+    """Render PDF pages with the bundled Poppler path when available."""
+    if POPPLER_PATH:
+        return convert_from_path(input_path, poppler_path=POPPLER_PATH)
+    return convert_from_path(input_path)
 
 
 # normalize_configured_tool_path und resolve_prosync_launch_path sind
@@ -736,7 +748,7 @@ class PDFUtils:
             if not HAS_PDF2IMAGE:
                 raise Exception("pdf2image nicht installiert")
             
-            images = convert_from_path(input_path)
+            images = convert_pdf_to_images(input_path)
             
             if images:
                 images[0].save(output_path, "PDF", save_all=True, 
@@ -755,7 +767,7 @@ class PDFUtils:
         
         try:
             # PDF zu Bildern
-            images = convert_from_path(input_path)
+            images = convert_pdf_to_images(input_path)
             
             writer = PdfWriter()
             for img in images:
@@ -9098,6 +9110,9 @@ def main():
     
     if not HAS_PDF2IMAGE:
         warnings.append("⚠️ pdf2image nicht installiert - Text-Removal deaktiviert")
+
+    if getattr(sys, "frozen", False) and not OCR_RUNTIME.ready:
+        warnings.append("⚠️ Gebündelte Tesseract-/Poppler-Runtime fehlt - OCR/PDF-Rendering deaktiviert")
     
     if not HAS_DOCX:
         warnings.append("⚠️ python-docx nicht installiert - Word-Features deaktiviert")
