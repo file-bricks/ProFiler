@@ -11,7 +11,7 @@ def test_windows_app_data_uses_localappdata() -> None:
         env={"LOCALAPPDATA": r"C:\Users\User\AppData\Local"},
         home=Path(r"C:\Users\User"),
     )
-    assert path == Path(r"C:\Users\User\AppData\Local\ProFilerSuite")
+    assert str(path).replace("\\", "/") == "C:/Users/User/AppData/Local/ProFilerSuite"
 
 
 def test_non_windows_keeps_legacy_hidden_dir() -> None:
@@ -37,4 +37,4 @@ def test_config_path_targets_localappdata_on_windows() -> None:
         env={"LOCALAPPDATA": r"C:\Users\User\AppData\Local"},
         home=Path(r"C:\Users\User"),
     )
-    assert path == Path(r"C:\Users\User\AppData\Local\ProFilerSuite\connections.json")
+    assert str(path).replace("\\", "/") == "C:/Users/User/AppData/Local/ProFilerSuite/connections.json"

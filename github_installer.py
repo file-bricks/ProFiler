@@ -246,10 +246,14 @@ def extract_zip_to_sibling(zip_path: Path, sibling_dir: Path) -> None:
                 if not member_path:
                     continue
                 relative = Path(member_path)
+                has_drive = bool(
+                    relative.drive
+                    or (len(member_path) >= 2 and member_path[1] == ":" and member_path[0].isalpha())
+                )
                 if (
                     normalized_name.startswith("/")
                     or relative.is_absolute()
-                    or relative.drive
+                    or has_drive
                     or ".." in relative.parts
                     or any(part in {"", "."} for part in relative.parts)
                 ):

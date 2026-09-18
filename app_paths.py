@@ -24,7 +24,7 @@ def app_data_dir(
     if platform == "nt":
         local_appdata = env.get("LOCALAPPDATA")
         if local_appdata:
-            return Path(local_appdata) / APP_DATA_DIRNAME
+            return Path(local_appdata.replace("\\", "/")) / APP_DATA_DIRNAME
         return home / "AppData" / "Local" / APP_DATA_DIRNAME
 
     return home / LEGACY_CONFIG_DIRNAME

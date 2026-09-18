@@ -38,7 +38,7 @@ jobs:
             libgl1 libglib2.0-0 libegl1 libxkbcommon0
 
       - name: Gepinntes PySide6 und Test-Abhängigkeiten installieren
-        run: pip install "PySide6==6.11.1" Pillow pytest
+        run: pip install "PySide6==6.11.1" Pillow pypdf pytest
 
       - name: Python Bytecode Compilation Gate
         run: python -m compileall -q .

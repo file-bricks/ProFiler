@@ -52,6 +52,8 @@ def normalize_configured_tool_path(base_dir, configured_path) -> Path | None:
         lambda match: os.environ.get(match.group(1), match.group(0)),
         raw_path,
     )
+    if sys.platform != "win32":
+        expanded_raw_path = expanded_raw_path.replace("\\", "/")
     expanded_path = Path(os.path.expandvars(expanded_raw_path)).expanduser()
     if not expanded_path.is_absolute():
         expanded_path = Path(base_dir).expanduser() / expanded_path

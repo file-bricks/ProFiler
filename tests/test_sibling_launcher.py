@@ -167,8 +167,9 @@ class TestLaunchToolProcess(unittest.TestCase):
             tool = Path(tmp) / "run.bat"
             tool.write_text("", encoding="utf-8")
             launch_tool_process(tool)
+            expected_cmd = ["sh", str(tool)] if sys.platform != "win32" else ["cmd", "/c", str(tool)]
             mock_popen.assert_called_once_with(
-                ["cmd", "/c", str(tool)], cwd=tmp
+                expected_cmd, cwd=tmp
             )
 
     @patch("sibling_launcher.subprocess.Popen")
