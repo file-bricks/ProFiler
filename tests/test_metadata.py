@@ -206,11 +206,13 @@ def test_ci_workflow_hardening() -> None:
 
 
 def test_changelog_release_entry() -> None:
-    """Verify CHANGELOG.md contains 15.0.1 release entry with technical hygiene notes."""
+    """Verify CHANGELOG.md contains 15.0.1 and 15.0.2 release entries with technical hygiene notes."""
     cl_text = (PROJECT_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     assert "## [15.0.1] - 2026-09-10" in cl_text
+    assert "## [15.0.2] - 2026-09-18" in cl_text
     assert "Technische Hygiene" in cl_text or "Pfad A" in cl_text
     assert "15.0.1.0" in cl_text
+    assert "15.0.2.0" in cl_text
 
 
 def test_readme_badges_parity() -> None:
@@ -219,7 +221,7 @@ def test_readme_badges_parity() -> None:
     readme_de = (PROJECT_ROOT / "README_de.md").read_text(encoding="utf-8")
 
     for doc in [readme_en, readme_de]:
-        assert "version-15.0.1-blue.svg" in doc
+        assert "version-15.0.2-blue.svg" in doc
         assert "48h%20Response%20%2F%205d%20Triage" in doc or "48h%20Antwort%20%2F%205d%20Triage" in doc
         assert "code%20style-ruff" in doc
         assert "ecosystem-open--bricks" in doc or "%C3%96kosystem-open--bricks" in doc
@@ -343,15 +345,17 @@ def test_third_party_licenses_markdown_audit() -> None:
 
 
 def test_marketing_log_parity() -> None:
-    """Verify local MARKETING-LOG.txt registers Pfad B run, personas, invariants, and queries."""
+    """Verify local MARKETING-LOG.txt registers Pfad B and Pfad A runs, personas, invariants, and queries."""
     m_log = PROJECT_ROOT / "MARKETING-LOG.txt"
     assert m_log.exists(), "MARKETING-LOG.txt missing"
     content = m_log.read_text(encoding="utf-8")
 
     assert "file-bricks/ProFiler" in content
     assert "15.0.1" in content
+    assert "15.0.2" in content
     assert "2026-09-12" in content
     assert "2026-09-16" in content
+    assert "2026-09-18" in content
     assert "INV-LOCAL-01" in content
     assert "INV-SLA-10" in content
     assert "Datenschutzampel" in content
@@ -449,7 +453,7 @@ def test_readme_extended_badges_parity() -> None:
 
     for doc in [readme_en, readme_de]:
         assert "RunAsInvoker" in doc
-        assert any(x in doc for x in ["201%2B%20", "201+", "197%2B%20", "197+"])
+        assert any(x in doc for x in ["205%2B%20", "205+", "201%2B%20", "201+", "197%2B%20", "197+"])
 
     assert "third--party-audited-brightgreen.svg" in readme_en
     assert "marketing%20log-active-blue.svg" in readme_en

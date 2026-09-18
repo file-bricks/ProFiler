@@ -4,11 +4,11 @@
 
 **[English](README.md)** | [Deutsch](README_de.md) | [GitHub](https://github.com/file-bricks/ProFiler)
 
-[![Version: 15.0.1](https://img.shields.io/badge/version-15.0.1-blue.svg)](CHANGELOG.md)
+[![Version: 15.0.2](https://img.shields.io/badge/version-15.0.2-blue.svg)](CHANGELOG.md)
 [![Org: file-bricks](https://img.shields.io/badge/Org-file--bricks-blue)](https://github.com/file-bricks)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 [![CI: Platform Smoke](https://img.shields.io/badge/CI-Platform%20Smoke-brightgreen.svg)](https://github.com/file-bricks/ProFiler/actions)
-[![Tests: 201+ passed](https://img.shields.io/badge/tests-201%2B%20passed%20%7C%20100%25-brightgreen.svg)]()
+[![Tests: 205+ passed](https://img.shields.io/badge/tests-205%2B%20passed%20%7C%20100%25-brightgreen.svg)]()
 [![Code Style: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![Security SLA: 48h Response / 5d Triage](https://img.shields.io/badge/Security%20SLA-48h%20Response%20%2F%205d%20Triage-blue.svg)](SECURITY.md)
 [![Security: RunAsInvoker](https://img.shields.io/badge/security-RunAsInvoker-green.svg)]()
@@ -363,7 +363,7 @@ ProFiler Suite is precision-engineered for privacy-sensitive desktop environment
 ProFiler Suite maintains rigorous automated verification gates. Every code and documentation modification is validated against automated contract tests, linter gates, and bytecode compilation:
 
 ```bash
-# Execute full automated contract & unit test suite (201+ tests, 100% green)
+# Execute full automated contract & unit test suite (205+ tests, 100% green)
 pytest -ra -v
 
 # Run fast Python linter (zero violations tolerated)

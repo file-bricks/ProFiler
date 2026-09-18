@@ -4,11 +4,11 @@
 
 [English](README.md) | **[Deutsch](README_de.md)** | [GitHub](https://github.com/file-bricks/ProFiler)
 
-[![Version: 15.0.1](https://img.shields.io/badge/version-15.0.1-blue.svg)](CHANGELOG.md)
+[![Version: 15.0.2](https://img.shields.io/badge/version-15.0.2-blue.svg)](CHANGELOG.md)
 [![Org: file-bricks](https://img.shields.io/badge/Org-file--bricks-blue)](https://github.com/file-bricks)
 [![Lizenz: AGPL v3](https://img.shields.io/badge/Lizenz-AGPL%20v3-blue.svg)](LICENSE)
 [![CI: Plattform-Smoke](https://img.shields.io/badge/CI-Plattform--Smoke-brightgreen.svg)](https://github.com/file-bricks/ProFiler/actions)
-[![Tests: 201+ bestanden](https://img.shields.io/badge/Tests-201%2B%20bestanden%20%7C%20100%25-brightgreen.svg)]()
+[![Tests: 205+ bestanden](https://img.shields.io/badge/Tests-205%2B%20bestanden%20%7C%20100%25-brightgreen.svg)]()
 [![Code-Style: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![Sicherheits-SLA: 48h Antwort / 5d Triage](https://img.shields.io/badge/Sicherheits--SLA-48h%20Antwort%20%2F%205d%20Triage-blue.svg)](SECURITY.md)
 [![Sicherheit: RunAsInvoker](https://img.shields.io/badge/Sicherheit-RunAsInvoker-green.svg)]()
@@ -363,7 +363,7 @@ ProFiler Suite ist passgenau auf datenschutzsensible Desktop-Umgebungen ausgeric
 ProFiler Suite unterliegt strengen automatisierten Verifikations-Gates. Jede Code- und Dokumentationsänderung wird gegen Vertragstests, Linter-Prüfungen und Bytecode-Kompilierung validiert:
 
 ```bash
-# Gesamte automatisierte Vertrags- und Test-Suite ausführen (201+ Tests, 100% bestanden)
+# Gesamte automatisierte Vertrags- und Test-Suite ausführen (205+ Tests, 100% bestanden)
 pytest -ra -v
 
 # Schnellen Python-Linter ausführen (null Toleranz für Verstöße)

@@ -1,9 +1,9 @@
 # MARKETING-LOG: ProFiler Suite (`file-bricks/ProFiler`)
-Date: 2026-09-16 (Initial Pfad B: 2026-09-12)
-Operator: Antigravity / Gemini (via GITHUBBOT Pfad B)
+Date: 2026-09-18 (Pfad A Hygiene; Previous Pfad B: 2026-09-16; Initial Pfad B: 2026-09-12)
+Operator: Antigravity / Gemini (via GITHUBBOT Pfad A & B)
 Target Repo: file-bricks/ProFiler
 Canonical Path: C:\_Local_DEV\repos\ProFiler
-Version: 15.0.1
+Version: 15.0.2 (Previous: 15.0.1)
 
 ================================================================================
 1. REPOSITORY AUDIT & DISCOVERABILITY BASELINE
@@ -118,5 +118,16 @@ Both README.md and README_de.md maintain synchronized 18-point Quick Navigation 
 7. VERIFICATION & CONTRACT TEST COVERAGE
 ================================================================================
 - 100% automated pytest contract verification in `tests/test_metadata.py` and `tests/test_security_license_contract.py`.
-- 201+ tests and 18 subtests passing (100% green).
+- 205+ tests and 18 subtests passing (100% green).
 - Enforces strict 18-point bilingual navigation anchor parity, persona coverage, 10 invariant definitions, PEP 621 extended URLs, and license metadata integrity.
+
+================================================================================
+8. PFAD A TECHNICAL HYGIENE & CI HARDENING (2026-09-18)
+================================================================================
+- Date: 2026-09-18
+- Version: 15.0.2 (Windows Store Package 15.0.2.0)
+- Operator: Antigravity / Gemini (via GITHUBBOT Pfad A)
+- Hardened CI workflow `source-platform-smoke.yml` with `timeout-minutes: 15` and added `Pillow` test dependency.
+- Hardened `stale.yml` and `welcome.yml` with `timeout-minutes: 5` and concurrency cancellation groups.
+- Bumped `pypdf` dependency to 6.16.1 across manifests and license registers.
+- Automated contract tests: 205+ tests and 18 subtests passing (100% green).

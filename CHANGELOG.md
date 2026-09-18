@@ -5,6 +5,17 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+## [15.0.2] - 2026-09-18
+
+### Geändert / Changed (2026-09-18)
+- **Technische Hygiene & CI-Härtung (Pfad A):**
+  - CI-Workflow `.github/workflows/source-platform-smoke.yml`: `timeout-minutes: 15` hinzugefügt; `Pillow` zur `pip install`-Stufe für PySide6/pytest ergänzt, wodurch der Import-Fehler `ModuleNotFoundError: No module named 'PIL'` bei der Test-Collection behoben und die CI wieder auf allen Plattformen grün ist.
+  - Workflows `.github/workflows/stale.yml` und `.github/workflows/welcome.yml`: `timeout-minutes: 5` und Concurrency-Gruppen (`group: ${{ github.workflow }}-${{ github.ref }}`, `cancel-in-progress: true`) ergänzt.
+  - Abhängigkeiten & Lizenzen: `pypdf` von 6.15.0 auf 6.16.1 in `requirements-lock.txt`, `THIRD_PARTY_LICENSES.txt` und `THIRD_PARTY_LICENSES.md` synchronisiert (schließt Dependabot PR #3).
+  - Versionsharmonisierung: Version auf `15.0.2` (Windows Store Package `15.0.2.0`) über `version.py`, `pyproject.toml`, `store_package.json`, `AppxManifest.xml`, `llms.txt`, `EXPORTFORMAT.md`, `WINDOWS_STORE_PREP.md` und Vertragstests synchronisiert.
+  - Badges & LLM-Kontext: Version-Badges in `README.md` und `README_de.md` auf `15.0.2`, Teststand auf 205+ bestanden / 100% grün und `llms.txt` auf Stand 2026-09-18 aktualisiert.
+  - OCR Runtime Fail-Closed Bundling Contract (`tests/test_build_pipeline.py`): Vertragssicherung für lokale OCR-Laufzeitdateien (`tesseract.exe`, `tessdata`, `pdftoppm.exe`, `pdfinfo.exe`) in `build_exe.bat`.
+
 ### Geändert / Changed (2026-09-16)
 - **Marketing, Discoverability & Visuelle Architektur (Pfad B):**
   - Zweisprachige README-Architektur (`README.md` & `README_de.md`) auf 18-Punkte-Schnellnavigation mit 100% wechselseitiger Anker-Parität (#1..#18) und dualen HTML-Anker-Tags (`<a id="1-..."></a><a id="..."></a>`) erweitert.

@@ -1,11 +1,11 @@
 # Windows Store Prep - ProFiler Suite
 
-Stand: 2026-09-10 (Version 15.0.1.0)
+Stand: 2026-09-18 (Version 15.0.2.0; Initial 15.0.1.0: 2026-09-10)
 
 ## Erledigt
 
 - `store_package.json` mit vollständigen Metadaten (`languages: ["de-DE", "en-US", "es-ES", "zh-CN", "ja-JP", "ru-RU"]`, Logo-Pfad, Publisher-ID, AGPL-Lizenz) gepflegt
-- Windows Store Packaging Staging unter `store_package/ProFiler/AppxManifest.xml` mit Identity `Geiger.ProFilerSuite`, Publisher `CN=52596601-BAB4-4F3F-B182-E8F3F273B202`, Version `15.0.1.0`, Capability `runFullTrust` und mehrsprachigen Ressourcen (`de-de`, `en-us`, `es-es`, `zh-cn`, `ja-jp`, `ru-ru`) angelegt
+- Windows Store Packaging Staging unter `store_package/ProFiler/AppxManifest.xml` mit Identity `Geiger.ProFilerSuite`, Publisher `CN=52596601-BAB4-4F3F-B182-E8F3F273B202`, Version `15.0.2.0`, Capability `runFullTrust` und mehrsprachigen Ressourcen (`de-de`, `en-us`, `es-es`, `zh-cn`, `ja-jp`, `ru-ru`) angelegt
 - Vollständiges Set an hochauflösenden MSIX-Tile- und Logo-Assets generiert:
   - `icon_44x44.png` (Square44x44Logo / Square71x71Logo)
   - `icon_50x50.png` (Square50x50Logo / StoreLogo)

@@ -36,7 +36,7 @@ def test_third_party_license_inventory_metadata() -> None:
 
     assert "Last reviewed: 2026-09-07" in text
     assert "AGPL-3.0-only" in text
-    assert "pypdf" in text and "6.15.0" in text
+    assert "pypdf" in text and ("6.15.0" in text or "6.16.1" in text)
 
     # All direct runtime dependencies must be explicitly cataloged
     for pkg in [

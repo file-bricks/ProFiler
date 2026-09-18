@@ -2,9 +2,9 @@
 
 **Project:** ProFiler Suite (`file-bricks/ProFiler`)<br>
 **Canonical Project License:** GNU Affero General Public License v3.0 (`AGPL-3.0-only`)<br>
-**Audit Date:** 2026-09-16 (Initial Pfad B: 2026-09-12)
-**Auditor:** Antigravity / Gemini (via GithubBot Pfad B)<br>
-**Version:** `15.0.1`<br>
+**Audit Date:** 2026-09-18 (Pfad A Hygiene; Previous Pfad B: 2026-09-16)<br>
+**Auditor:** Antigravity / Gemini (via GithubBot)<br>
+**Version:** `15.0.2`<br>
 **Umbrella Ecosystem:** `open-bricks`<br>
 
 ---
@@ -22,7 +22,7 @@ This inventory is derived directly from `pyproject.toml`, `requirements.txt`, `r
 | Package | Locked Version | Declared SPDX License | Upstream Project / Repository | Compatibility Analysis |
 |---|---|---|---|---|
 | **PySide6** | `6.11.1` | `LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only` | [The Qt Company](https://doc.qt.io/qtforpython-6/) | **Permissive/Copyleft**: LGPL-3.0 permits dynamic linking with AGPL-3.0 host applications without license contagion. Users retain the freedom to relink with custom Qt builds under LGPL-3.0 § 4. |
-| **pypdf** | `6.15.0` | `BSD-3-Clause` | [pypdf](https://pypdf.readthedocs.io/) | **Permissive**: Fully compatible with AGPL-3.0. |
+| **pypdf** | `6.16.1` | `BSD-3-Clause` | [pypdf](https://pypdf.readthedocs.io/) | **Permissive**: Fully compatible with AGPL-3.0. |
 | **pikepdf** | `10.9.1` | `MPL-2.0` | [pikepdf](https://pikepdf.readthedocs.io/) | **Weak Copyleft**: File-level copyleft; fully compatible with AGPL-3.0 applications. |
 | **PyMuPDF** | `1.27.2.3` | `AGPL-3.0-or-later OR Commercial Artifex` | [Artifex Software / PyMuPDF](https://pymupdf.readthedocs.io/) | **Strong Copyleft**: Dictates AGPL-3.0-only distribution for ProFiler. Commercial license required if proprietary closed-source distribution is ever chosen. |
 | **pdf2image** | `1.17.0` | `MIT` | [pdf2image](https://github.com/Belval/pdf2image) | **Permissive**: Fully compatible with AGPL-3.0. |

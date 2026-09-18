@@ -36,7 +36,7 @@ ProFiler Suite is a local-first desktop file manager for private document collec
 - `tests/macos_platform_smoke.py` — dedicated macOS platform smoke suite
 - `tests/linux_platform_smoke.py` — dedicated Linux platform smoke suite
 - `PLATFORM_SUPPORT.md` — exact platform smoke evidence and boundary gates
-- `version.py` — canonical public version contract (`15.0.1`)
+- `version.py` — canonical public version contract (`15.0.2`)
 - `STORE_LISTING.md` — bilingual Windows Store listing metadata
 - `store_package.json` — Store package configuration and parameters
 
@@ -84,6 +84,6 @@ Part of the **file-bricks** desktop suite under the **open-bricks** umbrella:
 - `ellmos-ai/ellmos-codecommander-mcp`: MCP code intelligence, AST analysis & format repair
 - `dev-bricks/sqlite-transit-sync`: Zero-loss multi-master SQLite replication & synchronization
 
-Test status: 201+ Python tests and 18 subtests passing (100% green).
+Test status: 205+ Python tests and 18 subtests passing (100% green).
 
-## Last-checked: 2026-09-16
+## Last-checked: 2026-09-18
