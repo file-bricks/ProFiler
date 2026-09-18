@@ -209,15 +209,15 @@ def test_pdf_ocr_writes_searchable_pdf_pages(monkeypatch, tmp_path: Path) -> Non
     writer.add_blank_page(width=100, height=100)
     writer.write(page_bytes)
 
+    import unittest.mock
+    mock_tess = unittest.mock.MagicMock()
+    mock_tess.image_to_pdf_or_hocr.return_value = page_bytes.getvalue()
+
     monkeypatch.setattr(profiler, "HAS_OCR", True)
     monkeypatch.setattr(profiler, "HAS_PDF", True)
     monkeypatch.setattr(profiler, "HAS_PDF2IMAGE", True)
-    monkeypatch.setattr(profiler, "convert_from_path", lambda _path: [object(), object()])
-    monkeypatch.setattr(
-        profiler.pytesseract,
-        "image_to_pdf_or_hocr",
-        lambda _image, extension, lang: page_bytes.getvalue(),
-    )
+    monkeypatch.setattr(profiler, "convert_from_path", lambda _path, **_kw: [object(), object()], raising=False)
+    monkeypatch.setattr(profiler, "pytesseract", mock_tess, raising=False)
 
     assert profiler.PDFUtils.apply_ocr_to_pdf(str(source), str(target), "deu") is True
     assert target.read_bytes() != source.read_bytes()

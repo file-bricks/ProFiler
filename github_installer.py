@@ -220,11 +220,16 @@ def extract_zip_to_sibling(zip_path: Path, sibling_dir: Path) -> None:
         names = [info.filename.replace("\\", "/") for info in infos]
         for original in names:
             original_path = Path(original)
+            has_raw_drive = bool(
+                original_path.drive
+                or (len(original) >= 2 and original[1] == ":" and original[0].isalpha())
+            )
             if (
                 original.startswith("/")
                 or original_path.is_absolute()
-                or original_path.drive
+                or has_raw_drive
                 or ".." in original_path.parts
+                or ".." in original.split("/")
             ):
                 raise InstallSafetyError(f"Unsicherer Archivpfad: {original!r}")
         # Gemeinsames Präfix ermitteln (GitHub erzeugt repo-tag/ als Top-Level)
