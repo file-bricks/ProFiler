@@ -5,6 +5,18 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Behoben / Fixed (2026-09-20 - Bugsweep Routine)
+- **Workspace Exchange & Excel Import Robustheit (`workspace_exchange.py`, `import_excel_to_profiler.py`):**
+  - `workspace_exchange.py::_summarize_database`: `TypeError: object of type 'NoneType' has no len()` behoben, wenn `connection.get("sources")` `None` liefert; Exception-Handling erweitert um `(sqlite3.Error, OSError, RuntimeError)`.
+  - `workspace_exchange.py::PathRedactor`: `file://` und `file:/` URIs werden nun verlässlich als absolute Pfade erkannt und vor dem Export maskiert.
+  - `workspace_exchange.py::load_workspace`: Redundantes Verschachteln von `WorkspaceFormatError` durch `except (OSError, ValueError)` behoben.
+  - `workspace_exchange.py::_validate_import_settings`: Wertebereichsprüfung für `trash_retention_days` (`0 <= days <= 3650`) hinzugefügt.
+  - `import_excel_to_profiler.py::run_import`: Typ-Guard für leere/NaN-Spaltenüberschriften hinzugefügt (`TypeError: argument of type 'float' is not iterable`).
+  - `import_excel_to_profiler.py::add_tags`: Tag-Deduplizierung gegen Datenbank und innerhalb des Batches implementiert sowie Transaktions-Commit ergänzt.
+  - `import_excel_to_profiler.py::sanitize_filename`: Windows-reservierte Gerätenamen (`CON`, `PRN`, `AUX`, `NUL`, `COM1-9`, `LPT1-9`) werden durch vorangestelltes `_` abgesichert.
+  - `import_excel_to_profiler.py`: Tags in Referenz-Dateien werden über `_single_line(tag)` gegen Zeilenumbruch-Headerkorruption abgesichert.
+  - Neue Regressionstestsuite `TestBugsweepWorkspaceExchangeAndExcelImport` (5 neue Tests) in `tests/test_bug_regressions.py` integriert (Gesamtsuite: 210 passed, 18 subtests passed, 100% grün).
+
 ## [15.0.2] - 2026-09-18
 
 ### Geändert / Changed (2026-09-18)
