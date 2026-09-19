@@ -23,7 +23,7 @@ CONFIG_DIR = app_data_dir()
 PRIVACY_CONFIG_PATH = config_path("datenschutzampel.json")
 IMPORTED_WORKSPACE_PATH = config_path("imported_workspace_preview.json")
 WINDOWS_ABS_PATTERN = re.compile(r"^[A-Za-z]:[\\/]")
-PATH_HINT_PATTERN = re.compile(r"[\\/]|^[A-Za-z]:")
+PATH_HINT_PATTERN = re.compile(r"[\\/]|^[A-Za-z]:|^file:")
 SAFE_EXPORT_SETTINGS = (
     "ui_language",
     "theme",
@@ -96,6 +96,8 @@ class PathRedactor:
 
     @staticmethod
     def _is_absolute_path(value: str) -> bool:
+        if value.startswith(("file://", "file:/")):
+            return True
         return value.startswith(("//", "/")) or bool(WINDOWS_ABS_PATTERN.match(value))
 
 
@@ -198,6 +200,8 @@ def load_workspace(input_path: str) -> dict[str, Any]:
                 f"Workspace-Datei ist größer als {MAX_WORKSPACE_BYTES} Bytes"
             )
         payload = json.loads(source.read_text(encoding="utf-8-sig"))
+    except WorkspaceFormatError:
+        raise
     except (OSError, ValueError) as exc:
         raise WorkspaceFormatError(f"Workspace-Datei konnte nicht gelesen werden: {exc}") from exc
 
@@ -287,6 +291,10 @@ def _validate_import_settings(settings: dict[str, Any]) -> None:
             raise WorkspaceFormatError(f"Einstellung '{key}' muss boolesch sein")
         if key in int_keys and (not isinstance(value, int) or isinstance(value, bool)):
             raise WorkspaceFormatError(f"Einstellung '{key}' muss eine Ganzzahl sein")
+        if key == "trash_retention_days" and (value < 0 or value > 3650):
+            raise WorkspaceFormatError(
+                "Einstellung 'trash_retention_days' muss zwischen 0 und 3650 Tagen liegen"
+            )
         if key in string_keys and not isinstance(value, str):
             raise WorkspaceFormatError(f"Einstellung '{key}' muss Text sein")
     delete_mode = settings.get("delete_mode")
@@ -371,6 +379,8 @@ def _build_index_payload(
 
 def _summarize_database(db_path: Path, connection: dict[str, Any], redactor: PathRedactor) -> dict[str, Any]:
     label = _safe_label(connection.get("name"), "ProFiler Index")
+    sources = connection.get("sources")
+    sources_count = len(sources) if isinstance(sources, (list, tuple, set)) else 0
     summary: dict[str, Any] = {
         "id": _safe_identifier(connection.get("id"), _slugify(label)),
         "label": label,
@@ -378,7 +388,7 @@ def _summarize_database(db_path: Path, connection: dict[str, Any], redactor: Pat
         "redacted_root": _redacted_root(connection, redactor),
         "formats": [],
         "enabled": bool(connection.get("enabled", True)),
-        "sources_count": len(connection.get("sources", [])),
+        "sources_count": sources_count,
     }
 
     try:
@@ -414,7 +424,7 @@ def _summarize_database(db_path: Path, connection: dict[str, Any], redactor: Pat
         }
         summary["formats"] = sorted(formats)
         summary["status"] = "ready"
-    except sqlite3.Error as exc:
+    except (sqlite3.Error, OSError, RuntimeError) as exc:
         summary["status"] = "error"
         summary["error"] = exc.__class__.__name__
     finally:

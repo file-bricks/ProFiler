@@ -61,6 +61,13 @@ def _is_missing(value: Any) -> bool:
     return False
 
 
+WINDOWS_RESERVED_NAMES = frozenset({
+    "CON", "PRN", "AUX", "NUL",
+    "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+    "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
+})
+
+
 def sanitize_filename(name: Any) -> str:
     if _is_missing(name):
         return "Unbenannt"
@@ -69,7 +76,10 @@ def sanitize_filename(name: Any) -> str:
         for character in str(name)
         if character.isalnum() or character in (" ", ".", "_", "-")
     ).strip(" .")
-    return (safe or "Unbenannt")[:100]
+    safe = (safe or "Unbenannt")[:100]
+    if safe.upper() in WINDOWS_RESERVED_NAMES:
+        safe = f"_{safe}"
+    return safe
 
 
 def safe_str(value: Any) -> str:
@@ -262,13 +272,26 @@ class ProfilerAutismoImporter:
     def add_tags(self, file_id: int, tags_list: list[str]) -> None:
         if not self._has_table("tags"):
             return
+        existing_tags: set[str] = set()
+        try:
+            self.cursor.execute("SELECT tag FROM tags WHERE file_id = ?", (file_id,))
+            existing_tags = {row[0] for row in self.cursor.fetchall() if row[0]}
+        except sqlite3.OperationalError:
+            pass
+
+        seen_in_batch: set[str] = set()
+        inserted = False
         for tag in tags_list:
             clean_tag = tag.strip()
-            if clean_tag:
+            if clean_tag and clean_tag not in existing_tags and clean_tag not in seen_in_batch:
                 self.cursor.execute(
                     "INSERT INTO tags (file_id, tag) VALUES (?, ?)",
                     (file_id, clean_tag),
                 )
+                seen_in_batch.add(clean_tag)
+                inserted = True
+        if inserted and self.conn:
+            self.conn.commit()
 
     def register_in_db(
         self,
@@ -399,7 +422,7 @@ class ProfilerAutismoImporter:
             f"Erstellt: {datetime.now().strftime('%Y-%m-%d')}\n"
             + "=" * 80
             + f"\n\nBezeichnung: {data['Name']}\nStandort/Info: {data['Ort']}\n"
-            f"Typ: {data['Typ']}\nTags: {', '.join(data['Tags'])}\n\n"
+            f"Typ: {data['Typ']}\nTags: {', '.join(_single_line(tag) for tag in data['Tags'])}\n\n"
             f"Beschreibung:\n{data['Beschreibung']}\n\nPreis/Anmerkung:\n{data['Preis']}\n"
         )
         return self._write_reference(
@@ -412,7 +435,7 @@ class ProfilerAutismoImporter:
             f"Literatur: {data['Name']}\nErstellt: {datetime.now().strftime('%Y-%m-%d')}\n"
             + "=" * 80
             + f"\n\nTitel: {data['Name']}\nQuelle/Ref: {data['Ort']}\nTyp: {data['Typ']}\n"
-            f"Tags: {', '.join(data['Tags'])}\n\nBeschreibung/Inhalt:\n{data['Beschreibung']}\n\n"
+            f"Tags: {', '.join(_single_line(tag) for tag in data['Tags'])}\n\nBeschreibung/Inhalt:\n{data['Beschreibung']}\n\n"
             f"Anmerkung:\n{data['Preis']}\n"
         )
         return self._write_reference(f"Literatur_{sanitize_filename(data['Name'])}.txt", content)
@@ -421,7 +444,7 @@ class ProfilerAutismoImporter:
         content = (
             f"Information: {data['Name']}\n" + "=" * 80
             + f"\n\nTyp: {data['Typ']}\nStatus: {data['Ort']}\n"
-            f"Tags: {', '.join(data['Tags'])}\n\nBeschreibung:\n{data['Beschreibung']}\n\n"
+            f"Tags: {', '.join(_single_line(tag) for tag in data['Tags'])}\n\nBeschreibung:\n{data['Beschreibung']}\n\n"
             f"Anmerkung:\n{data['Preis']}\n"
         )
         return self._write_reference(f"Info_{sanitize_filename(data['Name'])}.txt", content)
@@ -452,7 +475,7 @@ class ProfilerAutismoImporter:
         if target_df is None:
             raise ValueError("Spalten 'Name' und 'Beschreibung' wurden nicht gefunden")
 
-        target_df.columns = target_df.columns.str.strip()
+        target_df.columns = [safe_str(column) for column in target_df.columns]
         location_column = next(
             (column for column in target_df.columns if "Ort" in column or "Hyperlink" in column),
             None,
@@ -475,14 +498,16 @@ class ProfilerAutismoImporter:
                     "Ort": safe_str(row.get(location_column)),
                     "Tags": [],
                 }
+                raw_tags_list: list[str] = []
                 for source_column in ("Förderkategorien", "ICF-Bereiche"):
                     raw_tags = safe_str(row.get(source_column))
                     if raw_tags:
-                        data["Tags"].extend(
+                        raw_tags_list.extend(
                             tag.strip()
                             for tag in raw_tags.replace(";", ",").split(",")
                             if tag.strip()
                         )
+                data["Tags"] = list(dict.fromkeys(raw_tags_list))
 
                 location_lower = data["Ort"].lower()
                 kind_lower = kind.lower()

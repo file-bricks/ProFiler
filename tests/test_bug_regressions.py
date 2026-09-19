@@ -162,5 +162,73 @@ class TestBugsweepDatenschutzampelToolLinks(unittest.TestCase):
         self.assertIn("resolve_read_path(PRIVACY_CONFIG_PATH.name).exists()", src)
 
 
+class TestBugsweepWorkspaceExchangeAndExcelImport(unittest.TestCase):
+    """BUGSWEEP-2026-09-20: Workspace Exchange & Excel Import Robustheit."""
+
+    def test_summarize_database_with_none_sources_does_not_raise(self):
+        from workspace_exchange import PathRedactor, _summarize_database
+
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
+            f.write(b"")
+            db_file = Path(f.name)
+        try:
+            conn = {"id": "c1", "name": "Index", "sources": None}
+            summary = _summarize_database(db_file, conn, PathRedactor())
+            self.assertEqual(summary["sources_count"], 0)
+        finally:
+            if db_file.exists():
+                db_file.unlink()
+
+    def test_path_redactor_and_validation_handles_file_urls(self):
+        from workspace_exchange import PathRedactor, WorkspaceFormatError, _validate_safe_tree
+
+        redactor = PathRedactor()
+        self.assertTrue(PathRedactor._is_absolute_path("file:///C:/Users/User/docs"))
+        redacted = redactor.redact("file:///C:/Users/User/docs")
+        self.assertEqual(redacted, "[path-1]")
+
+        with self.assertRaises(WorkspaceFormatError):
+            _validate_safe_tree({"leak": "file:///C:/Users/User/secret.txt"})
+
+    def test_validate_import_settings_rejects_out_of_bounds_trash_retention(self):
+        from workspace_exchange import WorkspaceFormatError, _validate_import_settings
+
+        with self.assertRaises(WorkspaceFormatError):
+            _validate_import_settings({"trash_retention_days": -1})
+        with self.assertRaises(WorkspaceFormatError):
+            _validate_import_settings({"trash_retention_days": 5000})
+
+    def test_excel_sanitize_filename_handles_windows_reserved_names(self):
+        from import_excel_to_profiler import sanitize_filename
+
+        self.assertEqual(sanitize_filename("CON"), "_CON")
+        self.assertEqual(sanitize_filename("prn"), "_prn")
+        self.assertEqual(sanitize_filename("NUL"), "_NUL")
+
+    def test_excel_importer_deduplicates_tags(self):
+        import sqlite3
+        from import_excel_to_profiler import ProfilerAutismoImporter
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            db_path = tmp_path / "test.db"
+            conn = sqlite3.connect(db_path)
+            conn.execute("CREATE TABLE tags(id INTEGER PRIMARY KEY, file_id INTEGER, tag TEXT)")
+            conn.close()
+
+            with ProfilerAutismoImporter(db_path, tmp_path / "out") as importer:
+                importer.add_tags(1, ["alpha", "alpha", "beta"])
+                importer.add_tags(1, ["beta", "gamma"])
+
+            conn = sqlite3.connect(db_path)
+            try:
+                rows = conn.execute("SELECT tag FROM tags WHERE file_id = 1 ORDER BY id").fetchall()
+                tags = [r[0] for r in rows]
+                self.assertEqual(tags, ["alpha", "beta", "gamma"])
+            finally:
+                conn.close()
+
+
 if __name__ == "__main__":
     unittest.main()
+
