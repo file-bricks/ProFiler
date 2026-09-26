@@ -5,6 +5,18 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Geändert / Changed (2026-09-26)
+- **Marketing, Discoverability, Visual Architecture & Bilateral Navigation Parity (Pfad B):**
+  - Strikte Version-Freeze-Disziplin: Versionsstand `15.0.2` (Windows Store Package `15.0.2.0`) gemäß `T-20260920-167562623` über alle Manifeste, Quellcode und Metadaten unverändert beibehalten.
+  - Remote-Metadaten & Discoverability: 20/20 GitHub Topics gesättigt (`desktop-app`, `document-archive`, `document-management`, `duplicate-files`, `file-management`, `fulltext-search`, `local-first`, `ocr`, `offline-first`, `open-bricks`, `pdf`, `pdf-redaction`, `pdf-tools`, `privacy-first`, `pyside6`, `python`, `search`, `sqlite`, `windows`, `zero-egress`) und kanonische Homepage-URL auf `https://github.com/file-bricks/ProFiler#readme` via `gh repo edit` gesetzt.
+  - Bilaterale Schnellnavigation & Duale HTML-Anker: 18-Punkte bilaterale Schnellnavigation in `README.md` und `README_de.md` um wechselseitige reziproke duale HTML-Anker (`<a id="sec-01"></a>`..`<a id="sec-18"></a>`) erweitert; Shields.io Badges für `Attribution-NOTICE`, `Last-Checked-2026--09--26`, `Verified-2026--09--26` und Teststand `210 passed | 100% green` harmonisiert.
+  - Kanonische `NOTICE`-Attributionsdatei im Root formalisiert mit Copyright- und Urheberrechtszuweisung an Lukas Geiger, Organisation file-bricks und open-bricks Dachverband.
+  - Governance, Level 1 SBOM & Haftungsausschluss: `THIRD_PARTY_LICENSES.md` auf Stand 2026-09-26 re-auditiert mit Querverweis auf `NOTICE`, unprivileged `RunAsInvoker`-Non-Elevation-Zertifizierung (`INV-UNPRIV-06`), Bestätigung aller 10 Governance-Invarianten `INV-LOCAL-01` bis `INV-SLA-10` und Zero-Copyleft-Garantie für Nutzerdaten.
+  - Gesetzlicher Haftungshinweis gem. § 521 BGB (Gefälligkeitsrecht) und verbindliche 48h Security Response SLA in Abschnitt 18 von `README.md`, `README_de.md` und `SECURITY.md` verankert.
+  - PEP 621 Standardisierung in `pyproject.toml`: 20 gesättigte Keywords synchronisiert, `license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_LICENSES.md", "THIRD_PARTY_LICENSES.txt"]` und Notice-URL in `[project.urls]` registriert.
+  - LLM-Kontext & Historie: `llms.txt` aktualisiert mit 210 Tests Baseline, Stand 2026-09-26, `NOTICE`-Attribution und § 521 BGB; lokales `MARKETING-LOG.txt` Abschnitt 9 dokumentiert.
+  - Automatisierte Vertragstests: `tests/test_metadata.py` um neue Prüfungen für kanonische `NOTICE`-Datei, 20 PEP 621 Keywords, reziproke duale Anker `sec-01`..`sec-18`, Level 1 SBOM Stand 2026-09-26 und § 521 BGB Haftungsausschluss erweitert.
+
 ### Behoben / Fixed (2026-09-20 - Bugsweep Routine)
 - **Workspace Exchange & Excel Import Robustheit (`workspace_exchange.py`, `import_excel_to_profiler.py`):**
   - `workspace_exchange.py::_summarize_database`: `TypeError: object of type 'NoneType' has no len()` behoben, wenn `connection.get("sources")` `None` liefert; Exception-Handling erweitert um `(sqlite3.Error, OSError, RuntimeError)`.

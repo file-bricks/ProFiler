@@ -2,7 +2,8 @@
 
 **Project:** ProFiler Suite (`file-bricks/ProFiler`)<br>
 **Canonical Project License:** GNU Affero General Public License v3.0 (`AGPL-3.0-only`)<br>
-**Audit Date:** 2026-09-18 (Pfad A Hygiene; Previous Pfad B: 2026-09-16)<br>
+**Canonical Attribution:** [NOTICE](NOTICE)<br>
+**Audit Date:** 2026-09-26 (Pfad B Discoverability & Design; Previous Pfad A: 2026-09-18; Previous Pfad B: 2026-09-16)<br>
 **Auditor:** Antigravity / Gemini (via GithubBot)<br>
 **Version:** `15.0.2`<br>
 **Umbrella Ecosystem:** `open-bricks`<br>

@@ -24,8 +24,9 @@ ProFiler Suite is a local-first desktop file manager for private document collec
 
 - `README.md` — English overview with setup, features, and 18-point quick navigation
 - `README_de.md` — German overview with 18-point quick navigation
-- `SECURITY.md` — bilingual security policy, 48h response / 5-day triage SLA
-- `THIRD_PARTY_LICENSES.md` — audited third-party dependency inventory, zero-copyleft user data guarantee
+- `NOTICE` — canonical attribution and copyright notice (Lukas Geiger, file-bricks, open-bricks)
+- `SECURITY.md` — bilingual security policy, 48h response / 5-day triage SLA, § 521 BGB notice
+- `THIRD_PARTY_LICENSES.md` — audited Level 1 SBOM dependency inventory, zero-copyleft user data guarantee
 - `MARKETING-LOG.txt` — Pfad B discoverability audit, target personas, SEO queries, governance invariants
 - `Profiler_Suite_V15.py` — main desktop application
 - `ProFiler_Datenschutzampel.py` — standalone privacy traffic-light helper
@@ -84,6 +85,6 @@ Part of the **file-bricks** desktop suite under the **open-bricks** umbrella:
 - `ellmos-ai/ellmos-codecommander-mcp`: MCP code intelligence, AST analysis & format repair
 - `dev-bricks/sqlite-transit-sync`: Zero-loss multi-master SQLite replication & synchronization
 
-Test status: 205+ Python tests and 18 subtests passing (100% green).
+Test status: 210 Python tests and 18 subtests passing (100% green). Statutory notice: § 521 BGB gratuitous provision. Level 1 SBOM verified.
 
-## Last-checked: 2026-09-18
+## Last-checked: 2026-09-26

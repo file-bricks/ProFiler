@@ -131,3 +131,19 @@ Both README.md and README_de.md maintain synchronized 18-point Quick Navigation 
 - Hardened `stale.yml` and `welcome.yml` with `timeout-minutes: 5` and concurrency cancellation groups.
 - Bumped `pypdf` dependency to 6.16.1 across manifests and license registers.
 - Automated contract tests: 205+ tests and 18 subtests passing (100% green).
+
+================================================================================
+9. PFAD B DISCOVERABILITY, DUAL RECIPROCAL ANCHORS & LEVEL 1 SBOM (2026-09-26)
+================================================================================
+- Date: 2026-09-26
+- Version: 15.0.2 (strikte Einhaltung von T-20260920-167562623: unverändert beibehalten)
+- Operator: Antigravity / Gemini (via GITHUBBOT Pfad B)
+- Remote Discoverability & Topics Saturation: 20/20 GitHub Topics gesättigt via `gh repo edit` (`desktop-app`, `document-archive`, `document-management`, `duplicate-files`, `file-management`, `fulltext-search`, `local-first`, `ocr`, `offline-first`, `open-bricks`, `pdf`, `pdf-redaction`, `pdf-tools`, `privacy-first`, `pyside6`, `python`, `search`, `sqlite`, `windows`, `zero-egress`), kanonische Homepage-URL auf `https://github.com/file-bricks/ProFiler#readme` gesetzt.
+- PEP 621 Standardisierung: In `pyproject.toml` 20 gesättigte Keywords synchronisiert, `license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_LICENSES.md", "THIRD_PARTY_LICENSES.txt"]` und `Notice`-URL unter `[project.urls]` registriert.
+- Kanonische `NOTICE`-Attributionsdatei: Neu im Root formalisiert mit Copyright- und Urheberrechtszuweisung an Lukas Geiger, Organisation file-bricks und open-bricks Dachverband.
+- Level 1 SBOM Invarianten-Kreuzreferenzmatrix: `THIRD_PARTY_LICENSES.md` Stand 2026-09-26 auditiert mit Querverweis auf `NOTICE`, unprivileged `RunAsInvoker`-Zertifizierung (`INV-UNPRIV-06`), Bestätigung aller 10 Governance-Invarianten `INV-LOCAL-01` bis `INV-SLA-10` und Zero-Copyleft-Garantie für Nutzerdaten.
+- Bilaterale Schnellnavigation & Duale HTML-Anker: 18-Punkte bilaterale Schnellnavigation in `README.md` und `README_de.md` um wechselseitige reziproke duale HTML-Anker (`<a id="sec-01"></a>`..`<a id="sec-18"></a>`) erweitert; Shields.io Badges für `Attribution-NOTICE`, `Last-Checked-2026--09--26`, `Verified-2026--09--26` und Teststand `210 passed | 100% green` synchronisiert.
+- Gesetzlicher Hinweis (§ 521 BGB Gefälligkeitsrecht) & 48h SLA: In Abschnitt 18 von `README.md`, `README_de.md` und `SECURITY.md` verankert.
+- Maschinenlesbarer Kontext: `llms.txt` aktualisiert mit 210 Tests Baseline, Stand 2026-09-26, `NOTICE`-Attribution und § 521 BGB.
+- Release Notes: In `CHANGELOG.md` unter `## [Unreleased]` dokumentiert.
+- Automatisierte Vertragstests: `tests/test_metadata.py` um neue Prüfungen für kanonische `NOTICE`-Datei, 20 PEP 621 Keywords, reziproke duale Anker `sec-01`..`sec-18`, Level 1 SBOM Stand 2026-09-26 und § 521 BGB Haftungsausschluss erweitert.

@@ -36,6 +36,10 @@ We acknowledge receipt of vulnerability reports within **48 hours** and provide 
 
 Security fixes are released promptly upon confirmation and documented in [CHANGELOG.md](CHANGELOG.md).
 
+### Statutory Notice & Liability Limitation (§ 521 BGB Gratuitous Contract)
+
+This software and documentation are provided free of charge (gratuitous relationship). In accordance with the statutory liability regime under German Civil Code (**§ 521 BGB** — *Haftung des Schenkers*), liability for defects as to quality and title is strictly limited to **intent** and **gross negligence**. Liability for ordinary or slight negligence is excluded to the maximum extent permitted by applicable law.
+
 ---
 
 <a name="deutsch"></a>
@@ -70,3 +74,6 @@ Wir bestätigen den Eingang innerhalb von **48 Stunden**, führen innerhalb von 
 
 Sicherheitsupdates werden schnellstmöglich bereitgestellt und im [CHANGELOG.md](CHANGELOG.md) dokumentiert.
 
+### Gesetzlicher Hinweis & Haftungsbeschränkung (§ 521 BGB Gefälligkeitsrecht)
+
+Die Bereitstellung dieser Software sowie der dazugehörigen Dokumentation erfolgt unentgeltlich (Gefälligkeitsverhältnis). Gemäß dem gesetzlichen Haftungsregime des deutschen Bürgerlichen Gesetzbuches (**§ 521 BGB** — *Haftung des Schenkers*) ist die Haftung für Sach- und Rechtsmängel ausdrücklich auf **Vorsatz** und **grobe Fahrlässigkeit** beschränkt. Eine Haftung für einfache oder leichte Fahrlässigkeit ist im gesetzlich zulässigen Rahmen vollständig ausgeschlossen.

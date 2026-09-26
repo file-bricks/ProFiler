@@ -8,18 +8,21 @@
 [![Org: file-bricks](https://img.shields.io/badge/Org-file--bricks-blue)](https://github.com/file-bricks)
 [![Lizenz: AGPL v3](https://img.shields.io/badge/Lizenz-AGPL%20v3-blue.svg)](LICENSE)
 [![CI: Plattform-Smoke](https://img.shields.io/badge/CI-Plattform--Smoke-brightgreen.svg)](https://github.com/file-bricks/ProFiler/actions)
-[![Tests: 205+ bestanden](https://img.shields.io/badge/Tests-205%2B%20bestanden%20%7C%20100%25-brightgreen.svg)]()
+[![Tests: 210 bestanden](https://img.shields.io/badge/Tests-210%20bestanden%20%7C%20100%25-brightgreen.svg)](CHANGELOG.md)
 [![Code-Style: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![Sicherheits-SLA: 48h Antwort / 5d Triage](https://img.shields.io/badge/Sicherheits--SLA-48h%20Antwort%20%2F%205d%20Triage-blue.svg)](SECURITY.md)
-[![Sicherheit: RunAsInvoker](https://img.shields.io/badge/Sicherheit-RunAsInvoker-green.svg)]()
+[![Sicherheit: RunAsInvoker](https://img.shields.io/badge/Sicherheit-RunAsInvoker-green.svg)](SECURITY.md)
 [![Drittanbieter: Auditiert](https://img.shields.io/badge/Drittanbieter-auditiert-brightgreen.svg)](THIRD_PARTY_LICENSES.md)
 [![Marketing-Log: Aktiv](https://img.shields.io/badge/Marketing--Log-aktiv-blue.svg)](MARKETING-LOG.txt)
+[![Attribution: NOTICE](https://img.shields.io/badge/Attribution-NOTICE-blue.svg)](NOTICE)
 [![Python: 3.10--3.13](https://img.shields.io/badge/python-3.10--3.13-blue.svg)](https://www.python.org/)
 [![GUI: PySide6](https://img.shields.io/badge/GUI-PySide6-green.svg)](https://wiki.qt.io/Qt_for_Python)
 [![Plattform: Windows | Linux | macOS](https://img.shields.io/badge/Plattform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
 [![Datenschutz: 100% Local-First](https://img.shields.io/badge/Datenschutz-100%25%20Local--First-success.svg)]()
 [![Ökosystem: open-bricks](https://img.shields.io/badge/%C3%96kosystem-open--bricks-blueviolet)](https://github.com/open-bricks)
 [![LLM-Kontext: llms.txt](https://img.shields.io/badge/LLM--Kontext-llms.txt-orange)](llms.txt)
+[![Zuletzt geprüft: 2026-09-26](https://img.shields.io/badge/Zuletzt%20gepr%C3%BCft-2026--09--26-blue.svg)](CHANGELOG.md)
+[![Verifiziert: 2026-09-26](https://img.shields.io/badge/Verifiziert-2026--09--26-success.svg)](CHANGELOG.md)
 
 > [!NOTE]
 > KI-Agenten und LLM-Tools, die dieses Repository analysieren, finden in [`llms.txt`](llms.txt) Details zur Architektur, zu primären Features, Vertragsschnittstellen und Verifikationsbefehlen.
@@ -55,8 +58,11 @@ ProFiler wurde gezielt für Anwender entwickelt, die vertrauliche, geschäftlich
 
 ---
 
+<a id="sec-01"></a>
 <a id="1-architektur"></a>
 <a id="architektur"></a>
+<a id="1-architecture"></a>
+<a id="architecture"></a>
 ## Architektur
 
 ```mermaid
@@ -97,8 +103,11 @@ graph TD
     DatenschutzGate --> UI
 ```
 
+<a id="sec-02"></a>
 <a id="2-workflow-lebenszyklus"></a>
 <a id="workflow-lebenszyklus"></a>
+<a id="2-workflow-lifecycle"></a>
+<a id="workflow-lifecycle"></a>
 ## Workflow-Lebenszyklus
 
 ```mermaid
@@ -131,8 +140,11 @@ sequenceDiagram
     Exchange-->>User: Validiertes Übergabe-Artefakt ohne Datenlecks
 ```
 
+<a id="sec-03"></a>
 <a id="3-kernfähigkeiten--sicherheitsinvarianten"></a>
 <a id="kernfähigkeiten--sicherheitsinvarianten"></a>
+<a id="3-core-capabilities--security-invariants"></a>
+<a id="core-capabilities--security-invariants"></a>
 ## Kernfähigkeiten & Sicherheitsinvarianten
 
 | Invarianten-Code | Garantie & Systemgrenze | Technische Umsetzung | Verifikation & Nachweis |
@@ -148,8 +160,11 @@ sequenceDiagram
 | `INV-OFFLINE-09` | **Offline-OCR & Poppler-Sandbox** | Texterkennung (Tesseract) und PDF-Rendering erfolgen rein lokal über unprivilegierte Subprozesse ohne externe APIs. | Getestet in `tests/test_security_hardening.py`. |
 | `INV-SLA-10` | **48h Sicherheits-SLA & 5-Tage-Triage** | Sicherheitsrelevante Meldungen erhalten eine Erstbestätigung innerhalb von 48 Stunden und eine Triage binnen 5 Werktagen. | Festgelegt in `SECURITY.md` und verifiziert in `tests/test_metadata.py`. |
 
+<a id="sec-04"></a>
 <a id="4-zielgruppen--anwendungsfälle"></a>
 <a id="zielgruppen--anwendungsfälle"></a>
+<a id="4-target-personas--use-cases"></a>
+<a id="target-personas--use-cases"></a>
 ## Zielgruppen & Anwendungsfälle
 
 | Zielgruppe | Typische Aufgaben & Workflows | Gelöste Kernprobleme |
@@ -159,8 +174,11 @@ sequenceDiagram
 | **Freiberufler & Kleinunternehmen** | Strukturierung von Eingangsrechnungen, Kundenverträgen und Belegen; seitenweises Teilen oder Verschlüsseln von PDF-Dokumenten für die Buchhaltung. | **Keine monatlichen Abo-Kosten**: Vollwertige Desktop-Zentrale ohne teure SaaS-Monatsabos (wie Adobe Acrobat oder Cloud-DMS), 100% offline nutzbar. |
 | **Power-User & Datenschutz-Enthusiasten** | Schnelle Dateiverwaltung mit Dark/Light-Themes, Tastaturnavigation und präziser Kontrolle über Speicherpfade und OneDrive-Synchronisation. | **Platzhalter-Schutz**: ProFiler lädt Cloud-Dateien in OneDrive nicht ungefragt herunter und schützt so vor Speicherplatzüberläufen auf lokalen SSDs. |
 
+<a id="sec-05"></a>
 <a id="5-vergleichsmatrix--alternativen"></a>
 <a id="vergleichsmatrix--alternativen"></a>
+<a id="5-comparative-matrix--alternatives"></a>
+<a id="comparative-matrix--alternatives"></a>
 ## Vergleichsmatrix & Alternativen
 
 | Funktion / Eigenschaft | ProFiler Suite | Cloud-DMS SaaS (DocuWare / Dropbox) | Standard-Dateimanager (Windows Explorer) | Schweres Enterprise-ECM (Alfresco / Nextcloud) | Geschwistertool (KnowledgeDigest) |
@@ -175,8 +193,11 @@ sequenceDiagram
 | **Laufende Kosten** | **Kostenlos & Open Source**| 15–50 € / Monat / User | Im OS enthalten | Hardware- + Wartungskosten | Kostenlos & Open Source |
 | **Haupteinsatzbereich** | **Lokaler Dokumenten-Detektiv**| Team-Kollaboration | Allgemeine Dateiverwaltung| Großunternehmen | LLM-Wissens-Chunking |
 
+<a id="sec-06"></a>
 <a id="6-funktions-highlights"></a>
 <a id="funktions-highlights"></a>
+<a id="6-feature-highlights"></a>
+<a id="feature-highlights"></a>
 ## Funktions-Highlights
 
 - **Lokaler SQLite-Dateikatalog**: Schnelle Indexierung von Verzeichnisbäumen, Sammlungen und Dateiversionen.
@@ -191,14 +212,20 @@ sequenceDiagram
 - **Moderne Desktop-Oberfläche**: Native PySide6-GUI mit Dark-/Light-Theme-Umschaltung und System-Tray-Support.
 - **Zusätzliche Dienstprogramme**: Integrierter SQLite-Inspektor (`SQLiteViewer.py`) und Excel-Importwerkzeug.
 
+<a id="sec-07"></a>
 <a id="7-visuelle-oberfläche--screenshot"></a>
 <a id="visuelle-oberfläche--screenshot"></a>
+<a id="7-visual-interface--screenshot"></a>
+<a id="visual-interface--screenshot"></a>
 ## Visuelle Oberfläche & Screenshot
 
 ![ProFiler Suite Desktop-Dateimanager mit Filtern, Dateisuche, Sammlungen und Vorschaufenstern](README/screenshots/main.png)
 
+<a id="sec-08"></a>
 <a id="8-wann-profiler-passt"></a>
 <a id="wann-profiler-passt"></a>
+<a id="8-when-to-use-profiler"></a>
+<a id="when-to-use-profiler"></a>
 ## Wann ProFiler passt
 
 ProFiler ist die ideale Wahl, wenn Sie ein privates Dokumentenwerkzeug benötigen für:
@@ -210,8 +237,11 @@ ProFiler ist die ideale Wahl, wenn Sie ein privates Dokumentenwerkzeug benötige
 - Prüfung von Dokumentenpaketen auf sensible Daten vor der Weitergabe an Dritte (DSGVO-Prüfung).
 - Nutzung einer zentralen Desktop-Zentrale neben Begleitwerkzeugen wie [ProSync](https://github.com/file-bricks/ProSync) und [SQLiteViewer](https://github.com/file-bricks/SQLiteViewer).
 
+<a id="sec-09"></a>
 <a id="9-schnellstart--installation"></a>
 <a id="schnellstart--installation"></a>
+<a id="9-quick-start--setup"></a>
+<a id="quick-start--setup"></a>
 ## Schnellstart & Installation
 
 ### Voraussetzungen & Systemanforderungen
@@ -236,8 +266,11 @@ Unter Windows kann die Anwendung direkt über die Startdatei aufgerufen werden:
 START.bat
 ```
 
+<a id="sec-10"></a>
 <a id="10-windows-launcher--build-prozess"></a>
 <a id="windows-launcher--build-prozess"></a>
+<a id="10-windows-launcher--build-flow"></a>
+<a id="windows-launcher--build-flow"></a>
 ## Windows-Launcher & Build-Prozess
 
 Für die lokale Nutzung als eigenständige Windows-Desktop-Anwendung kann eine EXE-Datei gebaut werden:
@@ -254,8 +287,11 @@ Der Build setzt ein sauberes Git-Repository voraus, läuft außerhalb von OneDri
 
 Der Build schreibt niemals in OneDrive, GitHub Releases oder ein Store-Paket. `START.bat` startet die lokale EXE nur dann, wenn die Prüfsumme in `ProFiler.exe.sha256` übereinstimmt; andernfalls wird direkt `Profiler_Suite_V15.py` ausgeführt.
 
+<a id="sec-11"></a>
 <a id="11-konfiguration--lokale-ablage"></a>
 <a id="konfiguration--lokale-ablage"></a>
+<a id="11-configuration--local-storage"></a>
+<a id="configuration--local-storage"></a>
 ## Konfiguration & Lokale Ablage
 
 | Dateipfad | Zweck & Funktion |
@@ -272,8 +308,11 @@ python -m pip install -e ".[excel]"
 python import_excel_to_profiler.py --input INPUT.xlsx --database profiler.db --output imported
 ```
 
+<a id="sec-12"></a>
 <a id="12-enthaltene-werkzeuge--dienstprogramme"></a>
 <a id="enthaltene-werkzeuge--dienstprogramme"></a>
+<a id="12-included-tools--utilities"></a>
+<a id="included-tools--utilities"></a>
 ## Enthaltene Werkzeuge & Dienstprogramme
 
 | Datei | Funktion |
@@ -284,8 +323,11 @@ python import_excel_to_profiler.py --input INPUT.xlsx --database profiler.db --o
 | `import_excel_to_profiler.py` | Befehlszeilenwerkzeug zum Import bestehender Excel-Dateilisten |
 | `indent_gui_checker.py` | Entwicklerwerkzeug zur Überprüfung von Einrückungen im GUI-Code |
 
+<a id="sec-13"></a>
 <a id="13-unterstützte-dateiformate--ocr"></a>
 <a id="unterstützte-dateiformate--ocr"></a>
+<a id="13-supported-file-formats--ocr"></a>
+<a id="supported-file-formats--ocr"></a>
 ## Unterstützte Dateiformate & OCR
 
 | Kategorie | Dateiendungen | Funktionen |
@@ -295,8 +337,11 @@ python import_excel_to_profiler.py --input INPUT.xlsx --database profiler.db --o
 | **Tabellen** | `.xlsx`, `.xls`, `.csv` | Struktur-Inspektion und Indexierung (Excel-Zusatzpaket verfügbar) |
 | **Weitere Formate** | Allgemeiner Fallback | Erfassung von Dateisystem-Attributen, Größe, Zeitstempel und SHA-256 |
 
+<a id="sec-14"></a>
 <a id="14-geschwister-ökosystem--integrationen"></a>
 <a id="geschwister-ökosystem--integrationen"></a>
+<a id="14-sibling-ecosystem--integrations"></a>
+<a id="sibling-ecosystem--integrations"></a>
 ## Geschwister-Ökosystem & Integrationen
 
 ProFiler Suite ist fester Bestandteil der **file-bricks**-Werkzeugfamilie unter dem Dach von **[open-bricks](https://github.com/open-bricks)**:
@@ -315,8 +360,11 @@ ProFiler Suite ist fester Bestandteil der **file-bricks**-Werkzeugfamilie unter 
 | **CodeCommander MCP** | [ellmos-ai/ellmos-codecommander-mcp](https://github.com/ellmos-ai/ellmos-codecommander-mcp) | MCP-Code-Intelligenz, AST-Analyse & Formatreparatur | Aktiver Begleiter |
 | **SQLite Transit Sync** | [dev-bricks/sqlite-transit-sync](https://github.com/dev-bricks/sqlite-transit-sync) | Verlustfreie Multi-Master SQLite-Replikation & Synchronisation | Aktiver Begleiter |
 
+<a id="sec-15"></a>
 <a id="15-drittanbieter-lizenzen--compliance"></a>
 <a id="drittanbieter-lizenzen--compliance"></a>
+<a id="15-third-party-licenses--compliance"></a>
+<a id="third-party-licenses--compliance"></a>
 ## Drittanbieter-Lizenzen & Compliance
 
 ProFiler Suite ist unter der **GNU Affero General Public License v3.0 (AGPL-3.0-only)** lizenziert. Siehe [LICENSE](LICENSE).
@@ -325,8 +373,11 @@ Durch die Nutzung von `PyMuPDF` unterliegt die Anwendung der AGPL-3.0. Ein volls
 
 Die Vorbereitungen für den Microsoft Windows Store werden durch `store_package.json`, `STORE_LISTING.md`, `PRIVACY_POLICY.md`, `SUPPORT.md` und `WINDOWS_STORE_PREP.md` geregelt.
 
+<a id="sec-16"></a>
 <a id="16-sicherheitsrichtlinie--slas"></a>
 <a id="sicherheitsrichtlinie--slas"></a>
+<a id="16-security-policy--slas"></a>
+<a id="security-policy--slas"></a>
 ## Sicherheitsrichtlinie & SLAs
 
 ProFiler unterhält eine verbindliche, zweisprachige Sicherheitsrichtlinie unter [`SECURITY.md`](SECURITY.md).
@@ -337,8 +388,11 @@ ProFiler unterhält eine verbindliche, zweisprachige Sicherheitsrichtlinie unter
 
 ---
 
+<a id="sec-17"></a>
 <a id="17-zielgruppen--high-intent-seo"></a>
 <a id="zielgruppen--high-intent-seo"></a>
+<a id="17-target-personas--high-intent-seo"></a>
+<a id="target-personas--high-intent-seo"></a>
 ## Zielgruppen & High-Intent SEO
 
 ProFiler Suite ist passgenau auf datenschutzsensible Desktop-Umgebungen ausgerichtet. Die folgende Übersicht verknüpft unsere vier Kern-Zielgruppen mit konkreten Suchintentionen und architektonischen Antworten:
@@ -356,14 +410,17 @@ ProFiler Suite ist passgenau auf datenschutzsensible Desktop-Umgebungen ausgeric
 
 ---
 
+<a id="sec-18"></a>
 <a id="18-verifikation--test-suite"></a>
 <a id="verifikation--test-suite"></a>
+<a id="18-verification--test-suite"></a>
+<a id="verification--test-suite"></a>
 ## Verifikation & Test-Suite
 
 ProFiler Suite unterliegt strengen automatisierten Verifikations-Gates. Jede Code- und Dokumentationsänderung wird gegen Vertragstests, Linter-Prüfungen und Bytecode-Kompilierung validiert:
 
 ```bash
-# Gesamte automatisierte Vertrags- und Test-Suite ausführen (205+ Tests, 100% bestanden)
+# Gesamte automatisierte Vertrags- und Test-Suite ausführen (210 bestanden, 100% grün)
 pytest -ra -v
 
 # Schnellen Python-Linter ausführen (null Toleranz für Verstöße)
@@ -377,3 +434,9 @@ git diff --check
 ```
 
 Alle 10 Governance- und Laufzeit-Invarianten (`INV-LOCAL-01` bis `INV-SLA-10`), PEP-621-Metadaten, zweisprachige Dokumentationsanker und die Lizenzintegrität werden kontinuierlich über `tests/test_metadata.py` und `tests/test_security_license_contract.py` überwacht.
+
+### ⚖️ Gesetzlicher Hinweis & Haftungsbeschränkung (§ 521 BGB)
+
+> [!IMPORTANT]
+> **Haftungsbeschränkung bei unentgeltlicher Softwareüberlassung (§ 521 BGB):**
+> Soweit diese Software, Vorabversionen oder Test-Releases unentgeltlich zur Verfügung gestellt werden, richtet sich die Haftung der Autoren und Bereitsteller ausschließlich nach den Vorschriften des Schenkungsrechts gemäß § 521 des Bürgerlichen Gesetzbuches (BGB) und ist auf Vorsatz und grobe Fahrlässigkeit beschränkt (*Haftung des Schenkers für Vorsatz und grobe Fahrlässigkeit*). Die Bereitstellung erfolgt unter Ausschluss jeglicher Sach- und Rechtsmängelhaftung für einfache Fahrlässigkeit.

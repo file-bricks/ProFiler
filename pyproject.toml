@@ -9,20 +9,31 @@ description = "Local-first desktop file and document manager with search, previe
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "AGPL-3.0"}
+license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_LICENSES.md", "THIRD_PARTY_LICENSES.txt"]
 authors = [
     {name = "file-bricks Contributors"}
 ]
 keywords = [
-    "file-manager",
-    "document-management",
-    "ocr",
-    "tesseract",
-    "pyside6",
-    "pdf-tools",
-    "privacy",
-    "local-first",
-    "sqlite",
     "desktop-app",
+    "document-archive",
+    "document-management",
+    "duplicate-files",
+    "file-management",
+    "fulltext-search",
+    "local-first",
+    "ocr",
+    "offline-first",
+    "open-bricks",
+    "pdf",
+    "pdf-redaction",
+    "pdf-tools",
+    "privacy-first",
+    "pyside6",
+    "python",
+    "search",
+    "sqlite",
+    "windows",
+    "zero-egress",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -74,6 +85,7 @@ Security = "https://github.com/file-bricks/ProFiler/blob/master/SECURITY.md"
 "Third-Party Licenses" = "https://github.com/file-bricks/ProFiler/blob/master/THIRD_PARTY_LICENSES.md"
 "Marketing Log" = "https://github.com/file-bricks/ProFiler/blob/master/MARKETING-LOG.txt"
 "LLM Ready" = "https://github.com/file-bricks/ProFiler/blob/master/llms.txt"
+Notice = "https://github.com/file-bricks/ProFiler/blob/master/NOTICE"
 
 
 [tool.pytest.ini_options]

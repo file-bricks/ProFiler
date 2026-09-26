@@ -8,18 +8,21 @@
 [![Org: file-bricks](https://img.shields.io/badge/Org-file--bricks-blue)](https://github.com/file-bricks)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 [![CI: Platform Smoke](https://img.shields.io/badge/CI-Platform%20Smoke-brightgreen.svg)](https://github.com/file-bricks/ProFiler/actions)
-[![Tests: 205+ passed](https://img.shields.io/badge/tests-205%2B%20passed%20%7C%20100%25-brightgreen.svg)]()
+[![Tests: 210 passed](https://img.shields.io/badge/tests-210%20passed%20%7C%20100%25-brightgreen.svg)](CHANGELOG.md)
 [![Code Style: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![Security SLA: 48h Response / 5d Triage](https://img.shields.io/badge/Security%20SLA-48h%20Response%20%2F%205d%20Triage-blue.svg)](SECURITY.md)
-[![Security: RunAsInvoker](https://img.shields.io/badge/security-RunAsInvoker-green.svg)]()
+[![Security: RunAsInvoker](https://img.shields.io/badge/security-RunAsInvoker-green.svg)](SECURITY.md)
 [![Third-Party: Audited](https://img.shields.io/badge/third--party-audited-brightgreen.svg)](THIRD_PARTY_LICENSES.md)
 [![Marketing Log: Active](https://img.shields.io/badge/marketing%20log-active-blue.svg)](MARKETING-LOG.txt)
+[![Attribution: NOTICE](https://img.shields.io/badge/Attribution-NOTICE-blue.svg)](NOTICE)
 [![Python: 3.10--3.13](https://img.shields.io/badge/python-3.10--3.13-blue.svg)](https://www.python.org/)
 [![GUI: PySide6](https://img.shields.io/badge/GUI-PySide6-green.svg)](https://wiki.qt.io/Qt_for_Python)
 [![Platform: Windows | Linux | macOS](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
 [![Privacy: 100% Local-First](https://img.shields.io/badge/privacy-100%25%20Local--First-success.svg)]()
 [![Ecosystem: open-bricks](https://img.shields.io/badge/ecosystem-open--bricks-blueviolet)](https://github.com/open-bricks)
 [![LLM Context: llms.txt](https://img.shields.io/badge/LLM%20Context-llms.txt-orange)](llms.txt)
+[![Last Checked: 2026-09-26](https://img.shields.io/badge/Last--Checked-2026--09--26-blue.svg)](CHANGELOG.md)
+[![Verified: 2026-09-26](https://img.shields.io/badge/Verified-2026--09--26-success.svg)](CHANGELOG.md)
 
 > [!NOTE]
 > AI agents and LLM tools reading this repository should refer to [`llms.txt`](llms.txt) for codebase architecture, primary features, contract boundaries, and verification commands.
@@ -55,8 +58,11 @@ It is purpose-built for users who manage private, proprietary, or regulated docu
 
 ---
 
+<a id="sec-01"></a>
 <a id="1-architecture"></a>
 <a id="architecture"></a>
+<a id="1-architektur"></a>
+<a id="architektur"></a>
 ## Architecture
 
 ```mermaid
@@ -97,8 +103,11 @@ graph TD
     PrivacyGate --> UI
 ```
 
+<a id="sec-02"></a>
 <a id="2-workflow-lifecycle"></a>
 <a id="workflow-lifecycle"></a>
+<a id="2-workflow-lebenszyklus"></a>
+<a id="workflow-lebenszyklus"></a>
 ## Workflow Lifecycle
 
 ```mermaid
@@ -131,8 +140,11 @@ sequenceDiagram
     Exchange-->>User: Validated, zero-leak handoff artifact
 ```
 
+<a id="sec-03"></a>
 <a id="3-core-capabilities--security-invariants"></a>
 <a id="core-capabilities--security-invariants"></a>
+<a id="3-kernfähigkeiten--sicherheitsinvarianten"></a>
+<a id="kernfähigkeiten--sicherheitsinvarianten"></a>
 ## Core Capabilities & Security Invariants
 
 | Invariant Code | Guarantee & Boundary | Architectural Implementation | Verification & Evidence |
@@ -148,8 +160,11 @@ sequenceDiagram
 | `INV-OFFLINE-09` | **Offline Tesseract OCR & Poppler Sandbox** | Optical character recognition and PDF page rendering execute locally via unprivileged subprocesses with zero external API calls. | Tested in `tests/test_security_hardening.py`. |
 | `INV-SLA-10` | **48h Security Response & 5-Day Triage SLA** | Security vulnerabilities receive an initial response within 48 hours and an actionable triage report within 5 business days. | Formalized in `SECURITY.md` and verified in `tests/test_metadata.py`. |
 
+<a id="sec-04"></a>
 <a id="4-target-personas--use-cases"></a>
 <a id="target-personas--use-cases"></a>
+<a id="4-zielgruppen--anwendungsfälle"></a>
+<a id="zielgruppen--anwendungsfälle"></a>
 ## Target Personas & Use Cases
 
 | Persona | Primary Needs & Workflows | Key Pain Points Solved by ProFiler |
@@ -159,8 +174,11 @@ sequenceDiagram
 | **Small Business Owners & Freelancers** | Managing local invoice archives, client contracts, and vendor receipts across multiple quarters; batch protecting or extracting specific PDF pages for accounting. | **Zero Subscription Overhead**: Provides a comprehensive desktop document hub without recurring monthly SaaS fees (e.g. Adobe Acrobat / DocuWare), operating completely offline. |
 | **Power Users & Data Sovereignty Advocates** | Fast, responsive file management with dark/light themes, keyboard navigation, precise control over file paths, and safe coexistence with OneDrive sync. | **Placeholder Protection**: ProFiler detects OneDrive cloud placeholders and refrains from forcing unwanted downloads, keeping disk usage under full user control. |
 
+<a id="sec-05"></a>
 <a id="5-comparative-matrix--alternatives"></a>
 <a id="comparative-matrix--alternatives"></a>
+<a id="5-vergleichsmatrix--alternativen"></a>
+<a id="vergleichsmatrix--alternativen"></a>
 ## Comparative Matrix & Alternatives
 
 | Feature / Dimension | ProFiler Suite | Cloud Document SaaS (DocuWare / Dropbox) | Native OS File Manager (Windows Explorer) | Heavyweight Enterprise ECM (Alfresco / Nextcloud) | Sibling Tool (KnowledgeDigest) |
@@ -175,8 +193,11 @@ sequenceDiagram
 | **Recurring Cost** | **Free & Open Source** | $15–$50 / user / month | Free with OS | Hardware + Admin Costs | Free & Open Source |
 | **Primary Sweet Spot** | **Local Document Detective** | Corporate Collaboration | Generic File Browsing | Multi-Tenant Enterprise | LLM Digest & Chunking |
 
+<a id="sec-06"></a>
 <a id="6-feature-highlights"></a>
 <a id="feature-highlights"></a>
+<a id="6-funktions-highlights"></a>
+<a id="funktions-highlights"></a>
 ## Feature Highlights
 
 - **Local SQLite File Index**: Rapid indexing for folders, document collections, and versioned file entries.
@@ -191,14 +212,20 @@ sequenceDiagram
 - **Ergonomic Desktop UI**: Native PySide6 interface with dark/light theme switching and system tray integration.
 - **Companion Utilities**: Bundled SQLite database inspector (`SQLiteViewer.py`) and Excel file importer.
 
+<a id="sec-07"></a>
 <a id="7-visual-interface--screenshot"></a>
 <a id="visual-interface--screenshot"></a>
+<a id="7-visuelle-oberfläche--screenshot"></a>
+<a id="visuelle-oberfläche--screenshot"></a>
 ## Visual Interface & Screenshot
 
 ![ProFiler Suite desktop file manager with filters, file search, collections and preview panes](README/screenshots/main.png)
 
+<a id="sec-08"></a>
 <a id="8-when-to-use-profiler"></a>
 <a id="when-to-use-profiler"></a>
+<a id="8-wann-profiler-passt"></a>
+<a id="wann-profiler-passt"></a>
 ## When To Use ProFiler
 
 ProFiler is the optimal solution when you require a private document management tool for:
@@ -210,8 +237,11 @@ ProFiler is the optimal solution when you require a private document management 
 - Auditing document packages for privacy and GDPR/DSGVO compliance before sending them to external parties.
 - Using a unified desktop hub alongside companion tools such as [ProSync](https://github.com/file-bricks/ProSync) and [SQLiteViewer](https://github.com/file-bricks/SQLiteViewer).
 
+<a id="sec-09"></a>
 <a id="9-quick-start--setup"></a>
 <a id="quick-start--setup"></a>
+<a id="9-schnellstart--installation"></a>
+<a id="schnellstart--installation"></a>
 ## Quick Start & Setup
 
 ### Prerequisites & Requirements
@@ -236,8 +266,11 @@ On Windows, you can start the application directly via the bundled starter scrip
 START.bat
 ```
 
+<a id="sec-10"></a>
 <a id="10-windows-launcher--build-flow"></a>
 <a id="windows-launcher--build-flow"></a>
+<a id="10-windows-launcher--build-prozess"></a>
+<a id="windows-launcher--build-prozess"></a>
 ## Windows Launcher & Build Flow
 
 For local Windows desktop deployment, you can compile a self-contained executable:
@@ -254,8 +287,11 @@ The build requires a clean Git checkout, runs outside OneDrive in `C:\_Local_DEV
 
 The build never writes into OneDrive, GitHub Releases, or a Store package. `START.bat` launches a local EXE only when the adjacent `ProFiler.exe.sha256` matches; otherwise, a source checkout launches `Profiler_Suite_V15.py`.
 
+<a id="sec-11"></a>
 <a id="11-configuration--local-storage"></a>
 <a id="configuration--local-storage"></a>
+<a id="11-konfiguration--lokale-ablage"></a>
+<a id="konfiguration--lokale-ablage"></a>
 ## Configuration & Local Storage
 
 | File Path | Functional Purpose |
@@ -272,8 +308,11 @@ python -m pip install -e ".[excel]"
 python import_excel_to_profiler.py --input INPUT.xlsx --database profiler.db --output imported
 ```
 
+<a id="sec-12"></a>
 <a id="12-included-tools--utilities"></a>
 <a id="included-tools--utilities"></a>
+<a id="12-enthaltene-werkzeuge--dienstprogramme"></a>
+<a id="enthaltene-werkzeuge--dienstprogramme"></a>
 ## Included Tools & Utilities
 
 | Tool File | Functional Description |
@@ -284,8 +323,11 @@ python import_excel_to_profiler.py --input INPUT.xlsx --database profiler.db --o
 | `import_excel_to_profiler.py` | Command-line utility for importing existing Excel file inventories |
 | `indent_gui_checker.py` | Codebase development tool for checking GUI indentation integrity |
 
+<a id="sec-13"></a>
 <a id="13-supported-file-formats--ocr"></a>
 <a id="supported-file-formats--ocr"></a>
+<a id="13-unterstützte-dateiformate--ocr"></a>
+<a id="unterstützte-dateiformate--ocr"></a>
 ## Supported File Formats & OCR
 
 | Category | File Extensions | Capabilities |
@@ -295,8 +337,11 @@ python import_excel_to_profiler.py --input INPUT.xlsx --database profiler.db --o
 | **Spreadsheets** | `.xlsx`, `.xls`, `.csv` | Structure inspection and metadata indexing (Excel extra available) |
 | **Other Formats** | Universal fallback | Indexed by filesystem attributes, file size, timestamps, and SHA-256 hash |
 
+<a id="sec-14"></a>
 <a id="14-sibling-ecosystem--integrations"></a>
 <a id="sibling-ecosystem--integrations"></a>
+<a id="14-geschwister-ökosystem--integrationen"></a>
+<a id="geschwister-ökosystem--integrationen"></a>
 ## Sibling Ecosystem & Integrations
 
 ProFiler Suite is an active member of the **file-bricks** desktop utility family under the **[open-bricks](https://github.com/open-bricks)** umbrella:
@@ -315,8 +360,11 @@ ProFiler Suite is an active member of the **file-bricks** desktop utility family
 | **CodeCommander MCP** | [ellmos-ai/ellmos-codecommander-mcp](https://github.com/ellmos-ai/ellmos-codecommander-mcp) | MCP code intelligence, AST analysis & format repair | Active Companion |
 | **SQLite Transit Sync** | [dev-bricks/sqlite-transit-sync](https://github.com/dev-bricks/sqlite-transit-sync) | Zero-loss multi-master SQLite replication & synchronization | Active Companion |
 
+<a id="sec-15"></a>
 <a id="15-third-party-licenses--compliance"></a>
 <a id="third-party-licenses--compliance"></a>
+<a id="15-drittanbieter-lizenzen--compliance"></a>
+<a id="drittanbieter-lizenzen--compliance"></a>
 ## Third-Party Licenses & Compliance
 
 ProFiler Suite is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0-only)**. See [LICENSE](LICENSE).
@@ -325,8 +373,11 @@ Because ProFiler Suite uses `PyMuPDF`, the application is distributed under AGPL
 
 Windows Store distribution preparations are governed by `store_package.json`, `STORE_LISTING.md`, `PRIVACY_POLICY.md`, `SUPPORT.md`, and `WINDOWS_STORE_PREP.md`.
 
+<a id="sec-16"></a>
 <a id="16-security-policy--slas"></a>
 <a id="security-policy--slas"></a>
+<a id="16-sicherheitsrichtlinie--slas"></a>
+<a id="sicherheitsrichtlinie--slas"></a>
 ## Security Policy & SLAs
 
 ProFiler maintains a formal, bilingual security policy under [`SECURITY.md`](SECURITY.md).
@@ -337,8 +388,11 @@ ProFiler maintains a formal, bilingual security policy under [`SECURITY.md`](SEC
 
 ---
 
+<a id="sec-17"></a>
 <a id="17-target-personas--high-intent-seo"></a>
 <a id="target-personas--high-intent-seo"></a>
+<a id="17-zielgruppen--high-intent-seo"></a>
+<a id="zielgruppen--high-intent-seo"></a>
 ## Target Personas & High-Intent SEO
 
 ProFiler Suite is precision-engineered for privacy-sensitive desktop environments. The table below maps our four primary personas with high-intent search queries and architectural answers:
@@ -356,14 +410,17 @@ ProFiler Suite is precision-engineered for privacy-sensitive desktop environment
 
 ---
 
+<a id="sec-18"></a>
 <a id="18-verification--test-suite"></a>
 <a id="verification--test-suite"></a>
+<a id="18-verifikation--test-suite"></a>
+<a id="verifikation--test-suite"></a>
 ## Verification & Test Suite
 
 ProFiler Suite maintains rigorous automated verification gates. Every code and documentation modification is validated against automated contract tests, linter gates, and bytecode compilation:
 
 ```bash
-# Execute full automated contract & unit test suite (205+ tests, 100% green)
+# Execute full automated contract & unit test suite (210 passed, 100% green)
 pytest -ra -v
 
 # Run fast Python linter (zero violations tolerated)
@@ -377,3 +434,9 @@ git diff --check
 ```
 
 All 10 Governance & Runtime Invariants (`INV-LOCAL-01` through `INV-SLA-10`), PEP 621 metadata, bilingual documentation anchors, and license integrity are continuously verified by `tests/test_metadata.py` and `tests/test_security_license_contract.py`.
+
+### ⚖️ Statutory Notice & Liability Limitation (§ 521 BGB)
+
+> [!IMPORTANT]
+> **Limitation of Liability for Gratuitous Software Provision (§ 521 BGB):**
+> To the extent this software, its preview editions, or test releases are provided free of charge, the liability of the authors and publishers is governed exclusively by § 521 of the German Civil Code (Bürgerliches Gesetzbuch – BGB) and is limited to intent and gross negligence (*Haftung des Schenkers für Vorsatz und grobe Fahrlässigkeit*). The software is provided "as is", without warranty of any kind, express or implied.

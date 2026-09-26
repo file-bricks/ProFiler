@@ -43,6 +43,7 @@ def test_required_documentation_and_manifests_exist() -> None:
     required_files = [
         "README.md",
         "README_de.md",
+        "NOTICE",
         "LICENSE",
         "SECURITY.md",
         "CHANGELOG.md",
@@ -356,10 +357,12 @@ def test_marketing_log_parity() -> None:
     assert "2026-09-12" in content
     assert "2026-09-16" in content
     assert "2026-09-18" in content
+    assert "2026-09-26" in content
     assert "INV-LOCAL-01" in content
     assert "INV-SLA-10" in content
     assert "Datenschutzampel" in content
     assert "18-POINT NAVIGATION PARITY" in content
+    assert "PFAD B DISCOVERABILITY" in content or "Pfad B" in content
 
 
 def test_readme_18_points_quick_navigation_parity() -> None:
@@ -420,9 +423,15 @@ def test_readme_18_points_quick_navigation_parity() -> None:
     assert '<a id="1-architektur"></a>' in readme_de
     assert '<a id="18-verifikation--test-suite"></a>' in readme_de
 
+    # Verify reciprocal dual HTML anchors sec-01 through sec-18
+    for i in range(1, 19):
+        sec_id = f"sec-{i:02d}"
+        assert f'<a id="{sec_id}"></a>' in readme_en, f"Missing {sec_id} in English README"
+        assert f'<a id="{sec_id}"></a>' in readme_de, f"Missing {sec_id} in German README"
+
 
 def test_pyproject_pep621_extended_urls() -> None:
-    """Verify pyproject.toml PEP 621 URLs include Third-Party Licenses, Marketing Log, and LLM Ready."""
+    """Verify pyproject.toml PEP 621 URLs include Third-Party Licenses, Marketing Log, LLM Ready, and Notice."""
     pyproj_path = PROJECT_ROOT / "pyproject.toml"
     assert pyproj_path.exists(), "pyproject.toml missing"
     content = pyproj_path.read_text(encoding="utf-8")
@@ -430,6 +439,7 @@ def test_pyproject_pep621_extended_urls() -> None:
     assert '"Third-Party Licenses" = "https://github.com/file-bricks/ProFiler/blob/master/THIRD_PARTY_LICENSES.md"' in content
     assert '"Marketing Log" = "https://github.com/file-bricks/ProFiler/blob/master/MARKETING-LOG.txt"' in content
     assert '"LLM Ready" = "https://github.com/file-bricks/ProFiler/blob/master/llms.txt"' in content
+    assert 'Notice = "https://github.com/file-bricks/ProFiler/blob/master/NOTICE"' in content
 
 
 def test_third_party_licenses_audit_and_user_assets_guarantee() -> None:
@@ -438,7 +448,8 @@ def test_third_party_licenses_audit_and_user_assets_guarantee() -> None:
     assert lic_md.exists(), "THIRD_PARTY_LICENSES.md missing"
     content = lic_md.read_text(encoding="utf-8")
 
-    assert "2026-09-16" in content
+    assert "2026-09-26" in content
+    assert "NOTICE" in content
     assert "LGPL-3.0 § 4" in content
     assert "Zero-Copyleft" in content
     assert "RunAsInvoker" in content
@@ -453,9 +464,49 @@ def test_readme_extended_badges_parity() -> None:
 
     for doc in [readme_en, readme_de]:
         assert "RunAsInvoker" in doc
-        assert any(x in doc for x in ["205%2B%20", "205+", "201%2B%20", "201+", "197%2B%20", "197+"])
+        assert any(x in doc for x in ["210", "205%2B%20", "205+", "201%2B%20", "201+", "197%2B%20", "197+"])
+        assert "Attribution-NOTICE" in doc
+        assert "2026--09--26" in doc
 
     assert "third--party-audited-brightgreen.svg" in readme_en
     assert "marketing%20log-active-blue.svg" in readme_en
     assert "Drittanbieter-auditiert-brightgreen.svg" in readme_de
     assert "Marketing--Log-aktiv-blue.svg" in readme_de
+
+
+def test_notice_file_exists_and_attribution() -> None:
+    """Verify canonical root NOTICE attribution file."""
+    notice_path = PROJECT_ROOT / "NOTICE"
+    assert notice_path.is_file(), "Root NOTICE file missing"
+    content = notice_path.read_text(encoding="utf-8")
+    assert "ProFiler Suite" in content
+    assert "Lukas Geiger" in content
+    assert "file-bricks" in content
+    assert "open-bricks" in content
+    assert "THIRD_PARTY_LICENSES.md" in content
+
+
+def test_statutory_disclaimer_521_bgb_and_48h_sla() -> None:
+    """Verify statutory disclaimer (§ 521 BGB Gefälligkeitsrecht) and 48h SLA across documents."""
+    readme_en = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    readme_de = (PROJECT_ROOT / "README_de.md").read_text(encoding="utf-8")
+    sec_text = (PROJECT_ROOT / "SECURITY.md").read_text(encoding="utf-8")
+
+    assert "§ 521 BGB" in readme_en and "Haftung des Schenkers" in readme_en
+    assert "§ 521 BGB" in readme_de and "Haftung des Schenkers" in readme_de
+    assert "§ 521 BGB" in sec_text and "Haftung des Schenkers" in sec_text
+    assert "48h" in readme_en or "48-hour" in readme_en
+    assert "48h" in readme_de or "48 Stunden" in readme_de
+
+
+def test_pyproject_saturated_keywords_and_notice_url() -> None:
+    """Verify pyproject.toml has saturated 20 keywords and license-files configuration."""
+    pyproject_text = (PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    # Keywords
+    kw_match = re.search(r'keywords\s*=\s*\[(.*?)\]', pyproject_text, re.DOTALL)
+    assert kw_match is not None, "keywords array not found in pyproject.toml"
+    keywords = [k.strip(' \t\n\r"\'') for k in kw_match.group(1).split(",") if k.strip(' \t\n\r"\'')]
+    assert len(keywords) == 20, f"Expected 20 keywords, got {len(keywords)}: {keywords}"
+
+    # license-files
+    assert 'license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_LICENSES.md", "THIRD_PARTY_LICENSES.txt"]' in pyproject_text
