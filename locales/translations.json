@@ -39,6 +39,14 @@
     "ja": "キャンセル",
     "ru": "Отмена"
   },
+  "Aktion / Funktion": {
+    "de": "Aktion / Funktion",
+    "en": "Action / Function",
+    "es": "Acción / Función",
+    "zh": "操作 / 功能",
+    "ja": "アクション / 機能",
+    "ru": "Действие / Функция"
+  },
   "Aktualisieren": {
     "de": "Aktualisieren",
     "en": "Refresh",
@@ -70,6 +78,14 @@
     "zh": "匿名化设置",
     "ja": "匿名化設定",
     "ru": "Настройки анонимизации"
+  },
+  "Anzeigen": {
+    "de": "Anzeigen",
+    "en": "Show",
+    "es": "Mostrar",
+    "zh": "显示",
+    "ja": "表示",
+    "ru": "Показать"
   },
   "Ausblenden (Safety-Mode - Keine Dateisystem-Änderung)": {
     "de": "Ausblenden (Safety-Mode - Keine Dateisystem-Änderung)",
@@ -111,6 +127,22 @@
     "ja": "抜粋を保存",
     "ru": "Сохранить выдержку"
   },
+  "Auto-Sync": {
+    "de": "Auto-Sync",
+    "en": "Auto-Sync",
+    "es": "Sincronización automática",
+    "zh": "自动同步",
+    "ja": "自動同期",
+    "ru": "Автосинхронизация"
+  },
+  "Beenden": {
+    "de": "Beenden",
+    "en": "Quit",
+    "es": "Salir",
+    "zh": "退出",
+    "ja": "終了",
+    "ru": "Выход"
+  },
   "Benötigt: Tesseract-OCR installiert": {
     "de": "Benötigt: Tesseract-OCR installiert",
     "en": "Requires: Tesseract-OCR installed",
@@ -118,6 +150,14 @@
     "zh": "需要：已安装 Tesseract-OCR",
     "ja": "必要条件: Tesseract-OCR がインストール済み",
     "ru": "Требуется: установлен Tesseract-OCR"
+  },
+  "Bereich": {
+    "de": "Bereich",
+    "en": "Scope",
+    "es": "Área",
+    "zh": "范围",
+    "ja": "スコープ",
+    "ru": "Область"
   },
   "Bereinigung läuft...": {
     "de": "Bereinigung läuft...",
@@ -135,6 +175,22 @@
     "ja": "クリーンアップオプション",
     "ru": "Параметры очистки"
   },
+  "Bereit": {
+    "de": "Bereit",
+    "en": "Ready",
+    "es": "Listo",
+    "zh": "就绪",
+    "ja": "準備完了",
+    "ru": "Готово"
+  },
+  "Browser-Favoriten importieren...": {
+    "de": "Browser-Favoriten importieren...",
+    "en": "Import browser favorites...",
+    "es": "Importar favoritos del navegador...",
+    "zh": "导入浏览器收藏夹...",
+    "ja": "ブラウザのお気に入りをインポート...",
+    "ru": "Импортировать закладки браузера..."
+  },
   "DB wählen": {
     "de": "DB wählen",
     "en": "Select DB",
@@ -142,6 +198,14 @@
     "zh": "选择数据库",
     "ja": "DB を選択",
     "ru": "Выбрать БД"
+  },
+  "Datei": {
+    "de": "Datei",
+    "en": "File",
+    "es": "Archivo",
+    "zh": "文件",
+    "ja": "ファイル",
+    "ru": "Файл"
   },
   "Datei auswählen & korrigieren": {
     "de": "Datei auswählen & korrigieren",
@@ -183,6 +247,14 @@
     "ja": "ファイルタイプ:",
     "ru": "Типы файлов:"
   },
+  "Datenschutzampel starten...": {
+    "de": "Datenschutzampel starten...",
+    "en": "Start privacy light...",
+    "es": "Iniciar semáforo de privacidad...",
+    "zh": "启动隐私红绿灯...",
+    "ja": "プライバシー信号機を起動...",
+    "ru": "Запустить светофор конфиденциальности..."
+  },
   "Einrückungsfehler gefunden": {
     "de": "Einrückungsfehler gefunden",
     "en": "Indentation Error Found",
@@ -198,142 +270,6 @@
     "zh": "设置",
     "ja": "設定",
     "ru": "Настройки"
-  },
-  "Datei": {
-    "de": "Datei",
-    "en": "File",
-    "es": "Archivo",
-    "zh": "文件",
-    "ja": "ファイル",
-    "ru": "Файл"
-  },
-  "Tools": {
-    "de": "Tools",
-    "en": "Tools",
-    "es": "Herramientas",
-    "zh": "工具",
-    "ja": "ツール",
-    "ru": "Инструменты"
-  },
-  "Hilfe": {
-    "de": "Hilfe",
-    "en": "Help",
-    "es": "Ayuda",
-    "zh": "帮助",
-    "ja": "ヘルプ",
-    "ru": "Справка"
-  },
-  "Anzeigen": {
-    "de": "Anzeigen",
-    "en": "Show",
-    "es": "Mostrar",
-    "zh": "显示",
-    "ja": "表示",
-    "ru": "Показать"
-  },
-  "Beenden": {
-    "de": "Beenden",
-    "en": "Quit",
-    "es": "Salir",
-    "zh": "退出",
-    "ja": "終了",
-    "ru": "Выход"
-  },
-  "Browser-Favoriten importieren...": {
-    "de": "Browser-Favoriten importieren...",
-    "en": "Import browser favorites...",
-    "es": "Importar favoritos del navegador...",
-    "zh": "导入浏览器收藏夹...",
-    "ja": "ブラウザのお気に入りをインポート...",
-    "ru": "Импортировать закладки браузера..."
-  },
-  "Datenschutzampel starten...": {
-    "de": "Datenschutzampel starten...",
-    "en": "Start privacy light...",
-    "es": "Iniciar semáforo de privacidad...",
-    "zh": "启动隐私红绿灯...",
-    "ja": "プライバシー信号機を起動...",
-    "ru": "Запустить светофор конфиденциальности..."
-  },
-  "Über": {
-    "de": "Über",
-    "en": "About",
-    "es": "Acerca de",
-    "zh": "关于",
-    "ja": "バージョン情報",
-    "ru": "О программе"
-  },
-  "Bereit": {
-    "de": "Bereit",
-    "en": "Ready",
-    "es": "Listo",
-    "zh": "就绪",
-    "ja": "準備完了",
-    "ru": "Готово"
-  },
-  "Läuft im Hintergrund. Doppelklick zum öffnen.": {
-    "de": "Läuft im Hintergrund. Doppelklick zum Öffnen.",
-    "en": "Running in the background. Double-click to open.",
-    "es": "Ejecutándose en segundo plano. Doble clic para abrir.",
-    "zh": "正在后台运行。双击以打开。",
-    "ja": "バックグラウンドで実行中。ダブルクリックして開きます。",
-    "ru": "Работает в фоновом режиме. Двойной клик для открытия."
-  },
-  "Suche & Explorer": {
-    "de": "Suche & Explorer",
-    "en": "Search & Explorer",
-    "es": "Búsqueda y explorador",
-    "zh": "搜索与资源管理器",
-    "ja": "検索＆エクスプローラー",
-    "ru": "Поиск и проводник"
-  },
-  "Verbindungen & Themen": {
-    "de": "Verbindungen & Themen",
-    "en": "Connections & Topics",
-    "es": "Conexiones y temas",
-    "zh": "连接与主题",
-    "ja": "接続とトピック",
-    "ru": "Связи и темы"
-  },
-  "Auto-Sync": {
-    "de": "Auto-Sync",
-    "en": "Auto-Sync",
-    "es": "Sincronización automática",
-    "zh": "自动同步",
-    "ja": "自動同期",
-    "ru": "Автосинхронизация"
-  },
-  "🌐 Browser-Favoriten importieren...": {
-    "de": "🌐 Browser-Favoriten importieren...",
-    "en": "🌐 Import browser favorites...",
-    "es": "🌐 Importar favoritos del navegador...",
-    "zh": "🌐 导入浏览器收藏夹...",
-    "ja": "🌐 ブラウザのお気に入りをインポート...",
-    "ru": "🌐 Импортировать закладки браузера..."
-  },
-  "🚦 Datenschutzampel starten...": {
-    "de": "🚦 Datenschutzampel starten...",
-    "en": "🚦 Start privacy light...",
-    "es": "🚦 Iniciar semáforo de privacidad...",
-    "zh": "🚦 启动隐私红绿灯...",
-    "ja": "🚦 プライバシー信号機を起動...",
-    "ru": "🚦 Запустить светофор конфиденциальности..."
-  },
-  "FormConstructor öffnen...": {
-    "de": "FormConstructor öffnen...",
-    "en": "Open FormConstructor...",
-    "es": "Abrir FormConstructor...",
-    "zh": "打开 FormConstructor...",
-    "ja": "FormConstructor を開く...",
-    "ru": "Открыть FormConstructor..."
-  },
-  "❌ Beenden": {
-    "de": "❌ Beenden",
-    "en": "❌ Quit",
-    "es": "❌ Salir",
-    "zh": "❌ 退出",
-    "ja": "❌ 終了",
-    "ru": "❌ Выход"
   },
   "Erstellen Sie eine neue Prompt-Datei mit Versionsverwaltung:": {
     "de": "Erstellen Sie eine neue Prompt-Datei mit Versionsverwaltung:",
@@ -383,6 +319,30 @@
     "ja": "フィルタータイプ:",
     "ru": "Тип фильтра:"
   },
+  "FormConstructor öffnen...": {
+    "de": "FormConstructor öffnen...",
+    "en": "Open FormConstructor...",
+    "es": "Abrir FormConstructor...",
+    "zh": "打开 FormConstructor...",
+    "ja": "FormConstructor を開く...",
+    "ru": "Открыть FormConstructor..."
+  },
+  "Gelöschte Dateien anzeigen": {
+    "de": "Gelöschte Dateien anzeigen",
+    "en": "Show deleted files",
+    "es": "Mostrar archivos eliminados",
+    "zh": "显示已删除文件",
+    "ja": "削除されたファイルを表示",
+    "ru": "Показать удаленные файлы"
+  },
+  "Gelöschte anzeigen": {
+    "de": "Gelöschte anzeigen",
+    "en": "Show Deleted",
+    "es": "Mostrar eliminados",
+    "zh": "显示已删除",
+    "ja": "削除済みを表示",
+    "ru": "Показать удаленные"
+  },
   "Global-DB wählen": {
     "de": "Global-DB wählen",
     "en": "Select Global DB",
@@ -390,6 +350,14 @@
     "zh": "选择全局数据库",
     "ja": "グローバル DB を選択",
     "ru": "Выбрать глобальную БД"
+  },
+  "Hilfe": {
+    "de": "Hilfe",
+    "en": "Help",
+    "es": "Ayuda",
+    "zh": "帮助",
+    "ja": "ヘルプ",
+    "ru": "Справка"
   },
   "Hinzufügen": {
     "de": "Hinzufügen",
@@ -422,6 +390,22 @@
     "zh": "导入...",
     "ja": "インポート...",
     "ru": "Импорт..."
+  },
+  "Läuft im Hintergrund. Doppelklick zum Öffnen.": {
+    "de": "Läuft im Hintergrund. Doppelklick zum Öffnen.",
+    "en": "Running in the background. Double-click to open.",
+    "es": "Ejecutándose en segundo plano. Doble clic para abrir.",
+    "zh": "正在后台运行。双击以打开。",
+    "ja": "バックグラウンドで実行中。ダブルクリックして開きます。",
+    "ru": "Работает в фоновом режиме. Двойной клик для открытия."
+  },
+  "Läuft im Hintergrund. Doppelklick zum öffnen.": {
+    "de": "Läuft im Hintergrund. Doppelklick zum Öffnen.",
+    "en": "Running in the background. Double-click to open.",
+    "es": "Ejecutándose en segundo plano. Doble clic para abrir.",
+    "zh": "正在后台运行。双击以打开。",
+    "ja": "バックグラウンドで実行中。ダブルクリックして開きます。",
+    "ru": "Работает в фоновом режиме. Двойной клик для открытия."
   },
   "Lösch-Vorschau": {
     "de": "Lösch-Vorschau",
@@ -567,6 +551,14 @@
     "ja": "削除方法:",
     "ru": "Стратегия удаления:"
   },
+  "Suche & Explorer": {
+    "de": "Suche & Explorer",
+    "en": "Search & Explorer",
+    "es": "Búsqueda y explorador",
+    "zh": "搜索与资源管理器",
+    "ja": "検索＆エクスプローラー",
+    "ru": "Поиск и проводник"
+  },
   "Suche läuft...": {
     "de": "Suche läuft...",
     "en": "Searching...",
@@ -590,6 +582,46 @@
     "zh": "已同步：0 | 错误：0",
     "ja": "同期完了: 0 | エラー: 0",
     "ru": "Синхронизировано: 0 | Ошибок: 0"
+  },
+  "Tastaturkürzel & Barrierefreiheit": {
+    "de": "Tastaturkürzel & Barrierefreiheit",
+    "en": "Keyboard Shortcuts & Accessibility",
+    "es": "Atajos de teclado y accesibilidad",
+    "zh": "键盘快捷键与无障碍",
+    "ja": "キーボードショートカットとアクセシビリティ",
+    "ru": "Горячие клавиши и специальные возможности"
+  },
+  "Tastaturkürzel und Bedienungshilfen": {
+    "de": "Tastaturkürzel und Bedienungshilfen",
+    "en": "Keyboard shortcuts and accessibility aids",
+    "es": "Atajos de teclado y ayudas de accesibilidad",
+    "zh": "键盘快捷键与辅助功能",
+    "ja": "キーボードショートカットとアクセシビリティ機能",
+    "ru": "Горячие клавиши и средства доступности"
+  },
+  "Tastenkombination": {
+    "de": "Tastenkombination",
+    "en": "Shortcut",
+    "es": "Combinación de teclas",
+    "zh": "快捷键",
+    "ja": "ショートカット",
+    "ru": "Сочетание клавиш"
+  },
+  "Tools": {
+    "de": "Tools",
+    "en": "Tools",
+    "es": "Herramientas",
+    "zh": "工具",
+    "ja": "ツール",
+    "ru": "Инструменты"
+  },
+  "Verbindungen & Themen": {
+    "de": "Verbindungen & Themen",
+    "en": "Connections & Topics",
+    "es": "Conexiones y temas",
+    "zh": "连接与主题",
+    "ja": "接続とトピック",
+    "ru": "Связи и темы"
   },
   "Wähle eine .py-Datei mit Encoding-Problemen aus:": {
     "de": "Wähle eine .py-Datei mit Encoding-Problemen aus:",
@@ -646,6 +678,14 @@
     "zh": "打开",
     "ja": "開く",
     "ru": "Открыть"
+  },
+  "Über": {
+    "de": "Über",
+    "en": "About",
+    "es": "Acerca de",
+    "zh": "关于",
+    "ja": "バージョン情報",
+    "ru": "О программе"
   },
   "ðŸ'¾ Auszug speichern": {
     "de": "💾 Auszug speichern",
@@ -727,6 +767,14 @@
     "ja": "❌ キャンセル",
     "ru": "❌ Отмена"
   },
+  "❌ Beenden": {
+    "de": "❌ Beenden",
+    "en": "❌ Quit",
+    "es": "❌ Salir",
+    "zh": "❌ 退出",
+    "ja": "❌ 終了",
+    "ru": "❌ Выход"
+  },
   "❌ Datei nicht gefunden.\\n\\nDie Datei existiert nicht mehr am angegebenen Pfad.": {
     "de": "❌ Datei nicht gefunden.\\n\\nDie Datei existiert nicht mehr am angegebenen Pfad.",
     "en": "❌ File not found.\\n\\nThe file no longer exists at the specified path.",
@@ -742,6 +790,14 @@
     "zh": "➕ 添加",
     "ja": "➕ 追加",
     "ru": "➕ Добавить"
+  },
+  "🌐 Browser-Favoriten importieren...": {
+    "de": "🌐 Browser-Favoriten importieren...",
+    "en": "🌐 Import browser favorites...",
+    "es": "🌐 Importar favoritos del navegador...",
+    "zh": "🌐 导入浏览器收藏夹...",
+    "ja": "🌐 ブラウザのお気に入りをインポート...",
+    "ru": "🌐 Импортировать закладки браузера..."
   },
   "💾 Auszug speichern": {
     "de": "💾 Auszug speichern",
@@ -855,6 +911,14 @@
     "ja": "🗑️ 履歴を消去",
     "ru": "🗑️ Очистить историю"
   },
+  "🚦 Datenschutzampel starten...": {
+    "de": "🚦 Datenschutzampel starten...",
+    "en": "🚦 Start privacy light...",
+    "es": "🚦 Iniciar semáforo de privacidad...",
+    "zh": "🚦 启动隐私红绿灯...",
+    "ja": "🚦 プライバシー信号機を起動...",
+    "ru": "🚦 Запустить светофор конфиденциальности..."
+  },
   "🟢 Auf Grün setzen": {
     "de": "🟢 Auf Grün setzen",
     "en": "🟢 Set to Green",
@@ -862,13 +926,5 @@
     "zh": "🟢 设置为绿色",
     "ja": "🟢 緑に設定",
     "ru": "🟢 Установить на зелёный"
-  },
-  "Läuft im Hintergrund. Doppelklick zum Öffnen.": {
-    "de": "Läuft im Hintergrund. Doppelklick zum Öffnen.",
-    "en": "Running in the background. Double-click to open.",
-    "es": "Ejecutándose en segundo plano. Doble clic para abrir.",
-    "zh": "正在后台运行。双击以打开。",
-    "ja": "バックグラウンドで実行中。ダブルクリックして開きます。",
-    "ru": "Работает в фоновом режиме. Двойной клик для открытия."
   }
 }

@@ -183,3 +183,125 @@ def test_pdf_password_dialog_exposes_accessible_context():
     dec_dialog.close()
     app.quit()
 
+
+def test_search_widget_deleted_checkbox_and_tree_keyboard_navigation():
+    app = QApplication.instance() or QApplication([])
+    search = profiler.SearchWidgetHybrid(SimpleNamespace(dbs=[]), DummySettings())
+
+    # 1. Echte Umlaute auf Checkbox (behebt "Gelschte anzeigen")
+    assert search.cb_show_deleted.text() == "Gelöschte anzeigen"
+    assert search.cb_show_deleted.accessibleName() == "Gelöschte Dateien anzeigen"
+    assert "Gelöschte Dateien" in search.cb_show_deleted.toolTip()
+
+    # 2. AccessibleResultTree Instanz & Barrierefreiheit
+    assert isinstance(search.result_tree, profiler.AccessibleResultTree)
+    assert isinstance(search.result_tree, QTreeWidget)
+
+    # 3. Tastaturnavigation via keyPressEvent
+    from PySide6.QtCore import Qt
+    from PySide6.QtGui import QKeyEvent
+
+    called_events = []
+    search.open_selected_file = lambda: called_events.append("open")
+    search.delete_selected = lambda: called_events.append("delete")
+    search.perform_search = lambda: called_events.append("search")
+
+    # Enter/Return
+    key_enter = QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_Return, Qt.KeyboardModifier.NoModifier)
+    search.result_tree.keyPressEvent(key_enter)
+    assert "open" in called_events
+
+    # Delete
+    key_del = QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_Delete, Qt.KeyboardModifier.NoModifier)
+    search.result_tree.keyPressEvent(key_del)
+    assert "delete" in called_events
+
+    # F5
+    key_f5 = QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_F5, Qt.KeyboardModifier.NoModifier)
+    search.result_tree.keyPressEvent(key_f5)
+    assert "search" in called_events
+
+    # focus_search_input
+    search.show()
+    search.focus_search_input()
+    assert search.search_input.isVisible()
+
+    search.close()
+    app.quit()
+
+
+def test_shortcuts_dialog_conformance_and_structure():
+    app = QApplication.instance() or QApplication([])
+    dialog = profiler.ShortcutsDialog()
+
+    assert dialog.windowTitle() == "Tastaturkürzel & Barrierefreiheit"
+    assert dialog.accessibleName() == "Tastaturkürzel & Barrierefreiheit"
+    assert "BITV 2.0 / WCAG 2.1 AA" in dialog.accessibleDescription()
+
+    # Tabelle prüfen
+    assert dialog.table.columnCount() == 3
+    assert dialog.table.horizontalHeaderItem(0).text() == "Tastenkombination"
+    assert dialog.table.horizontalHeaderItem(1).text() == "Aktion / Funktion"
+    assert dialog.table.horizontalHeaderItem(2).text() == "Bereich"
+    assert dialog.table.rowCount() >= 15
+
+    keys = [dialog.table.item(row, 0).text() for row in range(dialog.table.rowCount())]
+    assert "F1" in keys
+    assert "Ctrl+F" in keys
+    assert "Ctrl+1" in keys
+    assert "Ctrl+," in keys
+    assert "Ctrl+Q" in keys
+    assert "Enter / Return" in keys
+    assert "Entf / Backspace" in keys
+    assert "F5" in keys
+
+    # Schließen Button & Escape
+    assert dialog.btn_close.accessibleName() == "Dialog schließen"
+
+    dialog.close()
+    app.quit()
+
+
+def test_unified_main_window_menu_mnemonics_shortcuts_and_a11y_tabs():
+    app = QApplication.instance() or QApplication([])
+    settings = DummySettings()
+    win = profiler.UnifiedMainWindow(settings=settings)
+
+    # 1. Barrierefreie Tabs
+    assert win.tabs.accessibleName() == "Hauptbereiche"
+    assert "Hauptnavigation" in win.tabs.accessibleDescription()
+    assert win.tabs.count() == 3
+
+    # 2. Menüleiste Mnemonics
+    menu_titles = [m.title() for m in win.menuBar().findChildren(profiler.QMenu)]
+    assert "&Datei" in menu_titles
+    assert "&Tools" in menu_titles
+    assert "&Hilfe" in menu_titles
+
+    # 3. Aktionen & Shortcuts
+    assert win.act_settings.shortcut().toString() == "Ctrl+,"
+    assert win.act_settings.text() == "⚙️ Einstellungen"
+
+    assert win.act_close.shortcut().toString() == "Ctrl+Q"
+    assert win.act_close.text() == "❌ Beenden"
+
+    assert win.act_shortcuts.shortcut().toString() == "F1"
+    assert win.act_shortcuts.text() == "⌨️ Tastaturkürzel & Barrierefreiheit"
+
+    # 4. Globale Shortcuts (Ctrl+F, F5, Ctrl+1, Ctrl+2, Ctrl+3)
+    assert hasattr(win, "shortcut_find")
+    assert hasattr(win, "shortcut_refresh")
+    assert hasattr(win, "shortcut_tab1")
+
+    # 5. focus_search test
+    win.tabs.setCurrentIndex(1)
+    assert win.tabs.currentIndex() == 1
+    win.focus_search()
+    assert win.tabs.currentIndex() == 0
+
+    # 6. Shortcuts Dialog über Fenster öffnen
+    dlg = win.show_shortcuts_dialog()
+    assert dlg is not None
+
+    win.close()
+    app.quit()

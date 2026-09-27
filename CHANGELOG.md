@@ -5,6 +5,23 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Geändert / Changed (2026-09-28)
+- **Barrierefreiheit, Tastaturnavigation & UX-Review (WCAG 2.1 AA / BITV 2.0):**
+  - Barrierefreier Ergebnisbaum (`AccessibleResultTree`): Vollständige Tastaturnavigation in den Suchergebnissen implementiert; `Enter`/`Return` öffnet die ausgewählte Datei (`open_selected_file`), `Entf`/`Backspace` löscht markierte Einträge mit Bestätigungsabfrage (`delete_selected`), `F5` aktualisiert die Suche (`perform_search`).
+  - Echte deutsche Umlaute & Barrierefreiheit im Center-Panel: Broken Umlaut `"Gelschte anzeigen"` auf `QCheckBox("Gelöschte anzeigen")` korrigiert mit Tooltip und Accessible Name `"Gelöschte Dateien anzeigen"`; Dateibaum-Tooltip auf `Gelöscht am {datum}` und Quellcode-Kommentare bereinigt.
+  - Globale Tastenkombinationen in `UnifiedMainWindow`:
+    - `F1`: Öffnet den neuen barrierefreien Tastaturkürzel- und Hilfedialog (`show_shortcuts_dialog`).
+    - `Ctrl+F`: Wechselt direkt zum Reiter „Suche & Explorer“ und fokussiert das Suchfeld (`focus_search_input`).
+    - `Ctrl+1`, `Ctrl+2`, `Ctrl+3`: Schnelle Tastaturnavigation zwischen den Hauptbereichen „Suche & Explorer“, „Verbindungen & Themen“ und „Auto-Sync“.
+    - `Ctrl+,`: Öffnet die Programmeinstellungen (`show_settings`).
+    - `Ctrl+Q`: Beendet die Anwendung geordnet (`close`).
+    - `F5`: Aktualisiert die aktuelle Ansicht bzw. Suche (`refresh_current_view`).
+  - Menüleiste mit Tastatur-Mnemonics: Menüs um Tastatur-Zugriffstasten `&Datei` (`Alt+D`), `&Tools` (`Alt+T`) und `&Hilfe` (`Alt+H`) erweitert; Menüeinträge mit Shortcuts und StatusTips ausgestattet.
+  - Barrierefreier Tastaturkürzel-Dialog (`ShortcutsDialog`): Modaler Dialog mit strukturierter 3-Spalten-Tabelle (`Tastenkombination`, `Aktion / Funktion`, `Bereich`) für alle 16 Tastaturkombinationen, Konformitätshinweis nach BITV 2.0 / WCAG 2.1 AA, Initialfokus auf Schließen-Schaltfläche und Headless-Bypass für automatisierte Tests.
+  - Hauptreiter Barrierefreiheit: `QTabWidget` mit `accessibleName="Hauptbereiche"` und detaillierter `accessibleDescription` ausgestattet.
+  - Internationalisierung (i18n): 7 neue Lokalisierungsschlüssel (`Tastaturkürzel & Barrierefreiheit`, `Tastaturkürzel und Bedienungshilfen`, `Tastenkombination`, `Aktion / Funktion`, `Bereich`, `Gelöschte anzeigen`, `Gelöschte Dateien anzeigen`) in `locales/translations.json` mit 100% 6-Sprachen-Parität (`de`, `en`, `es`, `zh`, `ja`, `ru`) und echten Umlauten eingepflegt.
+  - Testsuite & Verifikation: 3 neue automatisierte Testfunktionen in `tests/test_ui_accessibility.py` ergänzt (`test_search_widget_deleted_checkbox_and_tree_keyboard_navigation`, `test_shortcuts_dialog_conformance_and_structure`, `test_unified_main_window_menu_mnemonics_shortcuts_and_a11y_tabs`); Vollsuite 194 passed in 4.85s (100% grün); `ruff check` und `compileall` 100% sauber; `git diff --check` fehlerfrei.
+
 ### Geändert / Changed (2026-09-26)
 - **Marketing, Discoverability, Visual Architecture & Bilateral Navigation Parity (Pfad B):**
   - Strikte Version-Freeze-Disziplin: Versionsstand `15.0.2` (Windows Store Package `15.0.2.0`) gemäß `T-20260920-167562623` über alle Manifeste, Quellcode und Metadaten unverändert beibehalten.
