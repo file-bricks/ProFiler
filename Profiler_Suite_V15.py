@@ -6,6 +6,7 @@ import io
 import json
 import uuid
 import hashlib
+import html
 import re
 import shutil
 import sqlite3
@@ -679,6 +680,7 @@ class PDFUtils:
             writer.encrypt(password)
             
             # Speichern
+            os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
             with open(output_path, 'wb') as f:
                 writer.write(f)
             
@@ -707,6 +709,7 @@ class PDFUtils:
                 writer.add_page(page)
             
             # OHNE Verschlüsselung speichern
+            os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
             with open(output_path, 'wb') as f:
                 writer.write(f)
             
@@ -729,6 +732,7 @@ class PDFUtils:
                 if 0 <= idx < len(reader.pages):
                     writer.add_page(reader.pages[idx])
             
+            os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
             with open(output_path, 'wb') as f:
                 writer.write(f)
             
@@ -1013,7 +1017,8 @@ CREATE TABLE IF NOT EXISTS versions(
     mtime TEXT, 
     ctime TEXT, 
     version_index INTEGER, 
-    source_side TEXT
+    source_side TEXT,
+    display_name TEXT
 );
 
 CREATE TABLE IF NOT EXISTS collections(
@@ -1211,6 +1216,14 @@ class ConnectionDB:
             except Exception as e:
                 print(f"Could not add is_hidden: {e}")
         
+        # Display Name (NEU V13.2+!)
+        if 'display_name' not in versions_columns:
+            try:
+                self.conn.execute("ALTER TABLE versions ADD COLUMN display_name TEXT")
+                print("✓ Added display_name column")
+            except Exception as e:
+                print(f"Could not add display_name: {e}")
+
         # Collections
         cur.execute("PRAGMA table_info(collections)")
         coll_columns = [row[1] for row in cur.fetchall()]
@@ -1669,38 +1682,64 @@ class SearchWorker(QThread):
                 conn = sqlite3.connect(db_path)
                 conn.row_factory = sqlite3.Row
                 
-                sql = """
-                    SELECT v.id, v.name, v.path, COALESCE(v.display_name, v.name) as display_name, v.mtime, 
-                           COALESCE(v.is_favorite, 0) as is_favorite, 
-                           v.version_index,
-                           v.version_label, 
-                           COALESCE(v.is_deleted, 0) as is_deleted,
-                           COALESCE(v.is_hidden, 0) as is_hidden,
-                           v.hidden_at, 
-                           v.deleted_at,
+                # Check for column availability in versions (safe for legacy/unmigrated DBs)
+                cursor = conn.execute("PRAGMA table_info(versions)")
+                cols = {c[1] for c in cursor.fetchall()}
+                display_expr = "COALESCE(v.display_name, v.name) as display_name" if "display_name" in cols else "v.name as display_name"
+                fav_expr = "COALESCE(v.is_favorite, 0) as is_favorite" if "is_favorite" in cols else "0 as is_favorite"
+                vindex_expr = "v.version_index" if "version_index" in cols else "1 as version_index"
+                vlabel_expr = "v.version_label" if "version_label" in cols else "NULL as version_label"
+                del_expr = "COALESCE(v.is_deleted, 0) as is_deleted" if "is_deleted" in cols else "0 as is_deleted"
+                hid_expr = "COALESCE(v.is_hidden, 0) as is_hidden" if "is_hidden" in cols else "0 as is_hidden"
+                hid_at_expr = "v.hidden_at" if "hidden_at" in cols else "NULL as hidden_at"
+                del_at_expr = "v.deleted_at" if "deleted_at" in cols else "NULL as deleted_at"
+
+                if collection_id:
+                    ci_check = conn.execute(
+                        "SELECT name FROM sqlite_master WHERE type='table' AND name='collection_items'"
+                    ).fetchone()
+                    if not ci_check:
+                        continue
+
+                sql = f"""
+                    SELECT v.id, v.name, v.path, {display_expr}, v.mtime,
+                           {fav_expr},
+                           {vindex_expr},
+                           {vlabel_expr},
+                           {del_expr},
+                           {hid_expr},
+                           {hid_at_expr},
+                           {del_at_expr},
                            f.content_hash,
                            f.size
                     FROM versions v
                     JOIN files f ON v.file_id = f.id
-                    LEFT JOIN collection_items ci ON ci.version_id = v.id
-                    WHERE (lower(v.name) LIKE ? OR lower(v.path) LIKE ?)
                 """
-                args = [wildcard, wildcard]
-                
-                if not show_deleted:
+                args = []
+                if collection_id:
+                    sql += " JOIN collection_items ci ON ci.version_id = v.id"
+
+                sql += " WHERE (lower(v.name) LIKE ? OR lower(v.path) LIKE ?)"
+                args.extend([wildcard, wildcard])
+
+                if not show_deleted and "is_deleted" in cols:
                     sql += " AND v.is_deleted = 0"
-                
-                if not show_hidden:
+
+                if not show_hidden and "is_hidden" in cols:
                     sql += " AND v.is_hidden = 0"
-                
-                if only_fav: 
-                    sql += " AND v.is_favorite = 1"
+
+                if only_fav:
+                    if "is_favorite" in cols:
+                        sql += " AND v.is_favorite = 1"
+                    else:
+                        continue
                 
                 if collection_id: 
                     sql += " AND ci.collection_id = ?"
                     args.append(collection_id)
                 
-                sql += f" ORDER BY v.is_favorite DESC, v.name LIMIT {LIMIT}"
+                order_expr = "v.is_favorite DESC, v.name" if "is_favorite" in cols else "v.name"
+                sql += f" ORDER BY {order_expr} LIMIT {LIMIT}"
                 
                 rows = conn.execute(sql, args).fetchall()
                 for row in rows:
@@ -1727,6 +1766,7 @@ class SearchWorker(QThread):
                     results.append({
                         "id": row["id"],
                         "name": row["name"], 
+                        "display_name": row["display_name"],
                         "path": row["path"], 
                         "mtime": row["mtime"],
                         "is_favorite": bool(row["is_favorite"]),
@@ -1781,13 +1821,19 @@ class DuplicateWorker(QThread):
                 conn = sqlite3.connect(db_path)
                 conn.row_factory = sqlite3.Row
 
-                sql = """
-                    SELECT v.id, v.name, v.path, COALESCE(v.display_name, v.name) as display_name, v.mtime, v.ctime, f.content_hash, f.size
+                cursor = conn.execute("PRAGMA table_info(versions)")
+                cols = {c[1] for c in cursor.fetchall()}
+                display_expr = "COALESCE(v.display_name, v.name) as display_name" if "display_name" in cols else "v.name as display_name"
+                ctime_expr = "v.ctime" if "ctime" in cols else "NULL as ctime"
+
+                sql = f"""
+                    SELECT v.id, v.name, v.path, {display_expr}, v.mtime, {ctime_expr}, f.content_hash, f.size
                     FROM versions v
                     JOIN files f ON v.file_id = f.id
-                    WHERE v.is_deleted = 0
-                    AND f.content_hash NOT LIKE 'CLOUD:%'
+                    WHERE f.content_hash NOT LIKE 'CLOUD:%'
                 """
+                if "is_deleted" in cols:
+                    sql += " AND v.is_deleted = 0"
 
                 rows = conn.execute(sql).fetchall()
 
@@ -1799,6 +1845,7 @@ class DuplicateWorker(QThread):
                     file_info = {
                         'id': row['id'],
                         'name': row['name'],
+                        'display_name': row['display_name'],
                         'path': row['path'],
                         'mtime': row['mtime'],
                         'ctime': row['ctime'],
@@ -2875,7 +2922,8 @@ class PDFExcerptDialog(QDialog):
             text = page.extract_text() or "Keine Textvorschau verfügbar"
             
             # Zeige Text in Label
-            preview_text = f"<h3>Seite {self.current_page + 1}</h3><pre>{text[:500]}...</pre>"
+            escaped_text = html.escape(text[:500])
+            preview_text = f"<h3>Seite {self.current_page + 1}</h3><pre>{escaped_text}...</pre>"
             
             if self.current_page in self.selected_pages:
                 preview_text = f"<div style='background-color: #d4edda; padding: 10px;'>{preview_text}<br><b> Diese Seite ist ausgewählt</b></div>"
@@ -2884,7 +2932,7 @@ class PDFExcerptDialog(QDialog):
             self.preview_label.setWordWrap(True)
             
         except Exception as e:
-            self.preview_label.setText(f"Vorschau-Fehler: {str(e)}")
+            self.preview_label.setText(f"Vorschau-Fehler: {html.escape(str(e))}")
     
     def toggle_current_page(self):
         """Whlt/Abwhlt aktuelle Seite"""
@@ -6552,11 +6600,6 @@ class SearchWidgetHybrid(QWidget):
                 )
                 if db:
                     db.close()
-            db = ConnectionDB(db_path)
-            db.restore_version(vid)
-            db.close()
-        
-        self.perform_search()
     
     def hard_delete_selected(self):
         """Löscht permanent"""
@@ -6797,20 +6840,34 @@ class SearchWidgetHybrid(QWidget):
             
             conn = None
             try:
-                # Hole Dateien der Collection
-                query = """
-                    SELECT v.path, v.name, v.mtime, f.size, f.category
-                    FROM file_tags ft
-                    JOIN versions v ON ft.version_id = v.id
-                    JOIN files f ON v.file_id = f.id
-                    WHERE ft.collection_id = ? AND v.is_deleted = 0
-                    ORDER BY v.path
-                """
-
                 conn = sqlite3.connect(db_path)
                 conn.row_factory = sqlite3.Row
+
+                # Prüfe ob collection_items Tabelle existiert
+                table_check = conn.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table' AND name='collection_items'"
+                ).fetchone()
+                if not table_check:
+                    continue
+
+                # Hole Dateien der Collection
+                query = """
+                    SELECT v.path, v.name, v.mtime, f.size
+                    FROM collection_items ci
+                    JOIN versions v ON ci.version_id = v.id
+                    JOIN files f ON v.file_id = f.id
+                    WHERE ci.collection_id = ? AND v.is_deleted = 0
+                    ORDER BY v.path
+                """
                 rows = conn.execute(query, (coll_id,)).fetchall()
-                all_files.extend(rows)
+                for r in rows:
+                    all_files.append({
+                        'path': r['path'] or '',
+                        'name': r['name'] or '',
+                        'mtime': r['mtime'],
+                        'size': r['size'] or 0,
+                        'category': get_file_category(r['name'] or '')
+                    })
 
             except Exception as e:
                 print(f"Fehler beim Lesen von {db_path}: {e}")
@@ -6874,7 +6931,7 @@ class SearchWidgetHybrid(QWidget):
             
             for row in all_files:
                 # Größe formatieren
-                size_bytes = row['size']
+                size_bytes = row['size'] or 0
                 if size_bytes < 1024:
                     size_str = f"{size_bytes} B"
                 elif size_bytes < 1024**2:
