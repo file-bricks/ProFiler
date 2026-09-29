@@ -5,6 +5,17 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Behoben / Fixed (2026-09-29 - Bugsweep Routine)
+- **Datenbank-Schema-Migration, Suche & Duplikate-Resilienz (`Profiler_Suite_V15.py`):**
+  - Schema-Migration (`display_name`): `display_name TEXT` Spalte zur Tabelle `versions` in `DDL_BASE` hinzugefügt und automatische Migration in `_migrate_v9()` verankert; verhindert `OperationalError: no such column: v.display_name` auf älteren und frisch erstellten Datenbanken.
+  - Dynamische Spalten-Projektion in `SearchWorker` & `DuplicateWorker`: Alle Abfragen für optionale Versionsspalten (`display_name`, `is_favorite`, `version_index`, `version_label`, `is_deleted`, `is_hidden`, `hidden_at`, `deleted_at`, `ctime`) auf dynamische Projektion via `PRAGMA table_info(versions)` gehärtet, sodass Worker über alle historischen Datenbankschemata ausnahmslos stabil laufen.
+  - Sammlungs- und Duplikatsuche: Unnötiger `LEFT JOIN collection_items` in `SearchWorker` entfernt (verhindert duplizierte Trefferzeilen in der Suchansicht und Abstürze auf alten Datenbanken ohne Sammlungstabelle); `display_name` in Result-Dictionaries propagiert.
+  - Sammlungs-Export (`export_collection_list`): Fehlerhafte SQL-Abfrage auf nicht-existente Tabelle `file_tags` und Spalte `f.category` auf `collection_items ci` umgestellt; Kategorie-Ermittlung via `get_file_category` und null-sichere Dateigrößen-Formatierung integriert.
+  - Umbenennen-Funktion (`rename_selected`): Ungewollten Aufruf von `db.restore_version(vid)` und doppelten `perform_search()` am Ende der lokalen Umbenennung bereinigt.
+  - PDF-Vorschau (`PDFExcerptDialog`): Vorschautext und Fehlermeldungen via `html.escape()` gegen Rich-Text-Parsing-Fehler in Qt-Labels abgesichert.
+  - PDF-Werkzeuge (`PDFUtils`): `encrypt_pdf()`, `decrypt_pdf()` und `extract_pages()` legen übergeordnete Zielordner defensiv via `os.makedirs(..., exist_ok=True)` an.
+  - Regressionstests: 12 neue hermetische Regressionstests in `tests/test_bugsweep_database_and_collection_resilience_20260929.py` integriert; Vollsuite 228 passed, 18 subtests passed (100% grün).
+
 ### Geändert / Changed (2026-09-28)
 - **Barrierefreiheit, Tastaturnavigation & UX-Review (WCAG 2.1 AA / BITV 2.0):**
   - Barrierefreier Ergebnisbaum (`AccessibleResultTree`): Vollständige Tastaturnavigation in den Suchergebnissen implementiert; `Enter`/`Return` öffnet die ausgewählte Datei (`open_selected_file`), `Entf`/`Backspace` löscht markierte Einträge mit Bestätigungsabfrage (`delete_selected`), `F5` aktualisiert die Suche (`perform_search`).
