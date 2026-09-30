@@ -57,8 +57,13 @@ _USER/
 credentials.json
 client_secret*.json
 token.json
+secrets.*
 *.pem
 *.key
+*.pfx
+*.p12
+*.cer
+*.crt
 keyring/
 
 # ---- Build-Artefakte & Releases ----
@@ -103,6 +108,8 @@ _alt/
 *.bak
 *.tmp
 *.swp
+pytest_out.txt
+pytest*.txt
 
 # ---- Projektspezifisch ----
 

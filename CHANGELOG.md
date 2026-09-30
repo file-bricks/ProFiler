@@ -5,6 +5,21 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Geändert / Changed (2026-09-30 - Security & License Audit)
+- **Standardisiertes 5-Felder-SBOM-Inventar & Lizenz-Compliance (`THIRD_PARTY_LICENSES.txt`):**
+  - Standardisiertes 5-Felder-Schema (`Package:`, `License:`, `SPDX:`, `URL:`, `Notice:`) für alle 21 Laufzeit-, Optional-, Test- und Build-Abhängigkeiten etabliert (PySide6, shiboken6, pypdf, pikepdf, PyMuPDF, pdf2image, python-docx, pytesseract, Pillow, watchdog, reportlab, pandas, openpyxl, pytest, pluggy, iniconfig, ruff, PyInstaller, pyinstaller-hooks-contrib, altgraph, packaging).
+  - Stand auf 2026-09-30 aktualisiert; AGPL-3.0-Kompatibilität, LGPL-3.0 § 4 dynamische Qt-Bindung und Zero-Copyleft-Garantie für Nutzerdokumente explizit belegt.
+- **Sicherheitsrichtlinie & Kontakt-SLA (`SECURITY.md`):**
+  - Direkte GitHub-Advisory-Melde-URL (`https://github.com/file-bricks/ProFiler/security/advisories/new`) hinterlegt.
+  - Offizielle Sicherheitskontakt-Adressen synchronisiert (`security@file-bricks.org`, `security@open-bricks.org`, `lukas@open-bricks.org`, `security@ellmos.ai`, `support@lukasgeiger.com`).
+- **Dependency-Floors & Paketierungs-Metadaten (`pyproject.toml`):**
+  - Support-Kontakt `support@lukasgeiger.com` in `[project.authors]` hinterlegt.
+  - Sichere Mindestgrenzen für Paketierungs- und Entwicklungswerkzeuge etabliert: `pyinstaller>=6.10.0`, `altgraph>=0.17.4`, `packaging>=24.0`.
+- **Gitignore-Härtung (`.gitignore`):**
+  - Schutzmuster für Zertifikate (`*.pfx`, `*.p12`, `*.cer`, `*.crt`), Secrets (`secrets.*`) und Test-Artefakte (`pytest_out.txt`, `pytest*.txt`) hinzugefügt.
+- **Automatisierte Vertragstests (`tests/test_security_license_contract.py`):**
+  - 8 hermetische Vertragstests zur kontinuierlichen Verifikation von Abhängigkeits-Floors, 5-Felder-SBOM-Vollständigkeit, bilingualer Security-Policy, Secret-Freiheit, Pfad-Hygiene und Zero-Copyleft-Garantie implementiert.
+
 ### Behoben / Fixed (2026-09-29 - Bugsweep Routine)
 - **Datenbank-Schema-Migration, Suche & Duplikate-Resilienz (`Profiler_Suite_V15.py`):**
   - Schema-Migration (`display_name`): `display_name TEXT` Spalte zur Tabelle `versions` in `DDL_BASE` hinzugefügt und automatische Migration in `_migrate_v9()` verankert; verhindert `OperationalError: no such column: v.display_name` auf älteren und frisch erstellten Datenbanken.

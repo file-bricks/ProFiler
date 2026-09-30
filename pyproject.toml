@@ -11,7 +11,7 @@ requires-python = ">=3.10"
 license = {text = "AGPL-3.0"}
 license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_LICENSES.md", "THIRD_PARTY_LICENSES.txt"]
 authors = [
-    {name = "file-bricks Contributors"}
+    {name = "file-bricks Contributors", email = "support@lukasgeiger.com"}
 ]
 keywords = [
     "desktop-app",
@@ -71,6 +71,9 @@ excel = [
 dev = [
     "pytest>=9.1.1",
     "ruff>=0.9.0",
+    "pyinstaller>=6.10.0",
+    "altgraph>=0.17.4",
+    "packaging>=24.0",
 ]
 
 [project.urls]

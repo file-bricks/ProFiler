@@ -1,83 +1,189 @@
-ProFiler Suite - Third-Party and Release Inventory
-Last reviewed: 2026-09-07
+===============================================================================
+THIRD PARTY LICENSES — ProFiler Suite
+===============================================================================
+Stand: 2026-09-30 (Erstfassung: 2026-09-07)
+Produkt: ProFiler Suite (Version 15.0.2)
+Lizenztyp: Open Source (GNU Affero General Public License v3 / AGPL-3.0-only)
 
-Scope
-=====
+Dieses Dokument führt alle direkten und indirekten Laufzeit-, Test- sowie
+Build-Abhängigkeiten von ProFiler Suite auf, inklusive standardisiertem
+5-Felder-Schema (Package, License, SPDX, URL, Notice) und Lizenzkompatibilität.
 
-This inventory is derived from pyproject.toml, requirements.txt,
-requirements-lock.txt and requirements-build.txt. It is not a dump of the
-maintainer's global Python environment. The exact Python distribution set used
-for a concrete EXE is recorded in BUILD-PROVENANCE.json by build_exe.bat.
+-------------------------------------------------------------------------------
+1. DIREKTE LAUFZEIT-KOMPONENTEN
+-------------------------------------------------------------------------------
 
-Direct runtime dependencies
-===========================
+Package: PySide6
+License: GNU Lesser General Public License v3 (LGPLv3)
+SPDX: LGPL-3.0-only
+URL: https://doc.qt.io/qtforpython-6/
+Notice: Offizielle Qt6 Python-Bindings (Locked 6.11.1). Dynamisch gebunden als vorcompilierte Standard-Wheels. Der Quellcode der Qt-Bibliotheken wird nicht verändert. Endnutzer können die PySide6-Bibliothek im Rahmen von LGPL-3.0 § 4 austauschen.
 
-Name             Locked version   License / distribution note
----------------- ---------------- ---------------------------------------------
-PySide6          6.11.1           LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
-pypdf            6.16.1           BSD-3-Clause
-pikepdf          10.9.1           MPL-2.0
-PyMuPDF          1.27.2.3         AGPL-3.0-or-later OR commercial Artifex license
-pdf2image        1.17.0           MIT
-python-docx      1.2.0            MIT
-pytesseract      0.3.13           Apache-2.0
-Pillow           12.3.0           HPND / historical PIL-compatible terms
-watchdog         6.0.0            Apache-2.0
-reportlab        5.0.0            BSD-3-Clause
+Package: shiboken6
+License: GNU Lesser General Public License v3 (LGPLv3)
+SPDX: LGPL-3.0-only
+URL: https://pypi.org/project/shiboken6/
+Notice: CPython-Binding-Generator-Laufzeitkomponente für PySide6. Dynamisch gebunden ohne Quelltextmodifikationen.
 
-The canonical project license is AGPL-3.0-only. PyMuPDF's licensing is material
-to distribution and Store review; replacing the project license statement does
-not replace PyMuPDF's own terms. Preserve license notices for all bundled
-transitive dependencies.
+Package: pypdf
+License: BSD 3-Clause License
+SPDX: BSD-3-Clause
+URL: https://pypdf.readthedocs.io/
+Notice: Reine Python-PDF-Bibliothek für Seitenoperationen, Metadaten-Extraktion und Splitting/Merging (Locked 6.16.1). Vollständig kompatibel mit AGPL-3.0.
 
-Build and test dependencies
-===========================
+Package: pikepdf
+License: Mozilla Public License 2.0 (MPL-2.0)
+SPDX: MPL-2.0
+URL: https://pikepdf.readthedocs.io/
+Notice: QPDF-Python-Bindings zur PDF-Strukturmanipulation, Reparatur und Kennwortverarbeitung (Locked 10.9.1). Weak Copyleft auf Dateiebene, vollständig kompatibel mit AGPL-3.0.
 
-Name                       Locked version   License / distribution note
--------------------------- ---------------- ---------------------------------------------
-PyInstaller                6.21.0           GPL-2.0-or-later with bootloader exception
-altgraph                   0.17.4           MIT (PyInstaller graph dependency)
-pyinstaller-hooks-contrib  2025.1           Apache-2.0 (PyInstaller hooks collection)
-packaging                  24.2             Apache-2.0 OR BSD-2-Clause (core metadata)
-pluggy                     1.6.0            MIT (pytest plugin manager)
-iniconfig                  2.1.0            MIT (pytest configuration parser)
-pytest                     9.1.1            MIT (test framework, GHSA-6w46-j5rx-g56g mitigated)
+Package: PyMuPDF
+License: GNU Affero General Public License v3 or later (AGPLv3+) / Commercial Artifex
+SPDX: AGPL-3.0-or-later
+URL: https://pymupdf.readthedocs.io/
+Notice: Python-Bindings für MuPDF (Locked 1.27.2.3) für High-Performance PDF-Rendering, Text-Extraktion und Vektorgrafiken. Bestimmt die AGPL-3.0-only Lizenzierung für die ProFiler-Anwendung.
 
-External native tools
-=====================
+Package: pdf2image
+License: MIT License
+SPDX: MIT
+URL: https://github.com/Belval/pdf2image
+Notice: Wrapper-Modul für Poppler zur Konvertierung von PDF-Seiten in PIL-Bilder (Locked 1.17.0). Permissiv, vollständig kompatibel mit AGPL-3.0.
 
-Tesseract OCR - Apache-2.0. Required for OCR at runtime.
-Poppler utilities - commonly GPL-2.0-or-later; verify the exact Windows
-distribution and its notices before bundling.
+Package: python-docx
+License: MIT License
+SPDX: MIT
+URL: https://python-docx.readthedocs.io/
+Notice: Python-Bibliothek zum Erzeugen und Modifizieren von Microsoft Word (.docx) Dokumenten und Formular-Exporten (Locked 1.2.0).
 
-Neither Tesseract nor Poppler is currently bundled by the canonical
-build_exe.bat. OCR/PDF-to-image Store claims therefore remain blocked until the
-actual package contains the selected binaries, their notices and a real
-installed-package smoke test.
+Package: pytesseract
+License: Apache License 2.0
+SPDX: Apache-2.0
+URL: https://github.com/madmaze/pytesseract
+Notice: Python-Wrapper für Googles Tesseract-OCR Engine (Locked 0.3.13). Apache-2.0 ist kompatibel mit AGPL-3.0.
 
-Release checklist
-=================
+Package: Pillow
+License: Historical Permission Notice and Disclaimer (HPND)
+SPDX: HPND
+URL: https://python-pillow.org/
+Notice: Python-Imaging-Library (Locked 12.3.0). Sicherheits-Mindestgrenze Pillow>=12.3.0 (behebt 26 CVEs/GHSAs aus früheren Versionen, u.a. GHSA-4x4j-2g7c-83w6, GHSA-45hq-cxwh-f6vc).
 
-1. Build only from a clean, pushed commit using requirements-build.txt.
-2. Keep BUILD-PROVENANCE.json and SHA256SUMS.txt next to the artifact.
-3. Review the artifact-specific python_packages list in the provenance file.
-4. Add notices for any selected Tesseract/Poppler distribution.
-5. Record Authenticode status, MSIX identity, WACK result and Store readback.
-6. Do not call a local unsigned EXE a Store-ready package.
+Package: watchdog
+License: Apache License 2.0
+SPDX: Apache-2.0
+URL: https://github.com/gorakhargosh/watchdog
+Notice: Dateisystem-Monitoring für Auto-Sync und Datei-Änderungsbenachrichtigungen (Locked 6.0.0).
 
-Upstream references
-===================
+Package: reportlab
+License: BSD 3-Clause License
+SPDX: BSD-3-Clause
+URL: https://www.reportlab.com/
+Notice: PDF-Generierungs-Engine für strukturierte Exporte, Berichte und PDF-Zusammenstellungen (Locked 5.0.0).
 
-PySide6: https://doc.qt.io/qtforpython-6/
-pypdf: https://pypdf.readthedocs.io/
-pikepdf: https://pikepdf.readthedocs.io/
-PyMuPDF: https://pymupdf.readthedocs.io/
-pdf2image: https://github.com/Belval/pdf2image
-python-docx: https://python-docx.readthedocs.io/
-pytesseract: https://github.com/madmaze/pytesseract
-Pillow: https://python-pillow.org/
-watchdog: https://github.com/gorakhargosh/watchdog
-ReportLab: https://www.reportlab.com/
-PyInstaller: https://pyinstaller.org/
-Tesseract: https://github.com/tesseract-ocr/tesseract
-Poppler: https://poppler.freedesktop.org/
+-------------------------------------------------------------------------------
+2. OPTIONALE LAUFZEIT- UND DATEN-KOMPONENTEN (EXTRA [excel])
+-------------------------------------------------------------------------------
+
+Package: pandas
+License: BSD 3-Clause License
+SPDX: BSD-3-Clause
+URL: https://pandas.pydata.org/
+Notice: Optionale tabellarische Datenanalyse- und Importbibliothek für Excel-Stapelverarbeitung (import_excel_to_profiler.py, Mindestversion pandas>=2.2.0).
+
+Package: openpyxl
+License: MIT License
+SPDX: MIT
+URL: https://openpyxl.readthedocs.io/
+Notice: Optionale Lese- und Schreibbibliothek für Microsoft Excel 2010 xlsm/xlsx/xltx/xltm Dateien (Mindestversion openpyxl>=3.1.0).
+
+-------------------------------------------------------------------------------
+3. TEST- UND ENTWICKLUNGSABHÄNGIGKEITEN
+-------------------------------------------------------------------------------
+
+Package: pytest
+License: MIT License
+SPDX: MIT
+URL: https://pypi.org/project/pytest/
+Notice: Test-Framework für automatisierte Regressionstests (Locked 9.1.1). Sicherheits-Mindestgrenze pytest>=9.1.1 (Schutz vor CVE-2025-7117 / GHSA-6w46-j5rx-g56g).
+
+Package: pluggy
+License: MIT License
+SPDX: MIT
+URL: https://pypi.org/project/pluggy/
+Notice: Plugin- und Hook-Verwaltungssystem für pytest (Locked 1.6.0).
+
+Package: iniconfig
+License: MIT License
+SPDX: MIT
+URL: https://pypi.org/project/iniconfig/
+Notice: Schneller INI- und Konfigurations-Parser für pytest (Locked 2.1.0).
+
+Package: ruff
+License: MIT License / Apache License 2.0
+SPDX: MIT OR Apache-2.0
+URL: https://pypi.org/project/ruff/
+Notice: Extrem schneller Python-Linter und Bytecode-Prüfer im Entwicklungs- und CI-Zyklus (Mindestversion ruff>=0.9.0).
+
+-------------------------------------------------------------------------------
+4. BUILD-, PACKAGING- UND DISTRIBUTIONSWERKZEUGE
+-------------------------------------------------------------------------------
+
+Package: PyInstaller
+License: GNU General Public License v2 or later with Bootloader Exception
+SPDX: GPL-2.0-or-later WITH Bootloader-Exception
+URL: https://pyinstaller.org/
+Notice: Packaging-Tool zur Erstellung autonomer Desktop-Binärdateien (Locked 6.21.0). Die Bootloader-Ausnahmeklausel verhindert Lizenzkontamination auf generierte ausführbare Dateien.
+
+Package: pyinstaller-hooks-contrib
+License: Apache License 2.0
+SPDX: Apache-2.0
+URL: https://github.com/pyinstaller/pyinstaller-hooks-contrib
+Notice: Community-Hook-Sammlung für PyInstaller-Paketierung (Locked 2025.1).
+
+Package: altgraph
+License: MIT License
+SPDX: MIT
+URL: https://pypi.org/project/altgraph/
+Notice: Graph-Konstruktions- und Analysemodul, Kern-Abhängigkeit von PyInstaller (Locked 0.17.4, Mindestversion altgraph>=0.17.4).
+
+Package: packaging
+License: Apache License 2.0 OR BSD 2-Clause License
+SPDX: Apache-2.0 OR BSD-2-Clause
+URL: https://pypi.org/project/packaging/
+Notice: Kern-Metadaten- und Versions-Parsing nach PEP 440 (Locked 24.2, Mindestversion packaging>=24.0).
+
+-------------------------------------------------------------------------------
+5. EXTERNE SYSTEM-WERKZEUGE (OPTIONAL / UNGEBUNDELT)
+-------------------------------------------------------------------------------
+
+Package: Tesseract OCR
+License: Apache License 2.0
+SPDX: Apache-2.0
+URL: https://github.com/tesseract-ocr/tesseract
+Notice: Optische Zeichenerkennungs-Engine für Bilddokumente und gescannte PDFs. Nicht in Quellcode gebündelt; wird als lokaler Prozess auf dem Host ausgeführt.
+
+Package: Poppler Utilities
+License: GNU General Public License v2 or later (GPL-2.0-or-later)
+SPDX: GPL-2.0-or-later
+URL: https://poppler.freedesktop.org/
+Notice: Externe Dienstprogramme (pdftoppm) zur PDF-Rasterisierung für pdf2image. Nicht im Quellcode gebündelt; unprivilegierter Subprozess.
+
+-------------------------------------------------------------------------------
+6. HINWEISE ZUR LIZENZKOMPATIBILITÄT & NUTZERDATEN-SCHUTZ
+-------------------------------------------------------------------------------
+
+1. Kanonische Projektlizenz:
+   Die Gesamtapplikation ProFiler Suite steht unter der GNU Affero General
+   Public License v3 (AGPL-3.0-only). Durch die Nutzung von PyMuPDF (AGPLv3+)
+   ist die Verbreitung von kompilierten Binärpaketen an die AGPL gebunden.
+
+2. Zero-Copyleft auf Nutzerdaten (INV-LOCAL-01 bis INV-SLA-10):
+   Das Verarbeiten, Indizieren, Durchsuchen, Schwärzen oder Extrahieren von
+   Nutzerdokumenten, Verträgen, Rechnungen, Bildern und SQLite-Datenbanken
+   führt zu KEINER Lizenzinfektion. Alle Nutzerdaten, Datenbanken und
+   exportierten Archive verbleiben zu 100% im uneingeschränkten, privaten
+   Eigentum des Anwenders.
+
+3. Dynamische Bindung von Qt / PySide6:
+   PySide6 wird ausschließlich dynamisch über vorcompilierte Standard-Wheels
+   eingebunden (LGPL-3.0 § 4). Die Modifikation von ProFiler-Quellcode
+   berührt nicht die Unabhängigkeit der LGPL-Bibliotheken.

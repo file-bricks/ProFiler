@@ -25,8 +25,8 @@
 
 If you discover a security vulnerability, please report it privately:
 
-1. **GitHub Security Advisories**: Navigate to the [Security tab](https://github.com/file-bricks/ProFiler/security/advisories) of this repository and select **Report a vulnerability**.
-2. **Direct Contact**: If GitHub reporting is unavailable, contact the security team via `security@open-bricks.org`, `lukas@open-bricks.org`, or `support@lukasgeiger.com`.
+1. **GitHub Security Advisories**: Direct submission via [Report a vulnerability](https://github.com/file-bricks/ProFiler/security/advisories/new).
+2. **Direct Contact**: If GitHub reporting is unavailable, contact the security team via `security@file-bricks.org`, `security@open-bricks.org`, `lukas@open-bricks.org`, `security@ellmos.ai`, or `support@lukasgeiger.com`.
 
 **Please do not open public issues for security vulnerabilities.**
 
@@ -63,8 +63,8 @@ This software and documentation are provided free of charge (gratuitous relation
 
 Wenn Sie eine Sicherheitslücke entdecken, melden Sie diese bitte vertraulich:
 
-1. **GitHub Security Advisories**: Über den Reiter [Security](https://github.com/file-bricks/ProFiler/security/advisories) im Repository -> **Report a vulnerability**.
-2. **Direktkontakt**: Falls GitHub nicht nutzbar ist, per E-Mail an `security@open-bricks.org`, `lukas@open-bricks.org` oder `support@lukasgeiger.com`.
+1. **GitHub Security Advisories**: Direkte Meldung über [Report a vulnerability](https://github.com/file-bricks/ProFiler/security/advisories/new).
+2. **Direktkontakt**: Falls GitHub nicht nutzbar ist, per E-Mail an `security@file-bricks.org`, `security@open-bricks.org`, `lukas@open-bricks.org`, `security@ellmos.ai` oder `support@lukasgeiger.com`.
 
 **Bitte eröffnen Sie keine öffentlichen Issues für Sicherheitslücken.**
 
