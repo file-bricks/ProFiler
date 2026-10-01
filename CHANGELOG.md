@@ -5,6 +5,17 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Geändert / Changed (2026-10-01 - Windows Store Readiness Audit & Packaging-Staging)
+- **Store-Readiness-Audit & Packaging-Staging (`releases/windowsstore/`):**
+  - Vollständiges Packaging-Staging unter `releases/windowsstore/` aufgebaut (`BUILD.md`, `WACK_PROTOCOL.md`, `store_settings.json`, `store_listing_de.md`, `store_listing_en.md`, `StoreLogo.png`, `screenshots/`, `test_reports/`).
+  - Partner-Center-konformes `StoreLogo.png` (50x50 PNG) generiert und synchronisiert in `store_package/ProFiler/icons/`, `store_assets/`, `assets/icons/` und `releases/windowsstore/`.
+  - Desktop-Bridge Manifest `store_package/ProFiler/AppxManifest.xml`: Properties-Logo auf `<Logo>icons\StoreLogo.png</Logo>` korrigiert; Identity `Geiger.ProFilerSuite`, Publisher `CN=52596601-BAB4-4F3F-B182-E8F3F273B202`, Version `15.0.2.0`, Capability `runFullTrust` validiert.
+  - `store_package.json`: Logo-Pfad auf `store_assets/StoreLogo.png` harmonisiert.
+  - WACK-Runner `scripts/run_windows_wack.py` implementiert; hermetischer WACK-Preflight erzeugt (`wack_preflight_20261001.xml` und `.json`: 6 PASS / 0 FAIL / 0 WARNING).
+  - Preflight-Auditor `scripts/check_store_readiness.py` auf 6 Prüfschritte ausgebaut (6/6 Checks PASS).
+  - Vertragstests in `tests/test_store_materials.py` um Staging-Vollständigkeit, WACK-Runner und StoreLogo-Prüfungen erweitert (12/12 passed, Gesamt-Suite 232/232 passed).
+  - Plan-D-Repository-Kopplung über `REPO.pointer.json` versioniert.
+
 ### Geändert / Changed (2026-09-30 - Security & License Audit)
 - **Standardisiertes 5-Felder-SBOM-Inventar & Lizenz-Compliance (`THIRD_PARTY_LICENSES.txt`):**
   - Standardisiertes 5-Felder-Schema (`Package:`, `License:`, `SPDX:`, `URL:`, `Notice:`) für alle 21 Laufzeit-, Optional-, Test- und Build-Abhängigkeiten etabliert (PySide6, shiboken6, pypdf, pikepdf, PyMuPDF, pdf2image, python-docx, pytesseract, Pillow, watchdog, reportlab, pandas, openpyxl, pytest, pluggy, iniconfig, ruff, PyInstaller, pyinstaller-hooks-contrib, altgraph, packaging).

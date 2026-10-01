@@ -1,0 +1,25 @@
+{
+  "schema": "ellmos-repo-pointer-v1",
+  "repo_id": "file-bricks/ProFiler",
+  "profile": "plan-d-code",
+  "remote": "https://github.com/file-bricks/ProFiler.git",
+  "default_branch": "master",
+  "local_locator": {
+    "slot_manifest": ".SYNC/{slot}/repos.json",
+    "repo_name": "ProFiler",
+    "windows_default": "C:\\_Local_DEV\\repos\\ProFiler"
+  },
+  "onedrive_mirror": {
+    "mode": "tracked-files-no-git",
+    "relative_root": ".",
+    "source_commit": "5a69a1c75a10f1e38d3af11f54bc97f54a4145ff",
+    "generated_at": "2026-10-01T18:12:00+02:00",
+    "delete_policy": "no-delete",
+    "migration_state": "cleanup-pending"
+  },
+  "authority": {
+    "git": "local-checkout-plus-github",
+    "planning": "onedrive",
+    "mirror": "derived-read-surface"
+  }
+}

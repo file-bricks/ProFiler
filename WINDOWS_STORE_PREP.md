@@ -1,23 +1,27 @@
 # Windows Store Prep - ProFiler Suite
 
-Stand: 2026-09-18 (Version 15.0.2.0; Initial 15.0.1.0: 2026-09-10)
+Stand: 2026-10-01 (Version 15.0.2.0; Store-Readiness Audit & Packaging-Staging abgeschlossen)
 
 ## Erledigt
 
-- `store_package.json` mit vollständigen Metadaten (`languages: ["de-DE", "en-US", "es-ES", "zh-CN", "ja-JP", "ru-RU"]`, Logo-Pfad, Publisher-ID, AGPL-Lizenz) gepflegt
-- Windows Store Packaging Staging unter `store_package/ProFiler/AppxManifest.xml` mit Identity `Geiger.ProFilerSuite`, Publisher `CN=52596601-BAB4-4F3F-B182-E8F3F273B202`, Version `15.0.2.0`, Capability `runFullTrust` und mehrsprachigen Ressourcen (`de-de`, `en-us`, `es-es`, `zh-cn`, `ja-jp`, `ru-ru`) angelegt
-- Vollständiges Set an hochauflösenden MSIX-Tile- und Logo-Assets generiert:
+- `store_package.json` mit vollständigen Metadaten (`languages: ["de-DE", "en-US", "es-ES", "zh-CN", "ja-JP", "ru-RU"]`, `logo: "store_assets/StoreLogo.png"`, Publisher-ID, AGPL-Lizenz) gepflegt
+- Windows Store Packaging Staging unter `store_package/ProFiler/AppxManifest.xml` mit Identity `Geiger.ProFilerSuite`, Publisher `CN=52596601-BAB4-4F3F-B182-E8F3F273B202`, Version `15.0.2.0`, Capability `runFullTrust`, standardkonformer Desktop-Bridge-Properties `<Logo>icons\StoreLogo.png</Logo>` und mehrsprachigen Ressourcen (`de-de`, `en-us`, `es-es`, `zh-cn`, `ja-jp`, `ru-ru`) angelegt
+- Vollständiges Set an hochauflösenden MSIX-Tile- und Logo-Assets inklusive Partner-Center-konformem `StoreLogo.png` (50x50 PNG):
   - `icon_44x44.png` (Square44x44Logo / Square71x71Logo)
-  - `icon_50x50.png` (Square50x50Logo / StoreLogo)
+  - `icon_50x50.png` (Square50x50Logo)
+  - `StoreLogo.png` (50x50 Store-Logo)
   - `icon_150x150.png` (Square150x150Logo)
   - `icon_310x150.png` (Wide310x150Logo)
   - `icon_310x310.png` (Square310x310Logo)
-  - gespiegelt in `store_package/ProFiler/icons/`, `store_assets/` und `assets/icons/`
-- Vier hochauflösende Store-Screenshots (1920x1080) unter `screenshots/store/` und `README/screenshots/store/` hinterlegt (`shot-1-library-overview.png`, `shot-2-search-ocr.png`, `shot-3-privacy-traffic-light.png`, `shot-4-pdf-tools.png`)
+  - synchronisiert in `store_package/ProFiler/icons/`, `store_assets/`, `assets/icons/` und `releases/windowsstore/`
+- Vier hochauflösende Store-Screenshots (1920x1080) unter `screenshots/store/`, `README/screenshots/store/` und `releases/windowsstore/screenshots/` hinterlegt (`shot-1-library-overview.png`, `shot-2-search-ocr.png`, `shot-3-privacy-traffic-light.png`, `shot-4-pdf-tools.png` sowie nummerierte Aliase `01-` bis `04-`)
+- Vollständiges Release-Packaging-Staging unter `releases/windowsstore/` aufgebaut (`BUILD.md`, `WACK_PROTOCOL.md`, `store_settings.json`, `store_listing_de.md`, `store_listing_en.md`, `StoreLogo.png`, `screenshots/`, `test_reports/`)
+- WACK-Runner `scripts/run_windows_wack.py` implementiert; hermetischer WACK-Preflight erzeugt und verifiziert (`wack_preflight_20261001.xml` und `.json`: 6 PASS / 0 FAIL / 0 WARNING)
 - `STORE_LISTING.md` mit bilingualen Texten (DE/EN), maximal 7 Schlagwörtern pro Sprache (Policy 10.1.3), Feature-Listen und Screenshot-Referenzen synchronisiert
-- `scripts/check_store_readiness.py` als 5-stufiges automatisiertes Readiness-Audit-Tool ausgebaut (5/5 Checks PASS)
-- Testsuiten in `tests/test_store_materials.py` und `tests/test_app_assets.py` mit 100% Abdeckung verankert; Gesamt-Testsuite mit 170 Tests (100% bestanden)
-- Store-Readiness-Audit am 2026-09-10 vollständig re-auditiert und für Welle-2-Staging bestätigt (0 Fehler, 0 Warnungen)
+- `scripts/check_store_readiness.py` als 6-stufiges automatisiertes Readiness-Audit-Tool ausgebaut (6/6 Checks PASS)
+- Testsuiten in `tests/test_store_materials.py` (12/12 Store-Vertragstests passed) und Gesamtsuite mit 232 Tests (100% grün)
+- Plan-D-Kopplung mit `REPO.pointer.json` versioniert
+- Store-Readiness-Audit am 2026-10-01 vollständig durchgeführt und für Welle-2-Staging bestätigt (0 Fehler, 0 Warnungen)
 - App-Datenpfad auf Windows für Store-/Desktop-Readiness auf `%LOCALAPPDATA%\ProFilerSuite` umgestellt
 - Legacy-Lese-Fallback für alte `~/.profiler_suite`-Dateien bleibt erhalten
 - `THIRD_PARTY_LICENSES.txt` bildet die direkten Runtime-Abhängigkeiten manifestnah ab

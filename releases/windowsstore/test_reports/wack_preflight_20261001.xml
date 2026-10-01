@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<REPORT OVERALL_RESULT="PASS" Version="10.0.22621.0">
+  <REQUIREMENT Id="1" Name="AppManifest" RESULT="PASS" />
+  <REQUIREMENT Id="2" Name="SecurityFeatures" RESULT="PASS" />
+  <REQUIREMENT Id="3" Name="SupportedAPIs" RESULT="PASS" />
+  <REQUIREMENT Id="4" Name="PackageCompliance" RESULT="PASS" />
+  <REQUIREMENT Id="5" Name="PerformanceAndResources" RESULT="PASS" />
+  <REQUIREMENT Id="6" Name="CleanUninstall" RESULT="PASS" />
+</REPORT>

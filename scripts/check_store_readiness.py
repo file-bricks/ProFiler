@@ -41,6 +41,7 @@ REQUIRED_TILE_ICONS = {
     "icon_150x150.png": (150, 150),
     "icon_310x150.png": (310, 150),
     "icon_310x310.png": (310, 310),
+    "StoreLogo.png": (50, 50),
 }
 
 REQUIRED_SCREENSHOTS = [
@@ -105,6 +106,9 @@ def check_store_package_json(results: dict) -> None:
     if not s_url.startswith("https://"):
         results["errors"].append(f"store_package.json: support_url '{s_url}' muss eine gültige HTTPS-URL sein.")
 
+    if data.get("logo") != "store_assets/StoreLogo.png":
+        results["errors"].append(f"store_package.json: logo '{data.get('logo')}' != 'store_assets/StoreLogo.png'")
+
     expected_data_dir = str(
         app_data_dir(platform="nt", env={"LOCALAPPDATA": r"C:\Users\User\AppData\Local"})
     )
@@ -146,13 +150,31 @@ def check_appx_manifest(results: dict) -> None:
     else:
         results["errors"].append("AppxManifest.xml: <Identity> Tag nicht gefunden.")
 
-    results["ok"].append("AppxManifest.xml ist syntaktisch korrekt und Identity/Version stimmen überein.")
+    props = root.find("def:Properties", ns)
+    if props is None:
+        props = root.find("{http://schemas.microsoft.com/appx/manifest/foundation/windows10}Properties")
+    if props is not None:
+        logo = props.find("def:Logo", ns)
+        if logo is None:
+            logo = props.find("{http://schemas.microsoft.com/appx/manifest/foundation/windows10}Logo")
+        if logo is not None:
+            if logo.text != r"icons\StoreLogo.png":
+                results["errors"].append(
+                    f"AppxManifest.xml: <Properties><Logo> ist '{logo.text}', erwartet 'icons\\StoreLogo.png'"
+                )
+        else:
+            results["errors"].append("AppxManifest.xml: <Properties><Logo> Tag nicht gefunden.")
+    else:
+        results["errors"].append("AppxManifest.xml: <Properties> Tag nicht gefunden.")
+
+    results["ok"].append("AppxManifest.xml ist syntaktisch korrekt, Identity/Version stimmen überein und Properties Logo ist StoreLogo.png.")
 
 
 def check_tile_icons(results: dict) -> None:
     dirs_to_check = [
         PROJECT_ROOT / "store_package" / "ProFiler" / "icons",
         PROJECT_ROOT / "store_assets",
+        PROJECT_ROOT / "releases" / "windowsstore",
     ]
 
     for d in dirs_to_check:
@@ -256,6 +278,49 @@ def check_store_screenshots(results: dict) -> None:
     results["ok"].append("Alle 4 hochauflösenden Store-Screenshots (1920x1080) sind vorhanden und valide.")
 
 
+def check_windowsstore_release_staging(results: dict) -> None:
+    rel_store = PROJECT_ROOT / "releases" / "windowsstore"
+    if not rel_store.exists():
+        results["errors"].append(f"Release-Packaging-Staging-Ordner fehlt: {rel_store}")
+        return
+
+    required_files = [
+        "BUILD.md",
+        "WACK_PROTOCOL.md",
+        "store_settings.json",
+        "store_listing_de.md",
+        "store_listing_en.md",
+        "StoreLogo.png",
+    ]
+    for rf in required_files:
+        p = rel_store / rf
+        if not p.exists() or p.stat().st_size == 0:
+            results["errors"].append(f"releases/windowsstore: Pflichtdatei fehlt oder ist leer: {rf}")
+
+    shots_dir = rel_store / "screenshots"
+    if not shots_dir.exists():
+        results["errors"].append("releases/windowsstore/screenshots/ Verzeichnis fehlt.")
+    else:
+        shot_files = list(shots_dir.glob("*.png"))
+        if len(shot_files) < 4:
+            results["errors"].append(
+                f"releases/windowsstore/screenshots/ enthält weniger als 4 Screenshots: {len(shot_files)}"
+            )
+
+    wack_script = PROJECT_ROOT / "scripts" / "run_windows_wack.py"
+    if not wack_script.exists():
+        results["errors"].append("scripts/run_windows_wack.py fehlt.")
+
+    test_reports = rel_store / "test_reports"
+    if not test_reports.exists() or not list(test_reports.glob("wack_preflight_*.xml")):
+        results["errors"].append("releases/windowsstore/test_reports: Kein WACK-Preflight-Report vorhanden.")
+
+    results["ok"].append(
+        "Release-Packaging-Staging unter releases/windowsstore/ ist vollständig bestückt "
+        "(BUILD.md, WACK_PROTOCOL.md, store_settings.json, Listings, StoreLogo.png, Screenshots, WACK-Preflight)."
+    )
+
+
 def evaluate_store_readiness() -> list[str]:
     results = {"ok": [], "errors": []}
     check_store_package_json(results)
@@ -263,6 +328,7 @@ def evaluate_store_readiness() -> list[str]:
     check_tile_icons(results)
     check_store_listing_and_docs(results)
     check_store_screenshots(results)
+    check_windowsstore_release_staging(results)
     return results["errors"]
 
 
@@ -277,6 +343,7 @@ def main() -> int:
     check_tile_icons(results)
     check_store_listing_and_docs(results)
     check_store_screenshots(results)
+    check_windowsstore_release_staging(results)
 
     for ok_msg in results["ok"]:
         print(f"  [PASS] {ok_msg}")
@@ -290,7 +357,7 @@ def main() -> int:
         return 1
 
     print("\n" + "=" * 65)
-    print("  AUDIT PASSED (5/5 Checks OK - Vorbereitung vollständig)")
+    print("  AUDIT PASSED (6/6 Checks OK - Vorbereitung vollständig)")
     print(f"  - Package Version: {EXPECTED_VERSION}")
     print(f"  - App Identity:    {EXPECTED_IDENTITY}")
     print(f"  - Publisher:       {EXPECTED_PUBLISHER}")

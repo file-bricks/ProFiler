@@ -32,6 +32,7 @@ def test_store_package_matches_project_metadata() -> None:
     assert package["version"] == f"{_read_version_from_pyproject()}.0"
     assert package["privacy_url"].endswith("/PRIVACY_POLICY.md")
     assert package["support_url"].endswith("/SUPPORT.md")
+    assert package["logo"] == "store_assets/StoreLogo.png"
     assert "de-DE" in package["languages"]
     assert "en-US" in package["languages"]
 
@@ -54,6 +55,16 @@ def test_appx_manifest_structure_and_identity() -> None:
     assert identity.get("Version") == f"{_read_version_from_pyproject()}.0"
     assert identity.get("ProcessorArchitecture") == "x64"
 
+    props = root.find("def:Properties", ns)
+    if props is None:
+        props = root.find("{http://schemas.microsoft.com/appx/manifest/foundation/windows10}Properties")
+    assert props is not None
+    logo = props.find("def:Logo", ns)
+    if logo is None:
+        logo = props.find("{http://schemas.microsoft.com/appx/manifest/foundation/windows10}Logo")
+    assert logo is not None
+    assert logo.text == r"icons\StoreLogo.png"
+
 
 def test_store_tile_icons_dimensions_and_validity() -> None:
     required_icons = {
@@ -62,11 +73,13 @@ def test_store_tile_icons_dimensions_and_validity() -> None:
         "icon_150x150.png": (150, 150),
         "icon_310x150.png": (310, 150),
         "icon_310x310.png": (310, 310),
+        "StoreLogo.png": (50, 50),
     }
 
     dirs = [
         PROJECT_ROOT / "store_package" / "ProFiler" / "icons",
         PROJECT_ROOT / "store_assets",
+        PROJECT_ROOT / "releases" / "windowsstore",
     ]
 
     for d in dirs:
@@ -160,6 +173,47 @@ def test_desktop_release_materials_point_to_local_build_flow() -> None:
     assert "LOCK*.txt" in gitignore
     assert "LOCK.permissions.json" in gitignore
     assert "*.bak" in gitignore
+
+
+def test_windowsstore_release_staging_complete() -> None:
+    rel_store = PROJECT_ROOT / "releases" / "windowsstore"
+    assert rel_store.exists()
+
+    required_files = [
+        "BUILD.md",
+        "WACK_PROTOCOL.md",
+        "store_settings.json",
+        "store_listing_de.md",
+        "store_listing_en.md",
+        "StoreLogo.png",
+    ]
+    for rf in required_files:
+        p = rel_store / rf
+        assert p.exists() and p.stat().st_size > 0
+
+    shots_dir = rel_store / "screenshots"
+    assert shots_dir.exists()
+    assert len(list(shots_dir.glob("*.png"))) >= 4
+
+    test_reports = rel_store / "test_reports"
+    assert test_reports.exists()
+    assert list(test_reports.glob("wack_preflight_*.xml"))
+    assert list(test_reports.glob("wack_preflight_*.json"))
+
+
+def test_wack_runner_and_preflight_execution() -> None:
+    wack_script = PROJECT_ROOT / "scripts" / "run_windows_wack.py"
+    assert wack_script.exists()
+
+    namespace: dict = {"__file__": str(wack_script)}
+    exec(wack_script.read_text(encoding="utf-8"), namespace)
+    xml_path, json_path = namespace["generate_preflight_report"](PROJECT_ROOT)
+    assert xml_path.exists()
+    assert json_path.exists()
+    summary = namespace["parse_wack_report"](xml_path)
+    assert summary.overall_result == "PASS"
+    assert summary.fail_count == 0
+    assert summary.pass_count == 6
 
 
 def test_store_readiness_script_reports_clean_state() -> None:
