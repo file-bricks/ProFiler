@@ -65,6 +65,8 @@ def test_writer_owns_only_its_private_temporary_file(tmp_path, monkeypatch, fail
 
 def test_concurrent_writers_have_independent_staging(tmp_path, monkeypatch):
     target = tmp_path / 'output.json'
+    foreign = tmp_path / 'output.json.tmp'
+    foreign.write_bytes(b'foreign')
     barrier = Barrier(2)
     original = module.os.replace
     sources = []
@@ -74,9 +76,20 @@ def test_concurrent_writers_have_independent_staging(tmp_path, monkeypatch):
         return original(source, destination)
     monkeypatch.setattr(module.os, 'replace', replace)
     with ThreadPoolExecutor(max_workers=2) as pool:
-        list(pool.map(lambda i: module._write_json_atomic(target, {'value': i}), [1, 2]))
+        futures = {i: pool.submit(module._write_json_atomic, target, {'value': i}) for i in (1, 2)}
+        successful = []
+        for value, future in futures.items():
+            try:
+                future.result()
+            except OSError as error:
+                # Windows may reject overlapping replaces of the same target.
+                assert os.name == 'nt' and error.winerror in (5, 32)
+            else:
+                successful.append({'value': value})
+    assert successful
     assert len(set(sources)) == 2
-    assert json.loads(target.read_text()) in ({'value': 1}, {'value': 2})
+    assert json.loads(target.read_text()) in successful
+    assert foreign.read_bytes() == b'foreign'
     assert not list(tmp_path.glob('.profiler-workspace-*.tmp'))
 
 
