@@ -83,9 +83,14 @@ Issues = "https://github.com/file-bricks/ProFiler/issues"
 Documentation = "https://github.com/file-bricks/ProFiler#readme"
 "Parent Organization" = "https://github.com/file-bricks"
 "Umbrella Ecosystem" = "https://github.com/open-bricks"
+Contributing = "https://github.com/file-bricks/ProFiler/blob/master/CONTRIBUTING.md"
 Changelog = "https://github.com/file-bricks/ProFiler/blob/master/CHANGELOG.md"
 Security = "https://github.com/file-bricks/ProFiler/blob/master/SECURITY.md"
+"Level 1 SBOM" = "https://github.com/file-bricks/ProFiler/blob/master/THIRD_PARTY_LICENSES.md"
+"Level 1 SBOM (Text)" = "https://github.com/file-bricks/ProFiler/blob/master/THIRD_PARTY_LICENSES.txt"
+"Plain-Text License" = "https://github.com/file-bricks/ProFiler/blob/master/LICENSE"
 "Third-Party Licenses" = "https://github.com/file-bricks/ProFiler/blob/master/THIRD_PARTY_LICENSES.md"
+"Third-Party Licenses (Text)" = "https://github.com/file-bricks/ProFiler/blob/master/THIRD_PARTY_LICENSES.txt"
 "Marketing Log" = "https://github.com/file-bricks/ProFiler/blob/master/MARKETING-LOG.txt"
 "LLM Ready" = "https://github.com/file-bricks/ProFiler/blob/master/llms.txt"
 Notice = "https://github.com/file-bricks/ProFiler/blob/master/NOTICE"
@@ -95,7 +100,8 @@ Notice = "https://github.com/file-bricks/ProFiler/blob/master/NOTICE"
 pythonpath = ["."]
 testpaths = ["tests", "."]
 python_files = ["test_*.py", "*_test.py"]
-addopts = "-ra -v"
+addopts = "-ra -v --basetemp=.pytest_temp"
+norecursedirs = [".pytest_temp", ".hypothesis", ".turbo", ".nyc_output", ".tox"]
 
 [tool.ruff]
 line-length = 120

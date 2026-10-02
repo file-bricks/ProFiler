@@ -40,15 +40,33 @@ LOCK.*
 *.lock
 LOCK*.txt
 LOCK.permissions.json
+LOCK.dev.*
+LOCK.antigravity.*
+LOCK.bugsearch.*
+LOCK.user.*
+LOCK.until.*
+LOCK.condition.*
 
 # ---- Synchronisations- & Host-Konflikte ----
 *-WORKSTATION-LG*
 *-ASUS-GEI*
+*-IDEAPAD*
+*-IDEAPAD-GEI*
+*-IDEAPAD-GEI.*
 *-conflict-*
 *-CONFLIT-*
 *.conflict
 *.sync-conflict-*
 *.sync-temp-*
+Desktop.ini
+desktop.ini
+ehthumbs.db
+TASKPLAN_*.md
+*-TASKPLAN*
+.pytest_temp/
+.pytest_tmp*/
+.turbo/
+.nyc_output/
 
 # ---- Persoenliche / Sensible Daten ----
 _USER/

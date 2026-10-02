@@ -147,3 +147,17 @@ Both README.md and README_de.md maintain synchronized 18-point Quick Navigation 
 - Maschinenlesbarer Kontext: `llms.txt` aktualisiert mit 210 Tests Baseline, Stand 2026-09-26, `NOTICE`-Attribution und § 521 BGB.
 - Release Notes: In `CHANGELOG.md` unter `## [Unreleased]` dokumentiert.
 - Automatisierte Vertragstests: `tests/test_metadata.py` um neue Prüfungen für kanonische `NOTICE`-Datei, 20 PEP 621 Keywords, reziproke duale Anker `sec-01`..`sec-18`, Level 1 SBOM Stand 2026-09-26 und § 521 BGB Haftungsausschluss erweitert.
+
+================================================================================
+10. PFAD A TECHNICAL HYGIENE & CI LIFECYCLE WORKFLOWS (2026-10-02)
+================================================================================
+- Date: 2026-10-02
+- Version: 15.0.2 (strikte Einhaltung von T-20260920-167562623: Versions-Freeze ohne Bump)
+- Operator: Antigravity / Gemini (via GITHUBBOT Pfad A)
+- CI/CD Lifecycle Workflow Provisioning: `.github/workflows/auto-assign.yml` (PR auto-assignment mit least-privilege permissions, timeout 5m, cancel-in-progress), `.github/workflows/label-sync.yml` (Label-Sync via EndBug/label-sync@v2, timeout 5m, cancel-in-progress) und `.github/labels.yml` mit 11 Standard-Labels gemäß GOVERNANCE.md §4.2 provisioniert.
+- Bilinguale CONTRIBUTING.md Guidelines: Vollständige Überarbeitung in EN und DE mit Spezifikation aller 10 Governance-Invarianten INV-LOCAL-01..INV-SLA-10, unprivilegiertem RunAsInvoker Modus (INV-UNPRIV-06), Plan D Local Development Workflow (C:\_Local_DEV\repos\ProFiler als Source of Truth), gesetzlichem Haftungsausschluss (§ 521 BGB Gefälligkeitsrecht) und verbindlicher 48h Security Response SLA.
+- Level 1 SBOM Text-Companion & Re-Audit Stand 2026-10-02: `THIRD_PARTY_LICENSES.txt` und `THIRD_PARTY_LICENSES.md` re-auditiert mit Bestätigung aller 10 Invarianten INV-LOCAL-01..INV-SLA-10, unprivileged RunAsInvoker Non-Elevation, Zero-Copyleft & 100% Nutzerdaten-Schutz.
+- Multi-Host Cloud-Sync- & Lock-Härtung: `.gitignore` gehärtet gegen `*-IDEAPAD*`, `*-IDEAPAD-GEI*`, `Desktop.ini`, `TASKPLAN_*.md`, `LOCK.dev.*`, `LOCK.antigravity.*`, `LOCK.bugsearch.*`, `.pytest_temp/`.
+- PEP 621 Standardisierung in `pyproject.toml`: Registrierung von `Contributing`, `Level 1 SBOM`, `Level 1 SBOM (Text)`, `Plain-Text License`, `Third-Party Licenses (Text)` unter `[project.urls]`; `[tool.pytest.ini_options]` mit `addopts = "-ra -v --basetemp=.pytest_temp"` und `norecursedirs`.
+- Dokumentations-, Badge- & RAG-Kontext-Synchronisation: `README.md`, `README_de.md`, `llms.txt`, `CHANGELOG.md` unter `## [Unreleased]` Stand 2026-10-02 synchronisiert.
+- Automatisierte Vertragstests: `tests/test_metadata.py` um 6 neue Contract-Tests für CI Lifecycle Workflows, bilinguale CONTRIBUTING.md Parität, PEP 621 URLs, Gitignore Lock-Defense, Level 1 SBOM Recency 2026-10-02 und Version-Freeze-Disziplin erweitert.

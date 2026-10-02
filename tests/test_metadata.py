@@ -182,7 +182,7 @@ def test_pytest_configuration_and_flags() -> None:
     """Verify pytest ini_options configuration has standard flags -ra -v."""
     pyproject_text = (PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8")
     assert "[tool.pytest.ini_options]" in pyproject_text
-    assert 'addopts = "-ra -v"' in pyproject_text
+    assert any(opt in pyproject_text for opt in ['addopts = "-ra -v --basetemp=.pytest_temp"', 'addopts = "-ra -v"'])
     assert 'testpaths = ["tests", "."]' in pyproject_text
 
 
@@ -464,14 +464,17 @@ def test_readme_extended_badges_parity() -> None:
 
     for doc in [readme_en, readme_de]:
         assert "RunAsInvoker" in doc
-        assert any(x in doc for x in ["210", "205%2B%20", "205+", "201%2B%20", "201+", "197%2B%20", "197+"])
+        assert any(x in doc for x in ["238", "232", "210", "205%2B%20", "205+", "201%2B%20", "201+", "197%2B%20", "197+"])
         assert "Attribution-NOTICE" in doc
-        assert "2026--09--26" in doc
+        assert any(d in doc for d in ["2026--10--02", "2026--09--26"])
+        assert "Level%201%20SBOM" in doc
 
     assert "third--party-audited-brightgreen.svg" in readme_en
     assert "marketing%20log-active-blue.svg" in readme_en
     assert "Drittanbieter-auditiert-brightgreen.svg" in readme_de
     assert "Marketing--Log-aktiv-blue.svg" in readme_de
+    assert "Contributing" in readme_en
+    assert "Mitwirken" in readme_de
 
 
 def test_notice_file_exists_and_attribution() -> None:
@@ -510,3 +513,152 @@ def test_pyproject_saturated_keywords_and_notice_url() -> None:
 
     # license-files
     assert 'license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_LICENSES.md", "THIRD_PARTY_LICENSES.txt"]' in pyproject_text
+
+
+def test_contributing_guide_present_and_bilingual_parity() -> None:
+    """Verify bilingual CONTRIBUTING.md guidelines with 10 invariants, Plan D workflow, and SLA."""
+    contrib_path = PROJECT_ROOT / "CONTRIBUTING.md"
+    assert contrib_path.is_file(), "CONTRIBUTING.md missing"
+    content = contrib_path.read_text(encoding="utf-8")
+    assert len(content) > 2000, "CONTRIBUTING.md unexpectedly brief"
+
+    # Bilingual navigation and sections
+    assert "[English](#english)" in content and "[Deutsch](#deutsch)" in content
+    assert '<a id="english"></a>' in content
+    assert '<a id="deutsch"></a>' in content
+    assert "## English" in content
+    assert "## Deutsch" in content
+
+    # All 10 Invariants present in both languages
+    for inv in [
+        "INV-LOCAL-01",
+        "INV-SESSION-02",
+        "INV-GATE-03",
+        "INV-SCHEMA-04",
+        "INV-PLACEHOLDER-05",
+        "INV-UNPRIV-06",
+        "INV-ATOMIC-07",
+        "INV-INTEGRITY-08",
+        "INV-OFFLINE-09",
+        "INV-SLA-10",
+    ]:
+        assert content.count(inv) >= 2, f"Invariant {inv} not documented in both languages in CONTRIBUTING.md"
+
+    # Plan D workflow & RunAsInvoker
+    assert r"C:\_Local_DEV\repos\ProFiler" in content
+    assert "RunAsInvoker" in content
+    assert "Source of Truth" in content
+
+    # Statutory notice & SLA
+    assert "§ 521 BGB" in content
+    assert "Zero-Copyleft" in content
+    assert "security@file-bricks.org" in content
+
+
+def test_ci_lifecycle_workflows_and_labels_present() -> None:
+    """Verify auto-assign.yml, label-sync.yml and canonical labels.yml per GOVERNANCE.md §4.2."""
+    auto_assign_path = PROJECT_ROOT / ".github" / "workflows" / "auto-assign.yml"
+    assert auto_assign_path.is_file(), "auto-assign.yml workflow missing"
+    aa_text = auto_assign_path.read_text(encoding="utf-8")
+    assert "cancel-in-progress: true" in aa_text
+    assert "timeout-minutes: 5" in aa_text
+    assert "actions/github-script@v7" in aa_text
+    assert "pull-requests: write" in aa_text
+    assert "issues: write" in aa_text
+
+    label_sync_path = PROJECT_ROOT / ".github" / "workflows" / "label-sync.yml"
+    assert label_sync_path.is_file(), "label-sync.yml workflow missing"
+    ls_text = label_sync_path.read_text(encoding="utf-8")
+    assert "cancel-in-progress: true" in ls_text
+    assert "timeout-minutes: 5" in ls_text
+    assert "EndBug/label-sync@v2" in ls_text
+    assert "config-file: .github/labels.yml" in ls_text
+
+    labels_path = PROJECT_ROOT / ".github" / "labels.yml"
+    assert labels_path.is_file(), ".github/labels.yml missing"
+    labels_text = labels_path.read_text(encoding="utf-8")
+
+    expected_labels = [
+        "bug",
+        "enhancement",
+        "good first issue",
+        "help wanted",
+        "documentation",
+        "duplicate",
+        "wontfix",
+        "priority: high",
+        "priority: low",
+        "needs-triage",
+        "stale",
+    ]
+    for label in expected_labels:
+        assert f"name: {label}" in labels_text or f"name: '{label}'" in labels_text, f"Missing standard label: {label}"
+
+
+def test_pyproject_pep621_contributing_and_sbom_urls() -> None:
+    """Verify pyproject.toml registers Contributing, Level 1 SBOM endpoints, and basetemp."""
+    pyproj_path = PROJECT_ROOT / "pyproject.toml"
+    assert pyproj_path.is_file(), "pyproject.toml missing"
+    content = pyproj_path.read_text(encoding="utf-8")
+
+    assert 'Contributing = "https://github.com/file-bricks/ProFiler/blob/master/CONTRIBUTING.md"' in content
+    assert '"Level 1 SBOM" = "https://github.com/file-bricks/ProFiler/blob/master/THIRD_PARTY_LICENSES.md"' in content
+    assert '"Level 1 SBOM (Text)" = "https://github.com/file-bricks/ProFiler/blob/master/THIRD_PARTY_LICENSES.txt"' in content
+    assert '"Plain-Text License" = "https://github.com/file-bricks/ProFiler/blob/master/LICENSE"' in content
+    assert '"Third-Party Licenses (Text)" = "https://github.com/file-bricks/ProFiler/blob/master/THIRD_PARTY_LICENSES.txt"' in content
+    assert "--basetemp=.pytest_temp" in content
+    assert '".pytest_temp"' in content
+
+
+def test_gitignore_multihost_lock_defense() -> None:
+    """Verify .gitignore contains multi-host, lock defense, and temporary cache patterns."""
+    gi_path = PROJECT_ROOT / ".gitignore"
+    assert gi_path.is_file(), ".gitignore missing"
+    content = gi_path.read_text(encoding="utf-8")
+
+    assert "*-IDEAPAD*" in content
+    assert "*-IDEAPAD-GEI*" in content
+    assert "Desktop.ini" in content
+    assert "TASKPLAN_*.md" in content
+    assert "*-TASKPLAN*" in content
+    assert "LOCK.dev.*" in content
+    assert "LOCK.antigravity.*" in content
+    assert "LOCK.bugsearch.*" in content
+    assert ".pytest_temp/" in content
+
+
+def test_version_freeze_discipline_15_0_2() -> None:
+    """Verify strict adherence to version freeze discipline per T-20260920-167562623."""
+    version_src = (PROJECT_ROOT / "version.py").read_text(encoding="utf-8")
+    assert 'APP_VERSION = "15.0.2"' in version_src, "version.py version bump detected"
+
+    pyproject_text = (PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    assert 'version = "15.0.2"' in pyproject_text, "pyproject.toml version bump detected"
+
+    store_pkg = json.loads((PROJECT_ROOT / "store_package.json").read_text(encoding="utf-8"))
+    assert store_pkg["version"] == "15.0.2.0", "store_package.json version bump detected"
+
+    manifest_text = (PROJECT_ROOT / "store_package" / "ProFiler" / "AppxManifest.xml").read_text(encoding="utf-8")
+    assert 'Version="15.0.2.0"' in manifest_text, "AppxManifest.xml version bump detected"
+
+    changelog_text = (PROJECT_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    assert "## [Unreleased]" in changelog_text, "CHANGELOG.md missing Unreleased section"
+
+
+def test_third_party_licenses_plain_text_companion_and_audit_currency() -> None:
+    """Verify THIRD_PARTY_LICENSES.txt companion currency and statutory protections."""
+    txt_path = PROJECT_ROOT / "THIRD_PARTY_LICENSES.txt"
+    assert txt_path.is_file(), "THIRD_PARTY_LICENSES.txt missing"
+    text = txt_path.read_text(encoding="utf-8")
+
+    assert "Stand: 2026-10-02" in text
+    assert "§ 521 BGB" in text
+    assert "48h" in text
+    assert "RunAsInvoker" in text
+    assert "INV-LOCAL-01" in text
+    assert "INV-SLA-10" in text
+
+    md_path = PROJECT_ROOT / "THIRD_PARTY_LICENSES.md"
+    assert md_path.is_file(), "THIRD_PARTY_LICENSES.md missing"
+    md_text = md_path.read_text(encoding="utf-8")
+    assert "2026-10-02" in md_text

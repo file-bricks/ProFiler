@@ -8,10 +8,12 @@
 [![Org: file-bricks](https://img.shields.io/badge/Org-file--bricks-blue)](https://github.com/file-bricks)
 [![Lizenz: AGPL v3](https://img.shields.io/badge/Lizenz-AGPL%20v3-blue.svg)](LICENSE)
 [![CI: Plattform-Smoke](https://img.shields.io/badge/CI-Plattform--Smoke-brightgreen.svg)](https://github.com/file-bricks/ProFiler/actions)
-[![Tests: 210 bestanden](https://img.shields.io/badge/Tests-210%20bestanden%20%7C%20100%25-brightgreen.svg)](CHANGELOG.md)
+[![Tests: 238 bestanden](https://img.shields.io/badge/Tests-238%20bestanden%20%7C%20100%25-brightgreen.svg)](CHANGELOG.md)
 [![Code-Style: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+[![Mitwirken: Leitfaden](https://img.shields.io/badge/Mitwirken-Leitfaden-blue.svg)](CONTRIBUTING.md)
 [![Sicherheits-SLA: 48h Antwort / 5d Triage](https://img.shields.io/badge/Sicherheits--SLA-48h%20Antwort%20%2F%205d%20Triage-blue.svg)](SECURITY.md)
 [![Sicherheit: RunAsInvoker](https://img.shields.io/badge/Sicherheit-RunAsInvoker-green.svg)](SECURITY.md)
+[![Level 1 SBOM: Plain--Text auditiert](https://img.shields.io/badge/Level%201%20SBOM-Plain--Text%20auditiert-brightgreen.svg)](THIRD_PARTY_LICENSES.txt)
 [![Drittanbieter: Auditiert](https://img.shields.io/badge/Drittanbieter-auditiert-brightgreen.svg)](THIRD_PARTY_LICENSES.md)
 [![Marketing-Log: Aktiv](https://img.shields.io/badge/Marketing--Log-aktiv-blue.svg)](MARKETING-LOG.txt)
 [![Attribution: NOTICE](https://img.shields.io/badge/Attribution-NOTICE-blue.svg)](NOTICE)
@@ -21,8 +23,8 @@
 [![Datenschutz: 100% Local-First](https://img.shields.io/badge/Datenschutz-100%25%20Local--First-success.svg)]()
 [![Ökosystem: open-bricks](https://img.shields.io/badge/%C3%96kosystem-open--bricks-blueviolet)](https://github.com/open-bricks)
 [![LLM-Kontext: llms.txt](https://img.shields.io/badge/LLM--Kontext-llms.txt-orange)](llms.txt)
-[![Zuletzt geprüft: 2026-09-26](https://img.shields.io/badge/Zuletzt%20gepr%C3%BCft-2026--09--26-blue.svg)](CHANGELOG.md)
-[![Verifiziert: 2026-09-26](https://img.shields.io/badge/Verifiziert-2026--09--26-success.svg)](CHANGELOG.md)
+[![Zuletzt geprüft: 2026-10-02](https://img.shields.io/badge/Zuletzt%20gepr%C3%BCft-2026--10--02-blue.svg)](CHANGELOG.md)
+[![Verifiziert: 2026-10-02](https://img.shields.io/badge/Verifiziert-2026--10--02-success.svg)](CHANGELOG.md)
 
 > [!NOTE]
 > KI-Agenten und LLM-Tools, die dieses Repository analysieren, finden in [`llms.txt`](llms.txt) Details zur Architektur, zu primären Features, Vertragsschnittstellen und Verifikationsbefehlen.

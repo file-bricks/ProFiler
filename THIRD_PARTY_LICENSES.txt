@@ -1,7 +1,7 @@
 ===============================================================================
 THIRD PARTY LICENSES — ProFiler Suite
 ===============================================================================
-Stand: 2026-09-30 (Erstfassung: 2026-09-07)
+Stand: 2026-10-02 (Re-Audit; Stand: 2026-09-30; Erstfassung: 2026-09-07)
 Produkt: ProFiler Suite (Version 15.0.2)
 Lizenztyp: Open Source (GNU Affero General Public License v3 / AGPL-3.0-only)
 
@@ -175,6 +175,7 @@ Notice: Externe Dienstprogramme (pdftoppm) zur PDF-Rasterisierung für pdf2image
    Die Gesamtapplikation ProFiler Suite steht unter der GNU Affero General
    Public License v3 (AGPL-3.0-only). Durch die Nutzung von PyMuPDF (AGPLv3+)
    ist die Verbreitung von kompilierten Binärpaketen an die AGPL gebunden.
+   Kanonische Attribution siehe NOTICE; Richtlinien siehe CONTRIBUTING.md.
 
 2. Zero-Copyleft auf Nutzerdaten (INV-LOCAL-01 bis INV-SLA-10):
    Das Verarbeiten, Indizieren, Durchsuchen, Schwärzen oder Extrahieren von
@@ -187,3 +188,13 @@ Notice: Externe Dienstprogramme (pdftoppm) zur PDF-Rasterisierung für pdf2image
    PySide6 wird ausschließlich dynamisch über vorcompilierte Standard-Wheels
    eingebunden (LGPL-3.0 § 4). Die Modifikation von ProFiler-Quellcode
    berührt nicht die Unabhängigkeit der LGPL-Bibliotheken.
+
+4. Unprivilegierter Betrieb (RunAsInvoker, INV-UNPRIV-06):
+   Die Anwendung führt keinerlei administrative Elevation durch und benötigt
+   weder UAC-Rechte noch Root-Privilegien.
+
+5. Gesetzlicher Haftungsausschluss (§ 521 BGB Gefälligkeitsrecht) & 48h SLA (INV-SLA-10):
+   Die unentgeltliche Bereitstellung erfolgt unter der gesetzlichen Haftungs-
+   beschränkung nach § 521 BGB (Haftung nur für Vorsatz und grobe Fahrlässigkeit).
+   Sicherheitsmeldungen werden unter verbindlicher 48h Response SLA bearbeitet
+   (security@file-bricks.org, security@open-bricks.org, security@ellmos.ai).

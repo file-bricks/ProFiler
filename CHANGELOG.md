@@ -5,6 +5,25 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Geändert / Changed (2026-10-02 - Pfad A Technical Hygiene & CI Lifecycle Workflows)
+- **CI/CD Lifecycle Workflows & Label Governance (`.github/`):**
+  - PR-Auto-Assignment Workflow `.github/workflows/auto-assign.yml` mit least-privilege Rechten (`issues: write`, `pull-requests: write`), 5 Minuten Timeout und Concurrency-Schutz (`cancel-in-progress: true`) provisioniert.
+  - Label-Synchronisation `.github/workflows/label-sync.yml` via EndBug/label-sync@v2 mit `cancel-in-progress: true` und `.github/labels.yml` (11 Standard-Labels nach GOVERNANCE.md §4.2) bereitgestellt.
+- **Bilinguale CONTRIBUTING.md Guidelines (`CONTRIBUTING.md`):**
+  - Vollständige Entwicklerrichtlinien in Deutsch und Englisch verfasst mit Spezifikation aller 10 Governance- & Laufzeit-Invarianten (INV-LOCAL-01 bis INV-SLA-10), unprivilegiertem `RunAsInvoker`-Modus (INV-UNPRIV-06), Plan D Local Development Workflow (`C:\_Local_DEV\repos\ProFiler` als Source of Truth), gesetzlichem Haftungsausschluss (§ 521 BGB Gefälligkeitsrecht), Zero-Copyleft-Garantie auf Nutzerdaten und verbindlicher 48h Security Response SLA.
+- **Level 1 SBOM Text-Companion & Re-Audit Stand 2026-10-02 (`THIRD_PARTY_LICENSES.txt` / `THIRD_PARTY_LICENSES.md`):**
+  - Standardisiertes 5-Felder-SBOM-Inventar auf Stand 2026-10-02 re-auditiert mit Bestätigung aller 10 Invarianten, unprivileged RunAsInvoker Non-Elevation, Zero-Copyleft und dynamischer Qt/PySide6-Bindung (LGPL-3.0 § 4).
+  - Querverweise auf NOTICE, LICENSE und CONTRIBUTING.md harmonisiert.
+- **Multi-Host Cloud-Sync-, Lock- und Cache-Härtung (`.gitignore`):**
+  - Schutzmuster für `*-IDEAPAD*`, `*-IDEAPAD-GEI*`, `Desktop.ini`, `TASKPLAN_*.md`, `LOCK.dev.*`, `LOCK.antigravity.*`, `LOCK.bugsearch.*`, `.pytest_temp/`, `.turbo/` und `.nyc_output/` nachgerüstet.
+- **PEP 621 Standardisierung & Testkonfiguration (`pyproject.toml`):**
+  - Registrierung von `Contributing`, `Level 1 SBOM`, `Level 1 SBOM (Text)`, `Plain-Text License` und `Third-Party Licenses (Text)` unter `[project.urls]`.
+  - `[tool.pytest.ini_options]` um `addopts = "-ra -v --basetemp=.pytest_temp"` und `norecursedirs` gehärtet.
+- **Dokumentations-, Badge- & Kontext-Synchronisation (`README.md`, `README_de.md`, `llms.txt`):**
+  - Badges und Metadaten synchronisiert; Verifikationsstempel auf Stand 2026-10-02 aktualisiert; `llms.txt` um neue Workflows, SBOM-Begleitdatei und Testbaseline erweitert.
+- **Automatisierte Vertragstests (`tests/test_metadata.py`):**
+  - 6 neue hermetische Vertragstests für CI Lifecycle Workflows, bilinguale CONTRIBUTING.md Parität, PEP 621 URLs, Gitignore Lock-Defense, Level 1 SBOM Recency 2026-10-02 und Version-Freeze-Disziplin (15.0.2) implementiert.
+
 ### Geändert / Changed (2026-10-01 - Windows Store Readiness Audit & Packaging-Staging)
 - **Store-Readiness-Audit & Packaging-Staging (`releases/windowsstore/`):**
   - Vollständiges Packaging-Staging unter `releases/windowsstore/` aufgebaut (`BUILD.md`, `WACK_PROTOCOL.md`, `store_settings.json`, `store_listing_de.md`, `store_listing_en.md`, `StoreLogo.png`, `screenshots/`, `test_reports/`).

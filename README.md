@@ -8,10 +8,12 @@
 [![Org: file-bricks](https://img.shields.io/badge/Org-file--bricks-blue)](https://github.com/file-bricks)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 [![CI: Platform Smoke](https://img.shields.io/badge/CI-Platform%20Smoke-brightgreen.svg)](https://github.com/file-bricks/ProFiler/actions)
-[![Tests: 210 passed](https://img.shields.io/badge/tests-210%20passed%20%7C%20100%25-brightgreen.svg)](CHANGELOG.md)
+[![Tests: 238 passed](https://img.shields.io/badge/tests-238%20passed%20%7C%20100%25-brightgreen.svg)](CHANGELOG.md)
 [![Code Style: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+[![Contributing: Guide](https://img.shields.io/badge/Contributing-Guide-blue.svg)](CONTRIBUTING.md)
 [![Security SLA: 48h Response / 5d Triage](https://img.shields.io/badge/Security%20SLA-48h%20Response%20%2F%205d%20Triage-blue.svg)](SECURITY.md)
 [![Security: RunAsInvoker](https://img.shields.io/badge/security-RunAsInvoker-green.svg)](SECURITY.md)
+[![Level 1 SBOM: Plain--Text Audited](https://img.shields.io/badge/Level%201%20SBOM-Plain--Text%20Audited-brightgreen.svg)](THIRD_PARTY_LICENSES.txt)
 [![Third-Party: Audited](https://img.shields.io/badge/third--party-audited-brightgreen.svg)](THIRD_PARTY_LICENSES.md)
 [![Marketing Log: Active](https://img.shields.io/badge/marketing%20log-active-blue.svg)](MARKETING-LOG.txt)
 [![Attribution: NOTICE](https://img.shields.io/badge/Attribution-NOTICE-blue.svg)](NOTICE)
@@ -21,8 +23,8 @@
 [![Privacy: 100% Local-First](https://img.shields.io/badge/privacy-100%25%20Local--First-success.svg)]()
 [![Ecosystem: open-bricks](https://img.shields.io/badge/ecosystem-open--bricks-blueviolet)](https://github.com/open-bricks)
 [![LLM Context: llms.txt](https://img.shields.io/badge/LLM%20Context-llms.txt-orange)](llms.txt)
-[![Last Checked: 2026-09-26](https://img.shields.io/badge/Last--Checked-2026--09--26-blue.svg)](CHANGELOG.md)
-[![Verified: 2026-09-26](https://img.shields.io/badge/Verified-2026--09--26-success.svg)](CHANGELOG.md)
+[![Last Checked: 2026-10-02](https://img.shields.io/badge/Last--Checked-2026--10--02-blue.svg)](CHANGELOG.md)
+[![Verified: 2026-10-02](https://img.shields.io/badge/Verified-2026--10--02-success.svg)](CHANGELOG.md)
 
 > [!NOTE]
 > AI agents and LLM tools reading this repository should refer to [`llms.txt`](llms.txt) for codebase architecture, primary features, contract boundaries, and verification commands.
