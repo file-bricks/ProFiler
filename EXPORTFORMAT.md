@@ -15,6 +15,33 @@ Stand: 2026-07-22
 - Datenschutzampel nur als Regel-/Status-Zusammenfassung
 - sichere Einstellungen dürfen importiert werden; lokale Pfade bewusst nicht
 
+## Sichere Dateiausgabe
+
+Export und Import-Vorschau verwenden exklusiv erzeugte eigene temporäre Dateien
+im Zielverzeichnis. Erst nach vollständigem Schreiben, Synchronisieren und
+Schließen wird das Ziel ersetzt. Eine vorhandene Ausgabe bleibt bei Fehlern
+erhalten; fremde temporäre Dateien werden weder überschrieben noch entfernt.
+Gleichzeitige Schreibvorgänge besitzen getrennte temporäre Dateien; der letzte
+erfolgreiche vollständige Schreibvorgang bestimmt die Ausgabe.
+
+Der Export schützt die bekannten Indexdatenbanken, deren Standardbegleitdateien
+`-wal`, `-shm`, `-journal` und bekannte Konfigurationspfade einschließlich der
+verwendeten Legacy-Pfade und konkreter Managerpfade. Pfad- und Dateialiase werden
+vor dem Schreiben und vor der Veröffentlichung geprüft. Mehrdeutige Windows-
+Dateinamen mit abschließendem Punkt oder Leerzeichen werden abgewiesen.
+
+Eine Import-Vorschau darf die ursprüngliche Austauschdatei oder bekannte
+Einstellungsdateien nicht ersetzen. Die Vorschau wird vollständig gespeichert,
+bevor sichere Einstellungen übernommen werden. Ein Vorschaufehler verändert
+deshalb keine Einstellungen. Ein anschließender Fehler beim Speichern der
+Einstellungen kann weiterhin einen Teilimport hinterlassen: mehrere einzelne
+Einstellungsschreibvorgänge und Vorschau bilden keine gemeinsame Transaktion.
+
+Der Schutz umfasst keine beliebigen Rohdokumente, unbekannten Indexdatenbanken
+des Importaufrufs, besonderen VFS-/Superjournal-Dateien, externen Dateisystemrennen
+nach letzter Prüfung oder Stromausfall-Dauerhaftigkeit. Andere Persistenzhelfer,
+insbesondere der separate Settings-Schreiber, sind damit nicht freigegeben.
+
 ## Aktuelle Struktur
 
 ```json
