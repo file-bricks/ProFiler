@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 import sqlite3
+import tempfile
 from collections import Counter
 from collections.abc import Iterable
 from datetime import datetime, timezone
@@ -110,6 +112,7 @@ def export_workspace(
     privacy_config: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Write the redacted workspace export and return the payload."""
+    protected = _workspace_source_paths(search_manager, settings_manager, connection_manager)
     payload = build_workspace_export(
         search_manager,
         settings_manager,
@@ -117,7 +120,8 @@ def export_workspace(
         exported_at=exported_at,
         privacy_config=privacy_config,
     )
-    _write_json_atomic(Path(output_path), payload)
+    _write_json_atomic(Path(output_path), payload, protected_paths=protected,
+                       refresh_paths=lambda: _workspace_source_paths(search_manager, settings_manager, connection_manager))
     return payload
 
 
@@ -166,7 +170,6 @@ def import_workspace(
 ) -> dict[str, Any]:
     """Load a workspace export, apply safe settings, and persist a local preview."""
     payload = load_workspace(input_path)
-    applied_settings = _apply_imported_settings(settings_manager, payload.get("settings", {}))
 
     imported_at = imported_at or datetime.now(timezone.utc)
     target_path = Path(preview_path) if preview_path else IMPORTED_WORKSPACE_PATH
@@ -175,7 +178,11 @@ def import_workspace(
         "source_filename": Path(input_path).name,
         "workspace": payload,
     }
-    _write_json_atomic(target_path, preview_record)
+    protected = _configuration_paths(settings_manager)
+    protected.add(Path(input_path).absolute())
+    _write_json_atomic(target_path, preview_record, protected_paths=protected,
+                       refresh_paths=lambda: _configuration_paths(settings_manager))
+    applied_settings = _apply_imported_settings(settings_manager, payload.get("settings", {}))
 
     workspace = payload.get("workspace", {})
     return {
@@ -555,14 +562,79 @@ def _safe_identifier(value: Any, fallback: str) -> str:
     return candidate if safe else fallback
 
 
-def _write_json_atomic(target: Path, payload: dict[str, Any]) -> None:
+def _configuration_paths(*managers: Any) -> set[Path]:
+    names = ("profiler_settings.json", "search_config.json", "connections.json",
+             "profiler_config.json", "datenschutzampel.json")
+    paths = {Path(PRIVACY_CONFIG_PATH)}
+    for name in names:
+        paths.update((config_path(name), resolve_read_path(name)))
+    for manager in managers:
+        value = getattr(manager, "path", None)
+        if value:
+            paths.add(Path(value))
+    return paths
+
+
+def _workspace_source_paths(search_manager: Any, settings_manager: Any,
+                            connection_manager: Any) -> set[Path]:
+    databases = list(getattr(search_manager, "dbs", []) or [])
+    databases.extend(item.get("db_path") for item in _list_connections(connection_manager))
+    paths = _configuration_paths(search_manager, settings_manager, connection_manager)
+    paths.add(Path(IMPORTED_WORKSPACE_PATH))
+    for name in databases:
+        if not name or str(name) == ":memory:":
+            continue
+        for path in (Path(name).absolute(), Path(name).resolve()):
+            paths.add(path)
+            paths.update(Path(str(path) + suffix) for suffix in ("-wal", "-shm", "-journal"))
+    return {Path(os.path.abspath(path)) for path in paths}
+
+
+def _check_workspace_target(target: Path, protected_paths: Iterable[Path]) -> None:
+    lexical = Path(os.path.abspath(target))
+    if os.name == "nt" and any(
+        part not in (".", "..") and part.endswith((" ", ".")) for part in target.parts
+    ):
+        raise WorkspaceFormatError("Das Ziel enthält einen mehrdeutigen Windows-Dateinamen.")
+    resolved = target.resolve()
+    for protected in protected_paths:
+        protected = Path(protected)
+        if lexical == Path(os.path.abspath(protected)) or resolved == protected.resolve():
+            raise WorkspaceFormatError("Das Ziel ist eine geschützte Quelldatei. Bitte einen anderen Pfad wählen.")
+        try:
+            identical = os.path.samefile(target, protected)
+        except FileNotFoundError:
+            identical = False
+        if identical:
+            raise WorkspaceFormatError("Das Ziel ist eine geschützte Quelldatei. Bitte einen anderen Pfad wählen.")
+
+
+def _write_json_atomic(target: Path, payload: dict[str, Any],
+                       protected_paths: Iterable[Path] = (), refresh_paths=None) -> None:
+    target = target.absolute()
+    protected = set(protected_paths)
+    _check_workspace_target(target, protected)
+    serialized = json.dumps(payload, indent=2, ensure_ascii=False) + "\n"
     target.parent.mkdir(parents=True, exist_ok=True)
-    temporary = target.with_suffix(target.suffix + ".tmp")
+    temporary = None
     try:
-        temporary.write_text(
-            json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
-            encoding="utf-8",
-        )
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=target.parent,
+                                         prefix=".profiler-workspace-", suffix=".tmp",
+                                         delete=False) as handle:
+            temporary = Path(handle.name)
+            handle.write(serialized)
+            handle.flush()
+            os.fsync(handle.fileno())
+        if refresh_paths is not None:
+            protected.update(refresh_paths())
+        _check_workspace_target(target, protected)
         os.replace(temporary, target)
+        temporary = None
     finally:
-        temporary.unlink(missing_ok=True)
+        if temporary is not None:
+            try:
+                temporary.unlink()
+            except FileNotFoundError:
+                pass
+            except OSError:
+                logging.getLogger(__name__).warning("Eigene temporäre Workspace-Datei konnte nicht entfernt werden: %s", temporary, exc_info=True)
