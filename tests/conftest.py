@@ -60,6 +60,11 @@ _DIRS = {
     "XDG_CACHE_HOME": _SANDBOX / "xdg-cache",
     "XDG_DATA_HOME": _SANDBOX / "xdg-data",
     "PROFILER_QT_RUNTIME": _SANDBOX / "qt-runtime",
+    "PROFILER_QT_APP_CONFIG": _SANDBOX / "qt-app-config",
+    "PROFILER_QT_APP_DATA": _SANDBOX / "qt-app-data",
+    "PROFILER_QT_CACHE": _SANDBOX / "qt-cache",
+    "PROFILER_QT_GENERIC_CACHE": _SANDBOX / "qt-generic-cache",
+    "PROFILER_QT_GENERIC_DATA": _SANDBOX / "qt-generic-data",
 }
 for _name, _path in _DIRS.items():
     _path.mkdir(parents=True, exist_ok=True)
@@ -75,6 +80,24 @@ sys.dont_write_bytecode = True
 tempfile.tempdir = str(_DIRS["TEMP"])
 
 
+def _is_os_null_device(value: object) -> bool:
+    """Recognize only the platform null device for an explicit open sink."""
+    if isinstance(value, int):
+        return False
+    try:
+        raw_path = os.fsdecode(os.fspath(value))
+    except (TypeError, ValueError, OSError):
+        return False
+    if os.path.normcase(os.path.normpath(raw_path)) == os.path.normcase(
+        os.path.normpath(os.devnull)
+    ):
+        return True
+    return os.name == "nt" and raw_path.replace("/", "\\").casefold() in {
+        "nul:",
+        "\\\\.\\nul",
+    }
+
+
 def _path_is_sandboxed(value: object) -> bool:
     if isinstance(value, int):
         return True
@@ -82,9 +105,6 @@ def _path_is_sandboxed(value: object) -> bool:
         raw_path = os.fsdecode(os.fspath(value))
     except (TypeError, ValueError, OSError):
         return False
-    # Pytest's Windows logging handler opens the NUL device as a sink.
-    if raw_path.replace("/", "\\").casefold() in {"nul", "nul:", "\\\\.\\nul"}:
-        return True
     path = Path(raw_path)
     return _is_within(path, _SANDBOX)
 
@@ -160,7 +180,7 @@ def _sandbox_audit(event: str, args: tuple[object, ...]) -> None:
         flags = args[2] if len(args) > 2 else 0
         writes = isinstance(mode, str) and any(char in mode for char in "wax+")
         writes = writes or (isinstance(flags, int) and bool(flags & _WRITE_FLAGS))
-        if writes and not _path_is_sandboxed(path):
+        if writes and not (_path_is_sandboxed(path) or _is_os_null_device(path)):
             raise PermissionError(f"test sandbox blocked file write outside sandbox: {path!s}")
         if not writes and _path_is_protected_profile(path):
             raise PermissionError("test sandbox blocked read from a real ProFiler config folder")
@@ -187,6 +207,32 @@ def _sandbox_audit(event: str, args: tuple[object, ...]) -> None:
 sys.addaudithook(_sandbox_audit)
 
 
+def _qt_sandbox_path_map(QStandardPaths):
+    paths = {
+        QStandardPaths.AppConfigLocation: _DIRS["PROFILER_QT_APP_CONFIG"],
+        QStandardPaths.AppDataLocation: _DIRS["PROFILER_QT_APP_DATA"],
+        QStandardPaths.CacheLocation: _DIRS["PROFILER_QT_CACHE"],
+        QStandardPaths.GenericCacheLocation: _DIRS["PROFILER_QT_GENERIC_CACHE"],
+        QStandardPaths.GenericDataLocation: _DIRS["PROFILER_QT_GENERIC_DATA"],
+        QStandardPaths.HomeLocation: _DIRS["HOME"],
+        QStandardPaths.RuntimeLocation: _DIRS["PROFILER_QT_RUNTIME"],
+        QStandardPaths.TempLocation: _DIRS["TEMP"],
+    }
+    if hasattr(QStandardPaths, "AppLocalDataLocation"):
+        paths[QStandardPaths.AppLocalDataLocation] = _DIRS["PROFILER_QT_APP_DATA"]
+    return paths
+
+
+def _redirect_qt_location(location, sandbox_paths, original):
+    sandbox_path = sandbox_paths.get(location)
+    return str(sandbox_path) if sandbox_path is not None else original(location)
+
+
+def _redirect_qt_locations(location, sandbox_paths, original):
+    sandbox_path = sandbox_paths.get(location)
+    return [str(sandbox_path)] if sandbox_path is not None else original(location)
+
+
 def pytest_configure(config):
     """Redirect Qt paths and guard process-launch APIs when Qt is available."""
     try:
@@ -198,20 +244,17 @@ def pytest_configure(config):
     QStandardPaths.setTestModeEnabled(True)
     _original_writable_location = QStandardPaths.writableLocation
     _original_standard_locations = QStandardPaths.standardLocations
+    _qt_sandbox_paths = _qt_sandbox_path_map(QStandardPaths)
 
     def _sandbox_qt_location(location):
-        if location == QStandardPaths.HomeLocation:
-            return str(_DIRS["HOME"])
-        if location == QStandardPaths.RuntimeLocation:
-            return str(_DIRS["PROFILER_QT_RUNTIME"])
-        return _original_writable_location(location)
+        return _redirect_qt_location(
+            location, _qt_sandbox_paths, _original_writable_location
+        )
 
     def _sandbox_qt_locations(location):
-        if location == QStandardPaths.HomeLocation:
-            return [str(_DIRS["HOME"])]
-        if location == QStandardPaths.RuntimeLocation:
-            return [str(_DIRS["PROFILER_QT_RUNTIME"])]
-        return _original_standard_locations(location)
+        return _redirect_qt_locations(
+            location, _qt_sandbox_paths, _original_standard_locations
+        )
 
     QStandardPaths.writableLocation = staticmethod(_sandbox_qt_location)
     QStandardPaths.standardLocations = staticmethod(_sandbox_qt_locations)
@@ -223,6 +266,7 @@ def pytest_configure(config):
         QStandardPaths.GenericDataLocation,
         QStandardPaths.HomeLocation,
         QStandardPaths.TempLocation,
+        QStandardPaths.RuntimeLocation,
     )
     for _location in _qt_locations:
         _qt_path = QStandardPaths.writableLocation(_location)

@@ -142,6 +142,73 @@ class TestD5FileActionControlFlow(unittest.TestCase):
         self.assertNotIn("result['id']", block)
         self.assertNotIn("result['db']", block)
 
+
+class TestCrossPlatformTestSandbox(unittest.TestCase):
+    """The pytest sandbox narrowly permits null-sink opens and redirects Qt paths."""
+
+    def test_null_sink_open_is_allowed_but_device_mutations_remain_blocked(self):
+        from conftest import _REPO_ROOT, _SANDBOX, _path_is_sandboxed, _sandbox_audit
+
+        self.assertFalse(_path_is_sandboxed(os.devnull))
+        self.assertTrue(_path_is_sandboxed(_SANDBOX / "expected-write.txt"))
+        self.assertFalse(_path_is_sandboxed(_REPO_ROOT / "README.md"))
+        _sandbox_audit("open", (os.devnull, "w", os.O_WRONLY))
+        outside_probe = _REPO_ROOT.parent / "dev-other"
+        with self.assertRaises(PermissionError):
+            _sandbox_audit("open", (outside_probe, "w", os.O_WRONLY | os.O_CREAT))
+        with self.assertRaises(PermissionError):
+            _sandbox_audit("os.remove", (os.devnull,))
+        with self.assertRaises(PermissionError):
+            _sandbox_audit("os.chmod", (os.devnull, 0o600))
+
+    def test_qt_writable_and_search_locations_stay_in_task_sandbox(self):
+        from conftest import (
+            _REPO_ROOT,
+            _SANDBOX,
+            _qt_sandbox_path_map,
+            _redirect_qt_location,
+            _redirect_qt_locations,
+        )
+        from PySide6.QtCore import QStandardPaths
+
+        outside_result = str(_REPO_ROOT.parent / "runner-preferences")
+        fake_original = lambda _location: outside_result
+        sandbox_paths = _qt_sandbox_path_map(QStandardPaths)
+        config_path = _SANDBOX / "qt-app-config"
+        self.assertEqual(
+            _redirect_qt_location(
+                QStandardPaths.AppConfigLocation, sandbox_paths, fake_original
+            ),
+            str(config_path),
+        )
+        self.assertEqual(
+            _redirect_qt_locations(
+                QStandardPaths.AppConfigLocation, sandbox_paths, fake_original
+            ),
+            [str(config_path)],
+        )
+
+        locations = (
+            QStandardPaths.AppConfigLocation,
+            QStandardPaths.AppDataLocation,
+            QStandardPaths.CacheLocation,
+            QStandardPaths.GenericCacheLocation,
+            QStandardPaths.GenericDataLocation,
+            QStandardPaths.HomeLocation,
+            QStandardPaths.RuntimeLocation,
+            QStandardPaths.TempLocation,
+        )
+        sandbox = _SANDBOX.resolve()
+        for location in locations:
+            writable = Path(QStandardPaths.writableLocation(location)).resolve()
+            self.assertTrue(writable.is_relative_to(sandbox), str(writable))
+            standard = QStandardPaths.standardLocations(location)
+            self.assertTrue(standard)
+            self.assertTrue(
+                all(Path(path).resolve().is_relative_to(sandbox) for path in standard),
+                f"{location}: {standard}",
+            )
+
 class TestBugsweepDatenschutzampelToolLinks(unittest.TestCase):
     """BUGSWEEP-2026-09-13: _build_tool_links muss privacy_data und resolve_read_path unterstützen."""
 
