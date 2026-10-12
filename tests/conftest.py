@@ -98,16 +98,104 @@ def _is_os_null_device(value: object) -> bool:
     }
 
 
-def _path_is_sandboxed(value: object) -> bool:
-    if isinstance(value, int):
-        return True
+def _path_from_file_descriptor(fd: object, *, require_directory: bool = False) -> Path | None:
+    """Resolve an open descriptor only when the OS can prove its current path."""
+    if not isinstance(fd, int) or isinstance(fd, bool) or fd < 0:
+        return None
+    try:
+        descriptor_stat = os.fstat(fd)
+    except OSError:
+        return None
+
+    if sys.platform.startswith("linux"):
+        try:
+            raw_path = os.readlink(f"/proc/self/fd/{fd}")
+        except OSError:
+            return None
+        if raw_path.endswith(" (deleted)"):
+            return None
+    elif sys.platform == "darwin":
+        try:
+            import fcntl
+
+            getpath = getattr(fcntl, "F_GETPATH", None)
+            if getpath is None:
+                return None
+            result = fcntl.fcntl(fd, getpath, b"\0" * 1024)
+            raw_path = os.fsdecode(result.split(b"\0", 1)[0])
+        except (ImportError, OSError, TypeError, ValueError):
+            return None
+    elif os.name == "nt":
+        try:
+            import ctypes
+            import msvcrt
+            from ctypes import wintypes
+
+            handle = msvcrt.get_osfhandle(fd)
+            if handle == -1:
+                return None
+            get_final_path = ctypes.WinDLL("kernel32", use_last_error=True).GetFinalPathNameByHandleW
+            get_final_path.argtypes = (
+                wintypes.HANDLE,
+                wintypes.LPWSTR,
+                wintypes.DWORD,
+                wintypes.DWORD,
+            )
+            get_final_path.restype = wintypes.DWORD
+            buffer = ctypes.create_unicode_buffer(32768)
+            length = get_final_path(handle, buffer, len(buffer), 0)
+            if not length or length >= len(buffer):
+                return None
+            raw_path = buffer.value
+            if raw_path.startswith("\\\\?\\UNC\\"):
+                raw_path = "\\\\" + raw_path[8:]
+            elif raw_path.startswith("\\\\?\\"):
+                raw_path = raw_path[4:]
+        except (AttributeError, ImportError, OSError, TypeError, ValueError):
+            return None
+    else:
+        return None
+
+    if not raw_path:
+        return None
+    try:
+        resolved = Path(raw_path).resolve(strict=True)
+        path_stat = resolved.stat()
+    except (OSError, RuntimeError, ValueError):
+        return None
+    if (path_stat.st_dev, path_stat.st_ino) != (descriptor_stat.st_dev, descriptor_stat.st_ino):
+        return None
+    if require_directory and not resolved.is_dir():
+        return None
+    return resolved
+
+
+def _path_is_sandboxed(
+    value: object,
+    *,
+    dir_fd: object = None,
+    allow_symlink_leaf: bool = False,
+) -> bool:
+    if isinstance(value, int) and not isinstance(value, bool):
+        descriptor_path = _path_from_file_descriptor(value)
+        return descriptor_path is not None and _is_within(descriptor_path, _SANDBOX)
     try:
         raw_path = os.fsdecode(os.fspath(value))
     except (TypeError, ValueError, OSError):
         return False
     path = Path(raw_path)
-    return _is_within(path, _SANDBOX)
-
+    if dir_fd == -1:
+        dir_fd = None
+    if path.is_absolute() or dir_fd is None:
+        candidate = path
+    else:
+        directory = _path_from_file_descriptor(dir_fd, require_directory=True)
+        if directory is None or not _is_within(directory, _SANDBOX):
+            return False
+        candidate = directory / path
+    if allow_symlink_leaf and candidate.is_symlink():
+        return _is_within(candidate.parent, _SANDBOX)
+    return _is_within(candidate, _SANDBOX)
 
 def _path_is_protected_profile(value: object) -> bool:
     if isinstance(value, int):
@@ -141,6 +229,21 @@ _WRITE_EVENTS = {
     "os.rename": (0, 1),
     "os.replace": (0, 1),
 }
+
+_WRITE_EVENT_DIR_FD_INDEXES = {
+    "os.chmod": {0: 2},
+    "os.chown": {0: 3},
+    "os.link": {0: 2, 1: 3},
+    "os.mkdir": {0: 2},
+    "os.remove": {0: 1},
+    "os.rmdir": {0: 1},
+    "os.symlink": {1: 2},
+    "os.unlink": {0: 1},
+    "os.utime": {0: 3},
+    "os.rename": {0: 2, 1: 3},
+    "os.replace": {0: 2, 1: 3},
+}
+
 _PROFILE_READ_EVENTS = {
     "os.listdir": (0,),
     "os.scandir": (0,),
@@ -187,10 +290,21 @@ def _sandbox_audit(event: str, args: tuple[object, ...]) -> None:
         return
 
     if event in _WRITE_EVENTS:
-        indexes = _WRITE_EVENTS[event]
-        paths = [args[index] for index in indexes if index < len(args)]
-        if any(not _path_is_sandboxed(path) for path in paths):
-            raise PermissionError(f"test sandbox blocked filesystem mutation: {event}")
+        dir_fd_indexes = _WRITE_EVENT_DIR_FD_INDEXES.get(event, {})
+        for path_index in _WRITE_EVENTS[event]:
+            if path_index >= len(args):
+                continue
+            dir_fd_index = dir_fd_indexes.get(path_index)
+            dir_fd = (
+                args[dir_fd_index]
+                if dir_fd_index is not None and dir_fd_index < len(args)
+                else None
+            )
+            allow_symlink_leaf = event in {"os.remove", "os.unlink"}
+            if not _path_is_sandboxed(
+                args[path_index], dir_fd=dir_fd, allow_symlink_leaf=allow_symlink_leaf
+            ):
+                raise PermissionError(f"test sandbox blocked filesystem mutation: {event}")
         return
 
     if event in _PROFILE_READ_EVENTS:
