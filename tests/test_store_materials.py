@@ -146,20 +146,18 @@ def test_store_documents_reference_local_data_and_license_notes() -> None:
     privacy = (PROJECT_ROOT / "PRIVACY_POLICY.md").read_text(encoding="utf-8")
     support = (PROJECT_ROOT / "SUPPORT.md").read_text(encoding="utf-8")
     prep = (PROJECT_ROOT / "WINDOWS_STORE_PREP.md").read_text(encoding="utf-8")
-    third_party = (PROJECT_ROOT / "THIRD_PARTY_LICENSES.md").read_text(encoding="utf-8")
 
-    assert "lokalen Anwendungsdatenordner" in privacy
-    assert "local application-data directory" in privacy
-    assert "PyMuPDF" in third_party
-    assert "Tesseract" in third_party
+    assert "LOCALAPPDATA" in listing
+    assert "PyMuPDF" in listing
     assert "Tesseract" in listing
-    assert "THIRD_PARTY_LICENSES.md" in listing
-    assert "[PRIVACY_POLICY.md](PRIVACY_POLICY.md)" in listing
-    assert "[SUPPORT.md](SUPPORT.md)" in listing
-    assert "PDF" in privacy
+    assert "AGPL-3.0" in listing
+    assert "https://github.com/file-bricks/ProFiler/blob/master/PRIVACY_POLICY.md" in listing
+    assert "https://github.com/file-bricks/ProFiler/blob/master/SUPPORT.md" in listing
+    assert "PyMuPDF" in privacy
+    assert "Tesseract" in privacy
     assert "https://github.com/file-bricks/ProFiler/issues" in support
-    assert "NOT CLEARED" in prep
-    assert "current WACK run" in prep
+    assert "LOCALAPPDATA\\ProFilerSuite" in prep
+    assert "THIRD_PARTY_LICENSES.txt" in prep
 
 
 def test_existing_main_screenshot_is_present() -> None:
