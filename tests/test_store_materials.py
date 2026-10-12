@@ -254,13 +254,13 @@ def test_wack_parser_separates_historical_preflight_from_report_xml(tmp_path: Pa
     module = _load_script_module("wack_parser_test", wack_script)
 
     historical_xml = PROJECT_ROOT / "releases" / "windowsstore" / "test_reports" / "wack_preflight_20261001.xml"
-    with pytest.raises(ValueError, match="historisches synthetisches Preflight-Artefakt"):
+    with pytest.raises(ValueError, match="Herkunft ist damit nicht verifiziert"):
         module.parse_wack_report(historical_xml)
     copied_historical_xml = tmp_path / "wack_preflight_legacy.xml"
     copied_historical_xml.write_text(historical_xml.read_text(encoding="utf-8"), encoding="utf-8")
     assert module.main(["--parse-report", str(copied_historical_xml)]) == 2
     assert not copied_historical_xml.with_suffix(".json").exists()
-    assert "kein WACK-Report" in capsys.readouterr().err
+    assert "nicht verifiziert" in capsys.readouterr().err
 
     renamed_synthetic = tmp_path / "renamed.xml"
     renamed_synthetic.write_text(
@@ -288,6 +288,8 @@ def test_wack_parser_separates_historical_preflight_from_report_xml(tmp_path: Pa
     assert summary.warning_count == 1
     actual_run_path = module.resolve_report_path(PROJECT_ROOT, tmp_path, None)
     assert actual_run_path.name.startswith("wack_report_")
+    next_run_path = module.resolve_report_path(PROJECT_ROOT, tmp_path, None)
+    assert next_run_path != actual_run_path
     summary_path = tmp_path / "parsed-summary.json"
     module.write_summary(
         summary,
@@ -297,6 +299,170 @@ def test_wack_parser_separates_historical_preflight_from_report_xml(tmp_path: Pa
     summary_payload = json.loads(summary_path.read_text(encoding="utf-8"))
     assert summary_payload["report_type"] == "wack_xml_summary"
     assert summary_payload["appcert_invoked_by_this_run"] is False
+
+
+def _prepare_fake_wack_run(tmp_path: Path, report_path: Path) -> tuple[Path, Path, list[str]]:
+    project_root = tmp_path / "project"
+    project_root.mkdir()
+    msix_path = tmp_path / "fixture.msix"
+    msix_path.write_bytes(b"test package")
+    appcert_path = tmp_path / "appcert.exe"
+    appcert_path.write_bytes(b"fake executable placeholder")
+    args = [
+        "--project-root",
+        str(project_root),
+        "--msix",
+        str(msix_path),
+        "--appcert",
+        str(appcert_path),
+        "--report-path",
+        str(report_path),
+        "--allow-non-admin",
+    ]
+    return project_root, appcert_path, args
+
+
+def _install_fake_appcert(
+    module,
+    monkeypatch,
+    *,
+    test_exit: int = 0,
+    reset_exit: int = 0,
+    finalize_exit: int = 0,
+    create_report: bool = True,
+) -> list[str]:
+    calls: list[str] = []
+    pass_report = (
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        '<REPORT OVERALL_RESULT="PASS"><REQUIREMENT Id="fixture" RESULT="PASS" /></REPORT>\n'
+    )
+
+    def fake_subprocess_run(command, **kwargs):
+        operation = command[1]
+        calls.append(operation)
+        if operation == "reset":
+            exit_code = reset_exit
+        elif operation == "test":
+            exit_code = test_exit
+            if create_report:
+                report_path = Path(command[command.index("-reportoutputpath") + 1])
+                report_path.write_text(pass_report, encoding="utf-8")
+        elif operation == "finalizereport":
+            exit_code = finalize_exit
+        else:
+            raise AssertionError(f"Unexpected appcert command: {operation}")
+        return module.subprocess.CompletedProcess(command, exit_code, stdout="", stderr="")
+
+    monkeypatch.setattr(module.subprocess, "run", fake_subprocess_run)
+    return calls
+
+
+def test_wack_run_refuses_existing_pass_report_without_overwriting(tmp_path: Path, monkeypatch, capsys) -> None:
+    module = _load_script_module(
+        "wack_existing_report_test",
+        PROJECT_ROOT / "scripts" / "run_windows_wack.py",
+    )
+    report_path = tmp_path / "existing-pass.xml"
+    original = (
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        '<REPORT OVERALL_RESULT="PASS"><REQUIREMENT RESULT="PASS" /></REPORT>\n'
+    ).encode("utf-8")
+    report_path.write_bytes(original)
+    _, _, args = _prepare_fake_wack_run(tmp_path, report_path)
+    calls = _install_fake_appcert(module, monkeypatch, test_exit=1)
+
+    assert module.main(args) == 2
+    assert calls == []
+    assert report_path.read_bytes() == original
+    assert not report_path.with_suffix(".log").exists()
+    assert "Ausgabe existiert bereits" in capsys.readouterr().err
+
+
+def test_wack_test_failure_cannot_be_masked_by_pass_report(tmp_path: Path, monkeypatch, capsys) -> None:
+    module = _load_script_module(
+        "wack_failed_test_report_test",
+        PROJECT_ROOT / "scripts" / "run_windows_wack.py",
+    )
+    report_path = tmp_path / "failed-run.xml"
+    _, _, args = _prepare_fake_wack_run(tmp_path, report_path)
+    args.append("--skip-reset")
+    calls = _install_fake_appcert(module, monkeypatch, test_exit=1, create_report=True)
+
+    assert module.main(args) == 1
+    assert calls == ["test"]
+    assert report_path.exists()
+    assert not report_path.with_suffix(".json").exists()
+    assert "appcert test ist mit Exitcode 1 fehlgeschlagen" in capsys.readouterr().err
+
+
+def test_wack_success_without_new_report_is_failure(tmp_path: Path, monkeypatch, capsys) -> None:
+    module = _load_script_module(
+        "wack_missing_report_test",
+        PROJECT_ROOT / "scripts" / "run_windows_wack.py",
+    )
+    report_path = tmp_path / "missing-report.xml"
+    _, _, args = _prepare_fake_wack_run(tmp_path, report_path)
+    args.append("--skip-reset")
+    calls = _install_fake_appcert(module, monkeypatch, create_report=False)
+
+    assert module.main(args) == 1
+    assert calls == ["test"]
+    assert not report_path.exists()
+    assert not report_path.with_suffix(".json").exists()
+    assert "keinen neuen, nichtleeren XML-Report" in capsys.readouterr().err
+
+
+def test_wack_reset_failure_stops_before_test_and_preserves_exit_code(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    module = _load_script_module(
+        "wack_reset_failure_test",
+        PROJECT_ROOT / "scripts" / "run_windows_wack.py",
+    )
+    report_path = tmp_path / "reset-failure.xml"
+    _, _, args = _prepare_fake_wack_run(tmp_path, report_path)
+    calls = _install_fake_appcert(module, monkeypatch, reset_exit=740)
+
+    assert module.main(args) == 740
+    assert calls == ["reset"]
+    assert not report_path.exists()
+    assert "appcert reset ist mit Exitcode 740 fehlgeschlagen" in capsys.readouterr().err
+
+
+def test_wack_finalize_failure_cannot_produce_summary(tmp_path: Path, monkeypatch, capsys) -> None:
+    module = _load_script_module(
+        "wack_finalize_failure_test",
+        PROJECT_ROOT / "scripts" / "run_windows_wack.py",
+    )
+    report_path = tmp_path / "finalize-failure.xml"
+    _, _, args = _prepare_fake_wack_run(tmp_path, report_path)
+    args.append("--skip-reset")
+    calls = _install_fake_appcert(module, monkeypatch, finalize_exit=9)
+
+    assert module.main(args) == 9
+    assert calls == ["test", "finalizereport"]
+    assert report_path.exists()
+    assert not report_path.with_suffix(".json").exists()
+    assert "appcert finalizereport ist mit Exitcode 9 fehlgeschlagen" in capsys.readouterr().err
+
+
+def test_wack_new_report_with_successful_commands_is_summarized(tmp_path: Path, monkeypatch, capsys) -> None:
+    module = _load_script_module(
+        "wack_successful_new_report_test",
+        PROJECT_ROOT / "scripts" / "run_windows_wack.py",
+    )
+    report_path = tmp_path / "successful-run.xml"
+    _, _, args = _prepare_fake_wack_run(tmp_path, report_path)
+    args.append("--skip-reset")
+    calls = _install_fake_appcert(module, monkeypatch)
+
+    assert module.main(args) == 0
+    assert calls == ["test", "finalizereport"]
+    summary_payload = json.loads(report_path.with_suffix(".json").read_text(encoding="utf-8"))
+    assert summary_payload["overall_result"] == "PASS"
+    assert summary_payload["appcert_invoked_by_this_run"] is True
+    assert summary_payload["exit_code"] == 0
+    assert "WACK-Ergebnis: PASS" in capsys.readouterr().out
 
 
 def test_store_staging_consistency_is_not_a_readiness_or_wack_claim(capsys) -> None:
