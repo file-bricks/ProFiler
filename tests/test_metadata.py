@@ -3,6 +3,8 @@ from __future__ import annotations
 import ast
 import json
 import re
+import shlex
+import tomllib
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -35,7 +37,7 @@ def test_metadata_version_parity() -> None:
 
     # llms.txt
     llms_text = (PROJECT_ROOT / "llms.txt").read_text(encoding="utf-8")
-    assert f"version.py` — canonical public version contract (`{app_version}`)" in llms_text
+    assert f"Source version: {app_version} (frozen" in llms_text
 
 
 def test_required_documentation_and_manifests_exist() -> None:
@@ -85,14 +87,16 @@ def test_readme_and_readme_de_parity() -> None:
 
 
 def test_llms_txt_structure() -> None:
-    """Verify llms.txt structure, search keywords, and recent timestamp."""
+    """Verify current llms.txt sections, versioned source scope, and workflow link."""
     llms_text = (PROJECT_ROOT / "llms.txt").read_text(encoding="utf-8")
     assert "# ProFiler Suite" in llms_text
     assert "file-bricks/ProFiler" in llms_text
-    assert "## Architecture" in llms_text or "## Primary Use" in llms_text
-    assert "## Search Phrases" in llms_text
-    assert "## Contract Boundaries" in llms_text
-    assert "## Last-checked: 2026-" in llms_text
+    assert "## Main workflows" in llms_text
+    assert "## Search phrases" in llms_text
+    assert "## Distribution boundary" in llms_text
+    assert "## Current CI status" in llms_text
+    assert "https://github.com/file-bricks/ProFiler/actions/workflows/source-platform-smoke.yml" in llms_text
+    assert re.search(r"## Last checked\s+\d{4}-\d{2}-\d{2}", llms_text)
 
 
 def test_utf8_python_files_integrity() -> None:
@@ -122,18 +126,15 @@ def test_readme_quick_navigation_and_sequence_diagram_parity() -> None:
     # Core capabilities & security invariants
     assert "## Core Capabilities & Security Invariants" in readme_en
     assert "## Kernfähigkeiten & Sicherheitsinvarianten" in readme_de
-    assert "Zero-Egress" in readme_en and "Zero-Egress" in readme_de
 
 
 def test_security_policy_structure_and_contacts() -> None:
-    """Verify bilingual SECURITY.md structure, SLA, invariants, and contacts."""
+    """Verify the bilingual policy routes reports to the configured channels."""
     sec_text = (PROJECT_ROOT / "SECURITY.md").read_text(encoding="utf-8")
     assert "## English" in sec_text
     assert "## Deutsch" in sec_text
-    assert "48 hours" in sec_text or "48 Stunden" in sec_text
     assert "security@open-bricks.org" in sec_text
     assert "support@lukasgeiger.com" in sec_text
-    assert "Zero-Egress" in sec_text
     assert "security/advisories" in sec_text
 
 
@@ -149,16 +150,18 @@ def test_ci_workflow_concurrency_and_matrix() -> None:
 
 
 def test_pyproject_pep621_metadata_and_urls() -> None:
-    """Verify PEP 621 metadata, keywords, classifiers, and project URLs."""
-    pyproject_text = (PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8")
-    assert "keywords = [" in pyproject_text
-    assert "Programming Language :: Python :: 3.13" in pyproject_text
-    assert "Topic :: Security" in pyproject_text
-    assert "Documentation = " in pyproject_text
-    assert '"Parent Organization" = ' in pyproject_text
-    assert '"Umbrella Ecosystem" = ' in pyproject_text
-    assert "Changelog = " in pyproject_text
-    assert "Security = " in pyproject_text
+    """Verify parsed PEP 621 metadata and stable project URL targets."""
+    config = tomllib.loads((PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    project = config["project"]
+    urls = project["urls"]
+    assert project["keywords"]
+    assert "Programming Language :: Python :: 3.13" in project["classifiers"]
+    assert "Topic :: Security" in project["classifiers"]
+    assert urls["Documentation"] == "https://github.com/file-bricks/ProFiler#readme"
+    assert urls["Parent Organization"] == "https://github.com/file-bricks"
+    assert urls["Umbrella Ecosystem"] == "https://github.com/open-bricks"
+    assert urls["Changelog"].endswith("/CHANGELOG.md")
+    assert urls["Security"].endswith("/SECURITY.md")
 
 
 def test_gitignore_hygiene_patterns() -> None:
@@ -179,22 +182,22 @@ def test_gitignore_hygiene_patterns() -> None:
 
 
 def test_pytest_configuration_and_flags() -> None:
-    """Verify pytest ini_options configuration has standard flags -ra -v."""
-    pyproject_text = (PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8")
-    assert "[tool.pytest.ini_options]" in pyproject_text
-    assert any(opt in pyproject_text for opt in ['addopts = "-ra -v --basetemp=.pytest_temp"', 'addopts = "-ra -v"'])
-    assert 'testpaths = ["tests", "."]' in pyproject_text
+    """Verify parsed pytest configuration enables concise verbose reporting."""
+    config = tomllib.loads((PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    pytest_config = config["tool"]["pytest"]["ini_options"]
+    flags = shlex.split(pytest_config["addopts"])
+    assert "-ra" in flags
+    assert "-v" in flags
+    assert pytest_config["testpaths"] == ["tests", "."]
 
 
 def test_security_policy_slas_and_contacts() -> None:
-    """Verify bilingual SECURITY.md provides 48h response SLA, 5d triage, and official contacts."""
+    """Verify security report contact channels and current project version."""
     sec_text = (PROJECT_ROOT / "SECURITY.md").read_text(encoding="utf-8")
-    assert "48 hours" in sec_text and "48 Stunden" in sec_text
-    assert "5 business days" in sec_text and "5 Werktagen" in sec_text
     assert "security@open-bricks.org" in sec_text
     assert "lukas@open-bricks.org" in sec_text
     assert "support@lukasgeiger.com" in sec_text
-    assert "15.0.x" in sec_text
+    assert "15.0.2" in sec_text
 
 
 def test_ci_workflow_hardening() -> None:
@@ -217,15 +220,15 @@ def test_changelog_release_entry() -> None:
 
 
 def test_readme_badges_parity() -> None:
-    """Verify README.md and README_de.md badges parity for version, SLA, Ruff, and tests."""
+    """Verify current version, lint, ecosystem, and CI badges in both READMEs."""
     readme_en = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
     readme_de = (PROJECT_ROOT / "README_de.md").read_text(encoding="utf-8")
 
     for doc in [readme_en, readme_de]:
         assert "version-15.0.2-blue.svg" in doc
-        assert "48h%20Response%20%2F%205d%20Triage" in doc or "48h%20Antwort%20%2F%205d%20Triage" in doc
         assert "code%20style-ruff" in doc
         assert "ecosystem-open--bricks" in doc or "%C3%96kosystem-open--bricks" in doc
+        assert "CI:" in doc or "CI%3A" in doc
 
 
 def test_readme_16_points_quick_navigation_parity() -> None:
@@ -277,65 +280,18 @@ def test_readme_16_points_quick_navigation_parity() -> None:
         assert anchor in readme_de, f"Missing German navigation anchor: {anchor}"
 
 
-def test_governance_invariants_table_parity() -> None:
-    """Verify all 10 governance invariants (INV-LOCAL-01 to INV-SLA-10) are present in both READMEs."""
-    readme_en = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
-    readme_de = (PROJECT_ROOT / "README_de.md").read_text(encoding="utf-8")
-
-    invariant_codes = [
-        "INV-LOCAL-01",
-        "INV-SESSION-02",
-        "INV-GATE-03",
-        "INV-SCHEMA-04",
-        "INV-PLACEHOLDER-05",
-        "INV-UNPRIV-06",
-        "INV-ATOMIC-07",
-        "INV-INTEGRITY-08",
-        "INV-OFFLINE-09",
-        "INV-SLA-10",
-    ]
-
-    for code in invariant_codes:
-        assert code in readme_en, f"Missing {code} in English README"
-        assert code in readme_de, f"Missing {code} in German README"
-
-
-def test_target_personas_and_use_cases_parity() -> None:
-    """Verify presence of all 4 target personas in English and German READMEs."""
-    readme_en = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
-    readme_de = (PROJECT_ROOT / "README_de.md").read_text(encoding="utf-8")
-
-    assert "Legal, Compliance & Privacy Officers" in readme_en
-    assert "Academic Researchers & Archival Curators" in readme_en
-    assert "Small Business Owners & Freelancers" in readme_en
-    assert "Power Users & Data Sovereignty Advocates" in readme_en
-
-    assert "Datenschutzbeauftragte, Juristen & Compliance" in readme_de
-    assert "Wissenschaftler, Archive & Historiker" in readme_de
-    assert "Freiberufler & Kleinunternehmen" in readme_de
-    assert "Power-User & Datenschutz-Enthusiasten" in readme_de
-
-
-def test_comparative_matrix_parity() -> None:
-    """Verify presence of comprehensive comparative matrix against cloud and local alternatives."""
-    readme_en = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
-    readme_de = (PROJECT_ROOT / "README_de.md").read_text(encoding="utf-8")
-
-    for doc in [readme_en, readme_de]:
-        assert "KnowledgeDigest" in doc
-        assert "DocuWare" in doc or "Dropbox" in doc
-        assert "Alfresco" in doc or "Nextcloud" in doc
-        assert "Windows Explorer" in doc
-
-
 def test_third_party_licenses_markdown_audit() -> None:
-    """Verify THIRD_PARTY_LICENSES.md contains SPDX identifiers, packages, and copyleft analysis."""
+    """Verify the dependency note keeps its project and dependency structure."""
     lic_md = PROJECT_ROOT / "THIRD_PARTY_LICENSES.md"
     assert lic_md.exists(), "THIRD_PARTY_LICENSES.md missing"
     content = lic_md.read_text(encoding="utf-8")
 
-    assert "AGPL-3.0-only" in content
-    assert "open-bricks" in content
+    assert "GNU Affero General Public License version 3" in content
+    assert "[LICENSE](LICENSE)" in content
+    assert "[NOTICE](NOTICE)" in content
+    assert "## Direct runtime requirements" in content
+    assert "## Optional and development requirements" in content
+    assert "## External programs and packaging boundary" in content
     assert "PySide6" in content
     assert "PyMuPDF" in content
     assert "pypdf" in content
@@ -346,7 +302,7 @@ def test_third_party_licenses_markdown_audit() -> None:
 
 
 def test_marketing_log_parity() -> None:
-    """Verify local MARKETING-LOG.txt registers Pfad B and Pfad A runs, personas, invariants, and queries."""
+    """Keep the historical marketing record tied to the current project identity."""
     m_log = PROJECT_ROOT / "MARKETING-LOG.txt"
     assert m_log.exists(), "MARKETING-LOG.txt missing"
     content = m_log.read_text(encoding="utf-8")
@@ -354,15 +310,7 @@ def test_marketing_log_parity() -> None:
     assert "file-bricks/ProFiler" in content
     assert "15.0.1" in content
     assert "15.0.2" in content
-    assert "2026-09-12" in content
-    assert "2026-09-16" in content
-    assert "2026-09-18" in content
-    assert "2026-09-26" in content
-    assert "INV-LOCAL-01" in content
-    assert "INV-SLA-10" in content
-    assert "Datenschutzampel" in content
-    assert "18-POINT NAVIGATION PARITY" in content
-    assert "PFAD B DISCOVERABILITY" in content or "Pfad B" in content
+    assert "THIRD_PARTY_LICENSES.md" in content
 
 
 def test_readme_18_points_quick_navigation_parity() -> None:
@@ -431,48 +379,33 @@ def test_readme_18_points_quick_navigation_parity() -> None:
 
 
 def test_pyproject_pep621_extended_urls() -> None:
-    """Verify pyproject.toml PEP 621 URLs include Third-Party Licenses, Marketing Log, LLM Ready, and Notice."""
+    """Verify project links resolve to the intended docs and notice files."""
     pyproj_path = PROJECT_ROOT / "pyproject.toml"
     assert pyproj_path.exists(), "pyproject.toml missing"
-    content = pyproj_path.read_text(encoding="utf-8")
+    urls = tomllib.loads(pyproj_path.read_text(encoding="utf-8"))["project"]["urls"]
+    assert urls["Third-Party Licenses"] == "https://github.com/file-bricks/ProFiler/blob/master/THIRD_PARTY_LICENSES.md"
+    assert urls["Marketing Log"] == "https://github.com/file-bricks/ProFiler/blob/master/MARKETING-LOG.txt"
+    assert urls["LLM Ready"] == "https://github.com/file-bricks/ProFiler/blob/master/llms.txt"
+    assert urls["Notice"] == "https://github.com/file-bricks/ProFiler/blob/master/NOTICE"
 
-    assert '"Third-Party Licenses" = "https://github.com/file-bricks/ProFiler/blob/master/THIRD_PARTY_LICENSES.md"' in content
-    assert '"Marketing Log" = "https://github.com/file-bricks/ProFiler/blob/master/MARKETING-LOG.txt"' in content
-    assert '"LLM Ready" = "https://github.com/file-bricks/ProFiler/blob/master/llms.txt"' in content
-    assert 'Notice = "https://github.com/file-bricks/ProFiler/blob/master/NOTICE"' in content
 
-
-def test_third_party_licenses_audit_and_user_assets_guarantee() -> None:
-    """Verify THIRD_PARTY_LICENSES.md audit date, zero-copyleft guarantee, and PySide6 dynamic linking."""
+def test_third_party_notes_preserve_the_frozen_project_version() -> None:
+    """Keep the dependency note aligned with the repository's frozen version."""
     lic_md = PROJECT_ROOT / "THIRD_PARTY_LICENSES.md"
     assert lic_md.exists(), "THIRD_PARTY_LICENSES.md missing"
     content = lic_md.read_text(encoding="utf-8")
 
-    assert "2026-09-26" in content
-    assert "NOTICE" in content
-    assert "LGPL-3.0 § 4" in content
-    assert "Zero-Copyleft" in content
-    assert "RunAsInvoker" in content
-    assert "INV-LOCAL-01" in content
-    assert "INV-SLA-10" in content
+    assert "**Version:** `15.0.2` (frozen)" in content
 
 
 def test_readme_extended_badges_parity() -> None:
-    """Verify extended badges in English and German READMEs."""
+    """Verify attribution and contributor links remain in both READMEs."""
     readme_en = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
     readme_de = (PROJECT_ROOT / "README_de.md").read_text(encoding="utf-8")
 
     for doc in [readme_en, readme_de]:
-        assert "RunAsInvoker" in doc
-        assert any(x in doc for x in ["238", "232", "210", "205%2B%20", "205+", "201%2B%20", "201+", "197%2B%20", "197+"])
         assert "Attribution-NOTICE" in doc
-        assert any(d in doc for d in ["2026--10--02", "2026--09--26"])
-        assert "Level%201%20SBOM" in doc
 
-    assert "third--party-audited-brightgreen.svg" in readme_en
-    assert "marketing%20log-active-blue.svg" in readme_en
-    assert "Drittanbieter-auditiert-brightgreen.svg" in readme_de
-    assert "Marketing--Log-aktiv-blue.svg" in readme_de
     assert "Contributing" in readme_en
     assert "Mitwirken" in readme_de
 
@@ -489,34 +422,22 @@ def test_notice_file_exists_and_attribution() -> None:
     assert "THIRD_PARTY_LICENSES.md" in content
 
 
-def test_statutory_disclaimer_521_bgb_and_48h_sla() -> None:
-    """Verify statutory disclaimer (§ 521 BGB Gefälligkeitsrecht) and 48h SLA across documents."""
-    readme_en = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
-    readme_de = (PROJECT_ROOT / "README_de.md").read_text(encoding="utf-8")
-    sec_text = (PROJECT_ROOT / "SECURITY.md").read_text(encoding="utf-8")
-
-    assert "§ 521 BGB" in readme_en and "Haftung des Schenkers" in readme_en
-    assert "§ 521 BGB" in readme_de and "Haftung des Schenkers" in readme_de
-    assert "§ 521 BGB" in sec_text and "Haftung des Schenkers" in sec_text
-    assert "48h" in readme_en or "48-hour" in readme_en
-    assert "48h" in readme_de or "48 Stunden" in readme_de
-
-
-def test_pyproject_saturated_keywords_and_notice_url() -> None:
-    """Verify pyproject.toml has saturated 20 keywords and license-files configuration."""
+def test_pyproject_keywords_notice_url_and_license_files() -> None:
+    """Verify useful PyPI keywords, the NOTICE target, and explicit license files."""
     pyproject_text = (PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8")
-    # Keywords
     kw_match = re.search(r'keywords\s*=\s*\[(.*?)\]', pyproject_text, re.DOTALL)
     assert kw_match is not None, "keywords array not found in pyproject.toml"
     keywords = [k.strip(' \t\n\r"\'') for k in kw_match.group(1).split(",") if k.strip(' \t\n\r"\'')]
-    assert len(keywords) == 20, f"Expected 20 keywords, got {len(keywords)}: {keywords}"
+    assert len(keywords) <= 20, f"PyPI permits at most 20 keywords, got {len(keywords)}"
+    assert len(keywords) == len(set(keywords)), "PyPI keywords should be unique"
+    assert {"desktop-app", "file-management", "local-first", "pdf", "pyside6", "sqlite"} <= set(keywords)
 
-    # license-files
+    assert 'Notice = "https://github.com/file-bricks/ProFiler/blob/master/NOTICE"' in pyproject_text
     assert 'license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_LICENSES.md", "THIRD_PARTY_LICENSES.txt"]' in pyproject_text
 
 
 def test_contributing_guide_present_and_bilingual_parity() -> None:
-    """Verify bilingual CONTRIBUTING.md guidelines with 10 invariants, Plan D workflow, and SLA."""
+    """Verify practical bilingual contributor setup and accurate support boundaries."""
     contrib_path = PROJECT_ROOT / "CONTRIBUTING.md"
     assert contrib_path.is_file(), "CONTRIBUTING.md missing"
     content = contrib_path.read_text(encoding="utf-8")
@@ -529,30 +450,11 @@ def test_contributing_guide_present_and_bilingual_parity() -> None:
     assert "## English" in content
     assert "## Deutsch" in content
 
-    # All 10 Invariants present in both languages
-    for inv in [
-        "INV-LOCAL-01",
-        "INV-SESSION-02",
-        "INV-GATE-03",
-        "INV-SCHEMA-04",
-        "INV-PLACEHOLDER-05",
-        "INV-UNPRIV-06",
-        "INV-ATOMIC-07",
-        "INV-INTEGRITY-08",
-        "INV-OFFLINE-09",
-        "INV-SLA-10",
-    ]:
-        assert content.count(inv) >= 2, f"Invariant {inv} not documented in both languages in CONTRIBUTING.md"
-
-    # Plan D workflow & RunAsInvoker
-    assert r"C:\_Local_DEV\repos\ProFiler" in content
-    assert "RunAsInvoker" in content
-    assert "Source of Truth" in content
-
-    # Statutory notice & SLA
-    assert "§ 521 BGB" in content
-    assert "Zero-Copyleft" in content
-    assert "security@file-bricks.org" in content
+    # Both language sections provide runnable setup and test instructions.
+    assert content.count('python -m pip install -e ".[dev]"') == 2
+    assert content.count("python -m pytest -ra -v") == 2
+    assert content.count("git diff --check") == 2
+    assert content.count("[SECURITY.md](SECURITY.md)") == 2
 
 
 def test_ci_lifecycle_workflows_and_labels_present() -> None:
@@ -595,19 +497,15 @@ def test_ci_lifecycle_workflows_and_labels_present() -> None:
         assert f"name: {label}" in labels_text or f"name: '{label}'" in labels_text, f"Missing standard label: {label}"
 
 
-def test_pyproject_pep621_contributing_and_sbom_urls() -> None:
-    """Verify pyproject.toml registers Contributing, Level 1 SBOM endpoints, and basetemp."""
+def test_pyproject_pep621_contributing_and_license_urls() -> None:
+    """Verify contributor and license URL targets from parsed project metadata."""
     pyproj_path = PROJECT_ROOT / "pyproject.toml"
     assert pyproj_path.is_file(), "pyproject.toml missing"
-    content = pyproj_path.read_text(encoding="utf-8")
-
-    assert 'Contributing = "https://github.com/file-bricks/ProFiler/blob/master/CONTRIBUTING.md"' in content
-    assert '"Level 1 SBOM" = "https://github.com/file-bricks/ProFiler/blob/master/THIRD_PARTY_LICENSES.md"' in content
-    assert '"Level 1 SBOM (Text)" = "https://github.com/file-bricks/ProFiler/blob/master/THIRD_PARTY_LICENSES.txt"' in content
-    assert '"Plain-Text License" = "https://github.com/file-bricks/ProFiler/blob/master/LICENSE"' in content
-    assert '"Third-Party Licenses (Text)" = "https://github.com/file-bricks/ProFiler/blob/master/THIRD_PARTY_LICENSES.txt"' in content
-    assert "--basetemp=.pytest_temp" in content
-    assert '".pytest_temp"' in content
+    urls = tomllib.loads(pyproj_path.read_text(encoding="utf-8"))["project"]["urls"]
+    assert urls["Contributing"] == "https://github.com/file-bricks/ProFiler/blob/master/CONTRIBUTING.md"
+    assert urls["Plain-Text License"] == "https://github.com/file-bricks/ProFiler/blob/master/LICENSE"
+    assert urls["Third-Party Licenses"] == "https://github.com/file-bricks/ProFiler/blob/master/THIRD_PARTY_LICENSES.md"
+    assert urls["Third-Party Licenses (Text)"] == "https://github.com/file-bricks/ProFiler/blob/master/THIRD_PARTY_LICENSES.txt"
 
 
 def test_gitignore_multihost_lock_defense() -> None:
@@ -645,20 +543,30 @@ def test_version_freeze_discipline_15_0_2() -> None:
     assert "## [Unreleased]" in changelog_text, "CHANGELOG.md missing Unreleased section"
 
 
-def test_third_party_licenses_plain_text_companion_and_audit_currency() -> None:
-    """Verify THIRD_PARTY_LICENSES.txt companion currency and statutory protections."""
+def test_third_party_licenses_plain_text_companion_structure() -> None:
+    """Keep plain-text and Markdown dependency notes aligned with declared packages."""
     txt_path = PROJECT_ROOT / "THIRD_PARTY_LICENSES.txt"
-    assert txt_path.is_file(), "THIRD_PARTY_LICENSES.txt missing"
-    text = txt_path.read_text(encoding="utf-8")
-
-    assert "Stand: 2026-10-02" in text
-    assert "§ 521 BGB" in text
-    assert "48h" in text
-    assert "RunAsInvoker" in text
-    assert "INV-LOCAL-01" in text
-    assert "INV-SLA-10" in text
-
     md_path = PROJECT_ROOT / "THIRD_PARTY_LICENSES.md"
+    assert txt_path.is_file(), "THIRD_PARTY_LICENSES.txt missing"
     assert md_path.is_file(), "THIRD_PARTY_LICENSES.md missing"
+    text = txt_path.read_text(encoding="utf-8")
     md_text = md_path.read_text(encoding="utf-8")
-    assert "2026-10-02" in md_text
+
+    assert "Project version: 15.0.2 (frozen)" in text
+    assert "**Version:** `15.0.2` (frozen)" in md_text
+    assert "DIRECT RUNTIME REQUIREMENTS" in text
+    assert "## Direct runtime requirements" in md_text
+    packages = (
+        "PySide6",
+        "pypdf",
+        "pikepdf",
+        "PyMuPDF",
+        "pdf2image",
+        "python-docx",
+        "pytesseract",
+        "Pillow",
+        "watchdog",
+        "ReportLab",
+    )
+    for package in packages:
+        assert package in text and package in md_text

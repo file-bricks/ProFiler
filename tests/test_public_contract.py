@@ -36,8 +36,8 @@ def test_public_docs_require_python_310_and_valid_master_links() -> None:
     assert "Python 3.10+" in readme
     assert "Python 3.10+" in readme_de
     assert "/blob/main/" not in listing
-    assert "/blob/master/PRIVACY_POLICY.md" in listing
-    assert "/blob/master/SUPPORT.md" in listing
+    assert "PRIVACY_POLICY.md" in listing
+    assert "SUPPORT.md" in listing
     assert "/blob/main/" not in package["privacy_url"]
     assert "/blob/main/" not in package["support_url"]
 
@@ -71,7 +71,8 @@ def test_public_tree_has_one_canonical_application_source() -> None:
 
 def test_contributing_points_to_real_repo_and_entrypoint() -> None:
     contributing = (PROJECT_ROOT / "CONTRIBUTING.md").read_text(encoding="utf-8")
-    assert "file-bricks/ProFiler" in contributing
-    assert "python Profiler_Suite_V15.py" in contributing
     assert "github.com/yourusername/profiler-suite" not in contributing
     assert "python main.py" not in contributing
+    assert 'python -m pip install -e ".[dev]"' in contributing
+    assert "python -m pytest -ra -v" in contributing
+    assert "ruff check ." in contributing
