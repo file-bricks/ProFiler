@@ -9,6 +9,7 @@ Shared Config für Blacklist/Whitelist
 import json
 import re
 import sys
+from pathlib import Path
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QBrush, QColor, QIcon, QPainter, QPixmap
@@ -31,6 +32,59 @@ from PySide6.QtWidgets import (
 )
 
 from app_paths import config_path, resolve_read_path
+from translator import install_translator_from_settings
+
+
+def _ui_text(key: str, **values) -> str:
+    app = QApplication.instance()
+    translator = getattr(app, "_profiler_ui_translator", None) if app else None
+    if translator:
+        return translator.translate_ui(key, **values)
+    if not values:
+        return key
+    try:
+        return key.format_map(values)
+    except (KeyError, ValueError):
+        return key
+
+
+def _ui_message_box(kind: str, parent, title: str, message: str, *args):
+    """Show translated standard button labels without reprocessing rendered text."""
+    icon = {
+        "information": QMessageBox.Icon.Information,
+        "warning": QMessageBox.Icon.Warning,
+        "critical": QMessageBox.Icon.Critical,
+        "question": QMessageBox.Icon.Question,
+    }[kind]
+    buttons_default = (
+        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        if kind == "question"
+        else QMessageBox.StandardButton.Ok
+    )
+    buttons = args[0] if args else buttons_default
+    default_button = args[1] if len(args) > 1 else QMessageBox.StandardButton.NoButton
+    box = QMessageBox(icon, title, message, buttons, parent)
+    labels = {
+        QMessageBox.StandardButton.Ok: "OK",
+        QMessageBox.StandardButton.Yes: "Ja",
+        QMessageBox.StandardButton.No: "Nein",
+        QMessageBox.StandardButton.Cancel: "Abbrechen",
+        QMessageBox.StandardButton.Close: "Schließen",
+        QMessageBox.StandardButton.Save: "Speichern",
+        QMessageBox.StandardButton.Open: "Öffnen",
+        QMessageBox.StandardButton.Discard: "Verwerfen",
+        QMessageBox.StandardButton.Retry: "Wiederholen",
+        QMessageBox.StandardButton.Ignore: "Ignorieren",
+        QMessageBox.StandardButton.Help: "Hilfe",
+    }
+    for standard_button, key in labels.items():
+        if buttons & standard_button:
+            button = box.button(standard_button)
+            if button is not None:
+                button.setText(_ui_text(key))
+    if default_button != QMessageBox.StandardButton.NoButton:
+        box.setDefaultButton(default_button)
+    return QMessageBox.StandardButton(box.exec())
 
 # ============================================================================
 # KONFIGURATION
@@ -89,7 +143,7 @@ class DatenschutzAmpel(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("🚦 ProFiler Datenschutzampel")
+        self.setWindowTitle(_ui_text("🚦 ProFiler Datenschutzampel"))
         self.resize(900, 650)
         self.setMinimumSize(800, 500)
 
@@ -120,7 +174,7 @@ class DatenschutzAmpel(QMainWindow):
 
         # Styling
         self.setStyleSheet(STYLESHEET)
-        self.statusBar().showMessage("Bereit - Ampel: 🟢")
+        self.statusBar().showMessage(_ui_text("Bereit - Ampel: 🟢"))
 
     def init_ui(self):
         """Initialisiert UI"""
@@ -133,17 +187,17 @@ class DatenschutzAmpel(QMainWindow):
         # Tab 1: Listen
         tab_lists = QWidget()
         self.setup_tab_lists(tab_lists)
-        tabs.addTab(tab_lists, "📋 Listen (Blacklist/Whitelist)")
+        tabs.addTab(tab_lists, _ui_text("📋 Listen (Blacklist/Whitelist)"))
 
         # Tab 2: Ampel
         tab_ampel = QWidget()
         self.setup_tab_ampel(tab_ampel)
-        tabs.addTab(tab_ampel, "🚦 Ampel-Steuerung")
+        tabs.addTab(tab_ampel, _ui_text("🚦 Ampel-Steuerung"))
 
         # Tab 3: Verlauf
         tab_history = QWidget()
         self.setup_tab_history(tab_history)
-        tabs.addTab(tab_history, "🕘 Verlauf")
+        tabs.addTab(tab_history, _ui_text("🕘 Verlauf"))
 
         main_layout.addWidget(tabs)
 
@@ -152,22 +206,22 @@ class DatenschutzAmpel(QMainWindow):
         layout = QVBoxLayout(tab)
 
         # Header
-        header = QLabel("Listen-Verwaltung")
+        header = QLabel(_ui_text("Listen-Verwaltung"))
         header.setObjectName("Header")
         layout.addWidget(header)
 
         # Blacklist
-        layout.addWidget(QLabel("🚫 Blacklist (Sensible Begriffe):"))
+        layout.addWidget(QLabel(_ui_text("🚫 Blacklist (Sensible Begriffe):")))
 
         self.blacklist_widget = QListWidget()
         layout.addWidget(self.blacklist_widget)
 
         bl_controls = QHBoxLayout()
         self.blacklist_input = QLineEdit()
-        self.blacklist_input.setPlaceholderText("Begriff hinzufügen...")
-        btn_add_bl = QPushButton("+ Hinzufügen")
+        self.blacklist_input.setPlaceholderText(_ui_text("Begriff hinzufügen..."))
+        btn_add_bl = QPushButton(_ui_text("+ Hinzufügen"))
         btn_add_bl.clicked.connect(self.add_to_blacklist)
-        btn_remove_bl = QPushButton("- Entfernen")
+        btn_remove_bl = QPushButton(_ui_text("- Entfernen"))
         btn_remove_bl.clicked.connect(self.remove_from_blacklist)
 
         bl_controls.addWidget(self.blacklist_input)
@@ -176,17 +230,17 @@ class DatenschutzAmpel(QMainWindow):
         layout.addLayout(bl_controls)
 
         # Whitelist
-        layout.addWidget(QLabel("✅ Whitelist (Ausnahmen):"))
+        layout.addWidget(QLabel(_ui_text("✅ Whitelist (Ausnahmen):")))
 
         self.whitelist_widget = QListWidget()
         layout.addWidget(self.whitelist_widget)
 
         wl_controls = QHBoxLayout()
         self.whitelist_input = QLineEdit()
-        self.whitelist_input.setPlaceholderText("Ausnahme hinzufügen...")
-        btn_add_wl = QPushButton("+ Hinzufügen")
+        self.whitelist_input.setPlaceholderText(_ui_text("Ausnahme hinzufügen..."))
+        btn_add_wl = QPushButton(_ui_text("+ Hinzufügen"))
         btn_add_wl.clicked.connect(self.add_to_whitelist)
-        btn_remove_wl = QPushButton("- Entfernen")
+        btn_remove_wl = QPushButton(_ui_text("- Entfernen"))
         btn_remove_wl.clicked.connect(self.remove_from_whitelist)
 
         wl_controls.addWidget(self.whitelist_input)
@@ -196,11 +250,11 @@ class DatenschutzAmpel(QMainWindow):
 
         # Buttons
         btn_layout = QHBoxLayout()
-        btn_clear_bl = QPushButton("🗑️ Blacklist leeren")
+        btn_clear_bl = QPushButton(_ui_text("🗑️ Blacklist leeren"))
         btn_clear_bl.setObjectName("Danger")
         btn_clear_bl.clicked.connect(self.clear_blacklist)
 
-        btn_save = QPushButton("💾 Listen speichern")
+        btn_save = QPushButton(_ui_text("💾 Listen speichern"))
         btn_save.setObjectName("Success")
         btn_save.clicked.connect(self.save_config)
 
@@ -214,28 +268,28 @@ class DatenschutzAmpel(QMainWindow):
         layout = QVBoxLayout(tab)
 
         # Ampel-Anzeige
-        self.ampel_label = QLabel("🟢")
+        self.ampel_label = QLabel(_ui_text("🟢"))
         self.ampel_label.setStyleSheet("font-size: 72px;")
         self.ampel_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.ampel_label)
 
-        self.ampel_text = QLabel("Status: Grün - Alles sicher")
+        self.ampel_text = QLabel(_ui_text("Status: Grün - Alles sicher"))
         self.ampel_text.setStyleSheet("font-size: 16px; font-weight: bold;")
         self.ampel_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.ampel_text)
 
-        layout.addWidget(QLabel(""))
+        layout.addWidget(QLabel(_ui_text("")))
 
         # Optionen
-        self.cb_case_sensitive = QCheckBox("Groß-/Kleinschreibung beachten")
+        self.cb_case_sensitive = QCheckBox(_ui_text("Groß-/Kleinschreibung beachten"))
         self.cb_case_sensitive.stateChanged.connect(self.on_options_changed)
         layout.addWidget(self.cb_case_sensitive)
 
-        self.cb_whole_words = QCheckBox("Nur ganze Wörter")
+        self.cb_whole_words = QCheckBox(_ui_text("Nur ganze Wörter"))
         self.cb_whole_words.stateChanged.connect(self.on_options_changed)
         layout.addWidget(self.cb_whole_words)
 
-        self.cb_clipboard_lock = QCheckBox("🔒 Zwischenablage sperren bei Rot")
+        self.cb_clipboard_lock = QCheckBox(_ui_text("🔒 Zwischenablage sperren bei Rot"))
         self.cb_clipboard_lock.stateChanged.connect(self.on_options_changed)
         layout.addWidget(self.cb_clipboard_lock)
 
@@ -243,11 +297,11 @@ class DatenschutzAmpel(QMainWindow):
 
         # Manual Override
         manual_layout = QHBoxLayout()
-        btn_green = QPushButton("🟢 Auf Grün setzen")
+        btn_green = QPushButton(_ui_text("🟢 Auf Grün setzen"))
         btn_green.setObjectName("Success")
         btn_green.clicked.connect(lambda: self.set_ampel_manual("grün"))
 
-        btn_red = QPushButton("🔴 Auf Rot setzen")
+        btn_red = QPushButton(_ui_text("🔴 Auf Rot setzen"))
         btn_red.setObjectName("Danger")
         btn_red.clicked.connect(lambda: self.set_ampel_manual("rot"))
 
@@ -259,13 +313,13 @@ class DatenschutzAmpel(QMainWindow):
         """Zwischenablage-Verlauf"""
         layout = QVBoxLayout(tab)
 
-        layout.addWidget(QLabel("📋 Letzte Zwischenablage-Einträge:"))
+        layout.addWidget(QLabel(_ui_text("📋 Letzte Zwischenablage-Einträge:")))
 
         self.history_widget = QTextEdit()
         self.history_widget.setReadOnly(True)
         layout.addWidget(self.history_widget)
 
-        btn_clear_history = QPushButton("🗑️ Verlauf löschen")
+        btn_clear_history = QPushButton(_ui_text("🗑️ Verlauf löschen"))
         btn_clear_history.clicked.connect(self.clear_history)
         layout.addWidget(btn_clear_history)
 
@@ -275,11 +329,11 @@ class DatenschutzAmpel(QMainWindow):
         self.update_tray_icon()
 
         tray_menu = QMenu(self)
-        action_show = tray_menu.addAction("📂 Öffnen")
+        action_show = tray_menu.addAction(_ui_text("📂 Öffnen"))
         action_show.triggered.connect(self.show)
 
         tray_menu.addSeparator()
-        action_quit = tray_menu.addAction("❌ Beenden")
+        action_quit = tray_menu.addAction(_ui_text("❌ Beenden"))
         action_quit.triggered.connect(self.force_quit)
 
         self.tray_icon.setContextMenu(tray_menu)
@@ -306,7 +360,12 @@ class DatenschutzAmpel(QMainWindow):
 
         # FIX: QPixmap zu QIcon konvertieren!
         self.tray_icon.setIcon(QIcon(pixmap))
-        self.tray_icon.setToolTip(f"Datenschutzampel: {self.ampel_status.upper()}")
+        self.tray_icon.setToolTip(
+            _ui_text(
+                "Ampelstatus: {value0}",
+                value0=_ui_text(self.ampel_status),
+            )
+        )
 
     def on_tray_click(self, reason):
         """Tray-Icon Klick"""
@@ -326,8 +385,8 @@ class DatenschutzAmpel(QMainWindow):
         event.ignore()
         self.hide()
         self.tray_icon.showMessage(
-            "Datenschutzampel",
-            "Läuft im Hintergrund weiter.",
+            _ui_text("Datenschutzampel"),
+            _ui_text("Läuft im Hintergrund weiter."),
             QSystemTrayIcon.MessageIcon.Information,
             2000
         )
@@ -363,11 +422,12 @@ class DatenschutzAmpel(QMainWindow):
         self.update_whitelist_display()
 
     def clear_blacklist(self):
-        reply = QMessageBox.question(
+        reply = _ui_message_box(
+            "question",
             self,
-            "Blacklist leeren",
-            "Wirklich alle Einträge löschen?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+            _ui_text("Blacklist leeren"),
+            _ui_text("Wirklich alle Einträge löschen?"),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if reply == QMessageBox.StandardButton.Yes:
             self.sensitive.clear()
@@ -442,17 +502,25 @@ class DatenschutzAmpel(QMainWindow):
             ]
 
             if found_sensitive:
-                self.set_ampel("rot", f"Sensible Begriffe: {', '.join(set(found_sensitive))}")
+                sensitive_text = ", ".join(set(found_sensitive))
+                self.set_ampel(
+                    "rot",
+                    _ui_text("Sensible Begriffe: {value0}", value0=sensitive_text),
+                )
 
                 if self.clipboard_lock:
                     self.clipboard.clear()
-                    QMessageBox.warning(
+                    _ui_message_box(
+                        "warning",
                         self,
-                        "Zwischenablage gesperrt",
-                        f"⚠️ Sensible Begriffe erkannt!\n\nZwischenablage wurde geleert:\n{', '.join(set(found_sensitive))}"
+                        _ui_text("Zwischenablage gesperrt"),
+                        _ui_text(
+                            "⚠️ Sensible Begriffe erkannt!\n\nZwischenablage wurde geleert:\n{value0}",
+                            value0=sensitive_text,
+                        ),
                     )
             else:
-                self.set_ampel("grün", "Keine sensiblen Daten erkannt")
+                self.set_ampel("grün", _ui_text("Keine sensiblen Daten erkannt"))
 
         except Exception:
             pass
@@ -462,23 +530,23 @@ class DatenschutzAmpel(QMainWindow):
         self.ampel_status = status
 
         if status == "rot":
-            self.ampel_label.setText("🔴")
-            self.ampel_text.setText(f"Status: ROT - {message}")
-            self.statusBar().showMessage(f"⚠️ ROT: {message}")
+            self.ampel_label.setText(_ui_text("🔴"))
+            self.ampel_text.setText(_ui_text("Status: ROT - {value0}", value0=message))
+            self.statusBar().showMessage(_ui_text("⚠️ ROT: {value0}", value0=message))
         elif status == "gelb":
-            self.ampel_label.setText("🟡")
-            self.ampel_text.setText(f"Status: GELB - {message}")
-            self.statusBar().showMessage(f"⚠️ GELB: {message}")
+            self.ampel_label.setText(_ui_text("🟡"))
+            self.ampel_text.setText(_ui_text("Status: GELB - {value0}", value0=message))
+            self.statusBar().showMessage(_ui_text("⚠️ GELB: {value0}", value0=message))
         else:
-            self.ampel_label.setText("🟢")
-            self.ampel_text.setText(f"Status: GRÜN - {message}")
-            self.statusBar().showMessage(f"✅ GRÜN: {message}")
+            self.ampel_label.setText(_ui_text("🟢"))
+            self.ampel_text.setText(_ui_text("Status: GRÜN - {value0}", value0=message))
+            self.statusBar().showMessage(_ui_text("✅ GRÜN: {value0}", value0=message))
 
         self.update_tray_icon()
 
     def set_ampel_manual(self, status):
         """Manuelles Setzen der Ampel"""
-        self.set_ampel(status, "Manuell gesetzt")
+        self.set_ampel(status, _ui_text("Manuell gesetzt"))
 
     def update_history_display(self):
         """Aktualisiert Verlaufs-Anzeige"""
@@ -530,10 +598,11 @@ class DatenschutzAmpel(QMainWindow):
         with open(CONFIG_PATH, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
 
-        QMessageBox.information(
+        _ui_message_box(
+            "information",
             self,
-            "Gespeichert",
-            f"✅ Konfiguration gespeichert:\n{CONFIG_PATH}"
+            _ui_text("Gespeichert"),
+            _ui_text("✅ Konfiguration gespeichert:\n{value0}", value0=CONFIG_PATH),
         )
 
 
@@ -544,6 +613,7 @@ class DatenschutzAmpel(QMainWindow):
 def main():
     app = QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(False)  # Wichtig für Tray!
+    install_translator_from_settings(app, app_dir=Path(__file__).resolve().parent)
 
     window = DatenschutzAmpel()
     window.show()

@@ -157,3 +157,19 @@ def test_t_translates_sample_keys_in_all_six_languages():
 
     translator.set_language("ru")
     assert translator.t(key) == "Удалить выбранные дубликаты"
+
+def test_ui_translation_lookup_formats_without_persisting_missing_keys(tmp_path):
+    source_key = "Verarbeite {count} Dateien"
+    translator = _translator(
+        tmp_path,
+        {source_key: {"de": source_key, "en": "Processing {count} files", "es": ""}},
+    )
+    catalog_path = translator.translations_file
+    before = catalog_path.read_bytes()
+
+    translator.set_language("es")
+    assert translator.translate_ui(source_key, count=3) == "Processing 3 files"
+    unknown_key = "Änderungen werden nach dem Speichern wirksam."
+    assert translator.translate_ui(unknown_key) == unknown_key
+    assert unknown_key not in translator.translations
+    assert catalog_path.read_bytes() == before

@@ -50,14 +50,19 @@ def choose_folder():
     messagebox.showinfo("Fertig!", f"Prüfung abgeschlossen.\nLog gespeichert unter:\n{log_path}")
 
 # 🖼️ GUI erstellen
-root = tk.Tk()
-root.title("Einrückungsprüfer")
-root.geometry("400x150")
+def main():
+    root = tk.Tk()
+    root.title("Einrückungsprüfer")
+    root.geometry("400x150")
 
-label = tk.Label(root, text="Wähle einen Ordner mit .py-Dateien zur Prüfung:", font=("Arial", 11))
-label.pack(pady=15)
+    label = tk.Label(root, text="Wähle einen Ordner mit .py-Dateien zur Prüfung:", font=("Arial", 11))
+    label.pack(pady=15)
 
-btn = tk.Button(root, text="Ordner auswählen & prüfen", command=choose_folder, font=("Arial", 12))
-btn.pack(pady=10)
+    btn = tk.Button(root, text="Ordner auswählen & prüfen", command=choose_folder, font=("Arial", 12))
+    btn.pack(pady=10)
 
-root.mainloop()
+    root.mainloop()
+
+
+if __name__ == "__main__":
+    main()
