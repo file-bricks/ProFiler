@@ -351,9 +351,6 @@ def main() -> int:
     check_store_screenshots(results)
     check_windowsstore_release_staging(results)
 
-    for ok_msg in results["ok"]:
-        print(f"  [CHECK OK] {ok_msg}")
-
     if results["errors"]:
         print("\n" + "=" * 65)
         print("  STAGING CONSISTENCY CHECK FAILED - OFFENE DATEIPUNKTE:")
@@ -361,6 +358,9 @@ def main() -> int:
         for err in results["errors"]:
             print(f"  [CHECK FAILED] {err}")
         return 1
+
+    for ok_msg in results["ok"]:
+        print(f"  [CHECK OK] {ok_msg}")
 
     print("\n" + "=" * 65)
     print("  STAGING CONSISTENCY CHECK PASSED")

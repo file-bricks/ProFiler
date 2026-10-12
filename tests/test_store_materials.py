@@ -316,6 +316,28 @@ def test_store_staging_consistency_is_not_a_readiness_or_wack_claim(capsys) -> N
     assert "[PASS]" not in output
 
 
+def test_staging_check_error_output_does_not_print_success_labels(capsys, monkeypatch) -> None:
+    checker = _load_script_module(
+        "store_staging_check_failure_test",
+        PROJECT_ROOT / "scripts" / "check_store_readiness.py",
+    )
+    monkeypatch.setattr(
+        checker,
+        "check_store_package_json",
+        lambda results: results["errors"].append("missing package metadata"),
+    )
+    monkeypatch.setattr(checker, "check_appx_manifest", lambda results: None)
+    monkeypatch.setattr(checker, "check_tile_icons", lambda results: None)
+    monkeypatch.setattr(checker, "check_store_listing_and_docs", lambda results: None)
+    monkeypatch.setattr(checker, "check_store_screenshots", lambda results: None)
+    monkeypatch.setattr(checker, "check_windowsstore_release_staging", lambda results: None)
+
+    assert checker.main() == 1
+    output = capsys.readouterr().out
+    assert "STAGING CONSISTENCY CHECK FAILED" in output
+    assert "[CHECK OK]" not in output
+
+
 def test_staging_file_check_does_not_require_a_fake_preflight_report(tmp_path: Path) -> None:
     checker = _load_script_module(
         "store_staging_check_minimal_test",
