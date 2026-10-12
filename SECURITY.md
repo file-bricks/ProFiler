@@ -7,73 +7,55 @@
 <a name="english"></a>
 ## English
 
-### Supported Versions
+### Reporting a security issue
 
-| Version | Supported | Status |
-| ------- | --------- | ------ |
-| `15.0.x` | :white_check_mark: | Active release stream |
-| `< 15.0` | :x: | End of Life / Unsupported |
+Please report suspected vulnerabilities privately through [GitHub Security Advisories](https://github.com/file-bricks/ProFiler/security/advisories/new). If that channel is unavailable, use one of the contact addresses listed below. Do not include real personal records, credentials, or private documents in a public issue.
 
-### Security Invariants & Design Principles
+No response, triage, or remediation deadline is promised. Work depends on reproducibility, impact, and maintainer availability. Reports are reviewed for this source project; this policy does not create a support commitment for a particular release or deployment.
 
-1. **100% Local-First & Zero-Egress**: ProFiler operates strictly locally on your workstation. It performs no remote network telemetry, does not upload files to cloud servers, and requires no online account.
-2. **Session-Only Secrets**: PDF passwords and temporary decryption credentials are held only in volatile process memory and are never serialized to configuration files or logs.
-3. **Redacted Data Exchange**: Exporting workspace snapshots automatically strips host-specific absolute paths, system tokens, and untracked file metadata.
-4. **Non-Elevation**: The application operates with standard user privileges under `%LOCALAPPDATA%\ProFilerSuite` (or standard XDG directories on POSIX) without requiring administrative elevation.
+- `security@file-bricks.org`
+- `security@open-bricks.org`
+- `lukas@open-bricks.org`
+- `security@ellmos.ai`
+- `support@lukasgeiger.com`
 
-### Reporting a Vulnerability
+### Scope and limits
 
-If you discover a security vulnerability, please report it privately:
+ProFiler's default workflows process selected local folders and store application settings and search indexes on the user's device. The optional module installer can contact GitHub when a user invokes it. ProFiler does not block network traffic, sandbox external programs, or control the behavior of the operating system and third-party libraries. User-configured tools and integrations can have separate data flows.
 
-1. **GitHub Security Advisories**: Direct submission via [Report a vulnerability](https://github.com/file-bricks/ProFiler/security/advisories/new).
-2. **Direct Contact**: If GitHub reporting is unavailable, contact the security team via `security@file-bricks.org`, `security@open-bricks.org`, `lukas@open-bricks.org`, `security@ellmos.ai`, or `support@lukasgeiger.com`.
+The project has not published an independent security certification or a guarantee that every deployment is secure. The pattern-based privacy review and workspace exchange are aids; inspect results and exported files before sharing them.
 
-**Please do not open public issues for security vulnerabilities.**
+The Windows application runs with the invoking user's permissions and does not require administrator elevation for its standard workflows. External programs inherit their own behavior and may require separate permissions.
 
-We acknowledge receipt of vulnerability reports within **48 hours** and provide a formal triage assessment within **5 business days**, with regular progress updates until a patch is released.
+### Current source status
 
-### Security Updates
-
-Security fixes are released promptly upon confirmation and documented in [CHANGELOG.md](CHANGELOG.md).
-
-### Statutory Notice & Liability Limitation (§ 521 BGB Gratuitous Contract)
-
-This software and documentation are provided free of charge (gratuitous relationship). In accordance with the statutory liability regime under German Civil Code (**§ 521 BGB** — *Haftung des Schenkers*), liability for defects as to quality and title is strictly limited to **intent** and **gross negligence**. Liability for ordinary or slight negligence is excluded to the maximum extent permitted by applicable law.
+The repository version is frozen at `15.0.2` while maintenance work continues. A source version does not by itself mean that a binary release, security-support window, or Store package is available.
 
 ---
 
 <a name="deutsch"></a>
 ## Deutsch
 
-### Unterstützte Versionen
+### Sicherheitsproblem melden
 
-| Version | Unterstützt | Status |
-| ------- | ----------- | ------ |
-| `15.0.x` | :white_check_mark: | Aktiver Versionszweig |
-| `< 15.0` | :x: | Nicht mehr unterstützt (End of Life) |
+Bitte melden Sie vermutete Sicherheitslücken vertraulich über [GitHub Security Advisories](https://github.com/file-bricks/ProFiler/security/advisories/new). Falls dieser Kanal nicht verfügbar ist, können Sie eine der folgenden Kontaktadressen verwenden. Bitte senden Sie keine echten personenbezogenen Unterlagen, Zugangsdaten oder privaten Dokumente in öffentlichen Issues.
 
-### Sicherheits-Invarianten & Entwurfsprinzipien
+Es werden keine Antwort-, Triage- oder Behebungsfristen zugesagt. Die Bearbeitung hängt von Reproduzierbarkeit, Auswirkungen und verfügbarer Maintainer-Zeit ab. Meldungen beziehen sich auf dieses Quellcodeprojekt; diese Richtlinie begründet keine Supportzusage für eine bestimmte Version oder Bereitstellung.
 
-1. **100% Local-First & Zero-Egress**: ProFiler arbeitet ausnahmslos lokal. Keine Netzwerk-Telemetrie, kein Cloud-Upload, kein Online-Konto.
-2. **Flüchtige Passwörter (Session-Only)**: PDF-Passwörter und Schlüssel verbleiben ausschließlich im flüchtigen Arbeitsspeicher und werden niemals auf Datenträgern oder in Konfigurationsdateien gespeichert.
-3. **Redigierter Datenaustausch**: Der Workspace-Export entfernt automatisch system-spezifische absolute Pfade und vertrauliche Schlüssel.
-4. **Unprivilegierter Betrieb (Non-Elevation)**: Die Anwendung läuft mit Standard-Benutzerrechten unter `%LOCALAPPDATA%\ProFilerSuite` (bzw. XDG unter POSIX) und benötigt keine Administratorrechte.
+- `security@file-bricks.org`
+- `security@open-bricks.org`
+- `lukas@open-bricks.org`
+- `security@ellmos.ai`
+- `support@lukasgeiger.com`
 
-### Melden von Sicherheitslücken
+### Umfang und Grenzen
 
-Wenn Sie eine Sicherheitslücke entdecken, melden Sie diese bitte vertraulich:
+Die Standardabläufe von ProFiler verarbeiten ausgewählte lokale Ordner und speichern Programmeinstellungen sowie Suchindizes auf dem Gerät. Der optionale Modulinstaller kann GitHub kontaktieren, wenn eine Person ihn startet. ProFiler blockiert keinen Netzwerkverkehr, kapselt externe Programme nicht ab und kontrolliert weder das Betriebssystem noch Drittanbieterbibliotheken. Vom Nutzer konfigurierte Werkzeuge und Integrationen können eigene Datenflüsse haben.
 
-1. **GitHub Security Advisories**: Direkte Meldung über [Report a vulnerability](https://github.com/file-bricks/ProFiler/security/advisories/new).
-2. **Direktkontakt**: Falls GitHub nicht nutzbar ist, per E-Mail an `security@file-bricks.org`, `security@open-bricks.org`, `lukas@open-bricks.org`, `security@ellmos.ai` oder `support@lukasgeiger.com`.
+Das Projekt behauptet keine unabhängige Sicherheitszertifizierung und garantiert nicht, dass jede Bereitstellung sicher ist. Die regelbasierte Datenschutzprüfung und der Workspace-Austausch sind Hilfsmittel; prüfen Sie Treffer und exportierte Dateien vor einer Weitergabe.
 
-**Bitte eröffnen Sie keine öffentlichen Issues für Sicherheitslücken.**
+Die Windows-Anwendung läuft mit den Berechtigungen des aufrufenden Benutzerkontos und benötigt für ihre Standardabläufe keine Administratorrechte. Externe Programme behalten ihr eigenes Verhalten und können gesonderte Berechtigungen benötigen.
 
-Wir bestätigen den Eingang innerhalb von **48 Stunden**, führen innerhalb von **5 Werktagen** eine strukturierte Triage durch und informieren regelmäßig über den Fortschritt bis zur Veröffentlichung eines Patches.
+### Aktueller Quellstand
 
-### Sicherheits-Updates
-
-Sicherheitsupdates werden schnellstmöglich bereitgestellt und im [CHANGELOG.md](CHANGELOG.md) dokumentiert.
-
-### Gesetzlicher Hinweis & Haftungsbeschränkung (§ 521 BGB Gefälligkeitsrecht)
-
-Die Bereitstellung dieser Software sowie der dazugehörigen Dokumentation erfolgt unentgeltlich (Gefälligkeitsverhältnis). Gemäß dem gesetzlichen Haftungsregime des deutschen Bürgerlichen Gesetzbuches (**§ 521 BGB** — *Haftung des Schenkers*) ist die Haftung für Sach- und Rechtsmängel ausdrücklich auf **Vorsatz** und **grobe Fahrlässigkeit** beschränkt. Eine Haftung für einfache oder leichte Fahrlässigkeit ist im gesetzlich zulässigen Rahmen vollständig ausgeschlossen.
+Die Repository-Version bleibt während der laufenden Pflege auf `15.0.2` eingefroren. Eine Quellversion belegt weder eine verfügbare Binärveröffentlichung noch einen Supportzeitraum oder ein Store-Paket.

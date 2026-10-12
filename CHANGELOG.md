@@ -5,6 +5,15 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Changed (2026-10-12 — Full-care maintenance)
+- Updated the active desktop UI and six locale catalogs, including language switching that preserves the current window state and stored machine-readable settings.
+- Replaced unsupported privacy, security, licensing, and accessibility guarantees in current product documentation with bounded descriptions of the reviewed source behavior and its limits.
+- Clarified the Python wheel contents and the separate native Windows build gate. The source checkout lacks the Tesseract and Poppler bundle files required by `build_exe.bat`; no native executable, signed MSIX, WACK result, or Store approval is claimed.
+- Updated package metadata to use the SPDX project-license expression and explicit license files; restricted the wheel to declared runtime modules, locale data, and selected icons, and documented the source distribution contents.
+- Changed the Windows Store preflight to report `NOT_RUN` when no real package certification has been performed; retained historical synthetic reports as non-certification evidence.
+- Made `indent_gui_checker.py` safe to import while preserving its direct-script GUI behavior.
+- Kept source version `15.0.2` frozen; no release or Store submission was made.
+
 ### Geändert / Changed (2026-10-02 - Pfad A Technical Hygiene & CI Lifecycle Workflows)
 - **CI/CD Lifecycle Workflows & Label Governance (`.github/`):**
   - PR-Auto-Assignment Workflow `.github/workflows/auto-assign.yml` mit least-privilege Rechten (`issues: write`, `pull-requests: write`), 5 Minuten Timeout und Concurrency-Schutz (`cancel-in-progress: true`) provisioniert.

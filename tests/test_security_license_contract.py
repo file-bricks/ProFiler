@@ -48,25 +48,18 @@ def test_dependency_security_minimum_floors() -> None:
 
 
 def test_third_party_license_inventory_completeness() -> None:
-    """Ensure THIRD_PARTY_LICENSES.txt follows the standardized 5-field schema and covers all dependencies."""
+    """Check dependency declarations are grouped by runtime and development role."""
     license_file = ROOT / "THIRD_PARTY_LICENSES.txt"
     assert license_file.exists(), "THIRD_PARTY_LICENSES.txt is missing"
     text = license_file.read_text(encoding="utf-8")
 
-    assert re.search(r"Stand:\s*2026-\d{2}-\d{2}", text), "Must contain valid 2026 audit date"
-    assert "Stand: 2026-09-30" in text
+    direct_section, optional_section = text.split("OPTIONAL AND DEVELOPMENT REQUIREMENTS", 1)
+    assert "GNU Affero General Public License version 3" in text
+    assert "DIRECT RUNTIME REQUIREMENTS" in direct_section
 
-    # Standard 5-field schema markers
-    assert "Package:" in text
-    assert "License:" in text
-    assert "SPDX:" in text
-    assert "URL:" in text
-    assert "Notice:" in text
-
-    # All direct runtime dependencies must be explicitly cataloged
+    # Declared direct runtime dependencies are named in the bounded notes.
     direct_packages = [
         "PySide6",
-        "shiboken6",
         "pypdf",
         "pikepdf",
         "PyMuPDF",
@@ -75,61 +68,40 @@ def test_third_party_license_inventory_completeness() -> None:
         "pytesseract",
         "Pillow",
         "watchdog",
-        "reportlab",
+        "ReportLab",
     ]
     for pkg in direct_packages:
-        assert f"Package: {pkg}" in text, f"Missing direct dependency entry in THIRD_PARTY_LICENSES.txt: {pkg}"
+        assert pkg in direct_section, f"Missing direct dependency entry in THIRD_PARTY_LICENSES.txt: {pkg}"
 
-    # Optional packages
+    # Optional and development tools are distinguished from runtime packages.
     for pkg in ["pandas", "openpyxl"]:
-        assert f"Package: {pkg}" in text, f"Missing optional dependency entry in THIRD_PARTY_LICENSES.txt: {pkg}"
+        assert pkg in optional_section, f"Missing optional dependency entry in THIRD_PARTY_LICENSES.txt: {pkg}"
 
-    # Build, test and packaging dependencies
     toolchain_packages = [
         "pytest",
-        "pluggy",
-        "iniconfig",
         "ruff",
         "PyInstaller",
-        "pyinstaller-hooks-contrib",
         "altgraph",
         "packaging",
     ]
     for pkg in toolchain_packages:
-        assert f"Package: {pkg}" in text, f"Missing toolchain entry in THIRD_PARTY_LICENSES.txt: {pkg}"
-
-    # SPDX identifier validations
-    assert "SPDX: LGPL-3.0-only" in text
-    assert "SPDX: BSD-3-Clause" in text
-    assert "SPDX: MPL-2.0" in text
-    assert "SPDX: AGPL-3.0-or-later" in text
-    assert "SPDX: MIT" in text
-    assert "SPDX: Apache-2.0" in text
-    assert "SPDX: HPND" in text
-    assert "SPDX: GPL-2.0-or-later WITH Bootloader-Exception" in text
+        assert pkg in optional_section, f"Missing development/build tool in THIRD_PARTY_LICENSES.txt: {pkg}"
 
 
 def test_security_policy_bilingual_and_contacts() -> None:
-    """Ensure SECURITY.md is bilingual, provides contact SLA, and defines security invariants."""
+    """Ensure SECURITY.md keeps bilingual reporting channels and contact routes."""
     sec_file = ROOT / "SECURITY.md"
     assert sec_file.exists(), "SECURITY.md is missing"
     text = sec_file.read_text(encoding="utf-8")
 
     assert "## English" in text
     assert "## Deutsch" in text
-    assert "15.0.x" in text
-    assert "48 hours" in text or "48 Stunden" in text
-    assert "5 business days" in text or "5 Werktagen" in text
+    assert "15.0.2" in text
     assert "security@file-bricks.org" in text
     assert "security@open-bricks.org" in text
     assert "security@ellmos.ai" in text
     assert "support@lukasgeiger.com" in text
     assert "https://github.com/file-bricks/ProFiler/security/advisories/new" in text
-    assert "Zero-Egress" in text
-    assert "Local-First" in text
-    assert "Non-Elevation" in text or "Unprivilegierter Betrieb" in text
-    assert "§ 521 BGB" in text
-    assert "Haftung des Schenkers" in text
 
 
 def test_repo_hygiene_and_gitignore_rules() -> None:
@@ -174,14 +146,16 @@ def test_no_hardcoded_user_paths_or_plaintext_secrets() -> None:
 
 
 def test_license_parity_across_manifests() -> None:
-    """Ensure AGPL-3.0 license parity across LICENSE, pyproject.toml, and documentation."""
+    """Ensure the AGPL-3-only grant matches SPDX metadata and packaged license files."""
     license_text = (ROOT / "LICENSE").read_text(encoding="utf-8")
     assert "GNU AFFERO GENERAL PUBLIC LICENSE" in license_text
     assert "Version 3" in license_text
 
     pyproject_text = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
-    assert 'text = "AGPL-3.0"' in pyproject_text
-    assert "License :: OSI Approved :: GNU Affero General Public License v3" in pyproject_text
+    assert 'license = "AGPL-3.0-only"' in pyproject_text
+    assert 'license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_LICENSES.md", "THIRD_PARTY_LICENSES.txt"]' in pyproject_text
+    for path in ("LICENSE", "NOTICE", "THIRD_PARTY_LICENSES.md", "THIRD_PARTY_LICENSES.txt"):
+        assert (ROOT / path).is_file(), f"Declared license file is missing: {path}"
 
 
 def test_local_first_and_offline_invariants() -> None:
@@ -202,14 +176,13 @@ def test_local_first_and_offline_invariants() -> None:
             assert not pat.search(text), f"Disallowed telemetry pattern {pat.pattern} found in {py_file.name}"
 
 
-def test_user_assets_zero_copyleft_and_linking() -> None:
-    """Verify user assets zero-copyleft guarantee and PySide6 dynamic linking in inventory."""
-    tp_text = (ROOT / "THIRD_PARTY_LICENSES.txt").read_text(encoding="utf-8")
-    tp_md = (ROOT / "THIRD_PARTY_LICENSES.md").read_text(encoding="utf-8")
-
-    assert "Zero-Copyleft" in tp_text or "KEINE Lizenzinfektion" in tp_text
-    assert "Zero-Copyleft on User Data" in tp_md
-    assert "LGPL-3.0 § 4" in tp_text
-    assert "dynamisch gebunden" in tp_text.lower()
-    assert "INV-LOCAL-01" in tp_text
-    assert "INV-SLA-10" in tp_text
+def test_native_bundle_requirements_are_recorded() -> None:
+    """Keep external OCR/PDF bundle paths explicit in dependency notes."""
+    text = (ROOT / "THIRD_PARTY_LICENSES.txt").read_text(encoding="utf-8")
+    for required_path in (
+        "runtime/tesseract/tesseract.exe",
+        "runtime/tesseract/tessdata/",
+        "runtime/poppler/pdftoppm.exe",
+        "runtime/poppler/pdfinfo.exe",
+    ):
+        assert required_path in text

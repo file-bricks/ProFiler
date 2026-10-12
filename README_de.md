@@ -7,33 +7,33 @@
 [![Version: 15.0.2](https://img.shields.io/badge/version-15.0.2-blue.svg)](CHANGELOG.md)
 [![Org: file-bricks](https://img.shields.io/badge/Org-file--bricks-blue)](https://github.com/file-bricks)
 [![Lizenz: AGPL v3](https://img.shields.io/badge/Lizenz-AGPL%20v3-blue.svg)](LICENSE)
-[![CI: Plattform-Smoke](https://img.shields.io/badge/CI-Plattform--Smoke-brightgreen.svg)](https://github.com/file-bricks/ProFiler/actions)
-[![Tests: 238 bestanden](https://img.shields.io/badge/Tests-238%20bestanden%20%7C%20100%25-brightgreen.svg)](CHANGELOG.md)
+[![CI: Source- und Plattform-Smoke](https://github.com/file-bricks/ProFiler/actions/workflows/source-platform-smoke.yml/badge.svg?branch=master)](https://github.com/file-bricks/ProFiler/actions/workflows/source-platform-smoke.yml)
+
 [![Code-Style: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![Mitwirken: Leitfaden](https://img.shields.io/badge/Mitwirken-Leitfaden-blue.svg)](CONTRIBUTING.md)
-[![Sicherheits-SLA: 48h Antwort / 5d Triage](https://img.shields.io/badge/Sicherheits--SLA-48h%20Antwort%20%2F%205d%20Triage-blue.svg)](SECURITY.md)
-[![Sicherheit: RunAsInvoker](https://img.shields.io/badge/Sicherheit-RunAsInvoker-green.svg)](SECURITY.md)
-[![Level 1 SBOM: Plain--Text auditiert](https://img.shields.io/badge/Level%201%20SBOM-Plain--Text%20auditiert-brightgreen.svg)](THIRD_PARTY_LICENSES.txt)
-[![Drittanbieter: Auditiert](https://img.shields.io/badge/Drittanbieter-auditiert-brightgreen.svg)](THIRD_PARTY_LICENSES.md)
-[![Marketing-Log: Aktiv](https://img.shields.io/badge/Marketing--Log-aktiv-blue.svg)](MARKETING-LOG.txt)
+
+
+
+
+
 [![Attribution: NOTICE](https://img.shields.io/badge/Attribution-NOTICE-blue.svg)](NOTICE)
-[![Python: 3.10--3.13](https://img.shields.io/badge/python-3.10--3.13-blue.svg)](https://www.python.org/)
+[![Python: 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![GUI: PySide6](https://img.shields.io/badge/GUI-PySide6-green.svg)](https://wiki.qt.io/Qt_for_Python)
-[![Plattform: Windows | Linux | macOS](https://img.shields.io/badge/Plattform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
-[![Datenschutz: 100% Local-First](https://img.shields.io/badge/Datenschutz-100%25%20Local--First-success.svg)]()
+
+
 [![Ökosystem: open-bricks](https://img.shields.io/badge/%C3%96kosystem-open--bricks-blueviolet)](https://github.com/open-bricks)
 [![LLM-Kontext: llms.txt](https://img.shields.io/badge/LLM--Kontext-llms.txt-orange)](llms.txt)
-[![Zuletzt geprüft: 2026-10-02](https://img.shields.io/badge/Zuletzt%20gepr%C3%BCft-2026--10--02-blue.svg)](CHANGELOG.md)
-[![Verifiziert: 2026-10-02](https://img.shields.io/badge/Verifiziert-2026--10--02-success.svg)](CHANGELOG.md)
+
+
 
 > [!NOTE]
 > KI-Agenten und LLM-Tools, die dieses Repository analysieren, finden in [`llms.txt`](llms.txt) Details zur Architektur, zu primären Features, Vertragsschnittstellen und Verifikationsbefehlen.
 
 > Lokaler Dokumenten-Detektiv — Volltext-Indexierung, OCR, PDF-Werkzeuge, Duplikaterkennung & Datenschutzprüfung in einer PySide6-App.
 
-ProFiler Suite ist ein lokaler Desktop-Dateimanager für private und vertrauliche Dokumentensammlungen. Die App vereint Volltext-Indexierung, Tesseract-OCR, PDF-Werkzeuge, kryptografische SHA-256 Duplikaterkennung, Datenschutzprüfungen (Datenschutzampel) und Synchronisations-Workflows in einer Windows-orientierten PySide6-Oberfläche.
+ProFiler Suite ist eine Windows-orientierte PySide6-Desktop-App zum Indexieren vom Nutzer ausgewählter lokaler Ordner, für OCR- und PDF-Arbeitsabläufe, SHA-256-Deduplizierung und Hinweise auf mögliche sensible Begriffe. Suchindizes und App-Einstellungen werden lokal gespeichert; der konkrete Pfad hängt von Konfiguration und Betriebssystem ab. Der Quellcode enthält außerdem einen optionalen, vom Nutzer gestarteten GitHub-Modulinstaller. In den geprüften First-Party-Pfaden wurde kein automatischer Upload von Dokumentinhalten und keine Telemetrie gefunden. ProFiler blockiert jedoch keinen Netzwerkverkehr und kontrolliert weder Betriebssystem noch externe Bibliotheken.
 
-ProFiler wurde gezielt für Anwender entwickelt, die vertrauliche, geschäftliche oder regulierte Dokumente verwalten und schnelle Volltextsuche, Vorschau, PDF-Verarbeitung und Schwärzungen nutzen möchten, ohne jemals Daten in eine Cloud hochzuladen.
+ProFiler unterstützt lokale Such-, Vorschau- und PDF-Arbeitsabläufe für vom Nutzer ausgewählte Dateien. Prüfe Ergebnisse und Schwärzungen vor einer Weitergabe selbst. Der Modulinstaller kann bei ausdrücklichem Aufruf GitHub kontaktieren; ProFiler ist kein Egress-Filter und keine Datenschutz- oder Compliance-Zertifizierung.
 
 ---
 
@@ -53,8 +53,8 @@ ProFiler wurde gezielt für Anwender entwickelt, die vertrauliche, geschäftlich
 12. [Enthaltene Werkzeuge & Dienstprogramme](#enthaltene-werkzeuge--dienstprogramme)
 13. [Unterstützte Dateiformate & OCR](#unterstützte-dateiformate--ocr)
 14. [Geschwister-Ökosystem & Integrationen](#geschwister-ökosystem--integrationen)
-15. [Drittanbieter-Lizenzen & Compliance](#drittanbieter-lizenzen--compliance)
-16. [Sicherheitsrichtlinie & SLAs](#sicherheitsrichtlinie--slas)
+15. [Drittanbieter-Lizenzen](#drittanbieter-lizenzen--compliance)
+16. [Sicherheitsrichtlinie](#sicherheitsrichtlinie--slas)
 17. [Zielgruppen & High-Intent SEO](#zielgruppen--high-intent-seo)
 18. [Verifikation & Test-Suite](#verifikation--test-suite)
 
@@ -88,8 +88,8 @@ graph TD
         C3["Duplikat- & Versionsverwaltung"]
     end
 
-    subgraph DatenschutzGate["4. Datenschutz & Arbeitsbereich-Sicherheit"]
-        D1["Datenschutzampel (Mustererkennung sensibler Daten)"]
+    subgraph DatenschutzGate["4. Musterprüfung & Arbeitsbereich-Austausch"]
+        D1["Regelbasierte Prüfung möglicher sensibler Begriffe"]
         D2["Redigierter Arbeitsbereich-Austausch (JSON-Schema v1)"]
     end
 
@@ -131,15 +131,15 @@ sequenceDiagram
         OCR->>Index: Volltext-Suchindex aktualisieren (FTS)
     end
     User->>UI: Dokumentenexport oder Freigabe anfordern
-    UI->>Gate: Prüfung auf personenbezogene Daten (PII) ausführen
+    UI->>Gate: Regelbasierte Prüfung möglicher sensibler Begriffe
     alt Sensible Daten erkannt
         Gate-->>UI: Warnung / Schwärzungsvorschlag (Ampel ROT/GELB)
         User->>UI: PDF schwärzen / Arbeitsbereich anonymisieren
     else Unbedenkliches Dokument
-        Gate-->>UI: Status grün bestätigen (Ampel GRÜN)
+        Gate-->>UI: Kein konfiguriertes Muster gefunden
     end
     UI->>Exchange: Redigierten Arbeitsbereich exportieren (JSON-Schema v1)
-    Exchange-->>User: Validiertes Übergabe-Artefakt ohne Datenlecks
+    Exchange-->>User: Schema-geprüfter Workspace-Export
 ```
 
 <a id="sec-03"></a>
@@ -149,18 +149,15 @@ sequenceDiagram
 <a id="core-capabilities--security-invariants"></a>
 ## Kernfähigkeiten & Sicherheitsinvarianten
 
-| Invarianten-Code | Garantie & Systemgrenze | Technische Umsetzung | Verifikation & Nachweis |
-|---|---|---|---|
-| `INV-LOCAL-01` | **100% Local-First & Zero-Egress** | Alle SQLite-Datenbanken, Suchindizes und Caches verbleiben ausnahmslos auf dem lokalen Rechner. Kein Cloud-Upload, keine Netzwerktelemmetrie, kein Benutzerkonto. | Verifiziert durch netzwerkfreie Testsuite & Dateisystem-Isolation. |
-| `INV-SESSION-02` | **Flüchtige Passwörter (Session-Only)** | PDF-Passwörter und temporäre Entschlüsselungsschlüssel werden ausschließlich im flüchtigen Prozessspeicher gehalten und niemals auf Festplatte gespeichert. | Getestet in `tests/test_security_hardening.py` (`test_settings_passwords_are_session_only`). |
-| `INV-GATE-03` | **Datenschutzampel & PII-Filter** | Integrierte Heuristik (`Datenschutzampel`) scannt nach IBANs, Steuer-IDs, Zugangsdaten und personenbezogenen Daten vor dem Export. | Validiert in `ProFiler_Datenschutzampel.py` und `tests/test_anonymization.py`. |
-| `INV-SCHEMA-04` | **Redigierter Arbeitsbereich-Austausch** | Export und Import von Arbeitsbereichen folgen strikt dem JSON-Schema v1 und entfernen absolute Pfade sowie sensible Systemgeheimnisse. | Getestet in `tests/test_workspace_exchange.py` mit BOM-freiem UTF-8. |
-| `INV-PLACEHOLDER-05` | **Cloud-Platzhalter-Schutz** | Erkennt OneDrive- und Cloud-Platzhalterdateien und verhindert deren automatisches Herunterladen bei Indexierungsläufen. | Implementiert im Crawler und verifiziert in `tests/test_bug_regressions.py`. |
-| `INV-UNPRIV-06` | **Unprivilegierter Betrieb (RunAsInvoker)** | Läuft ausschließlich mit Standard-Benutzerrechten. Konfiguration und Indizes liegen unter `%LOCALAPPDATA%\ProFilerSuite` (bzw. XDG auf POSIX). | Verifiziert in `tests/test_app_paths.py` und `tests/test_platform_smoke_contract.py`. |
-| `INV-ATOMIC-07` | **Atomare SQLite-Indexierung** | Indexierungs-Transaktionen nutzen den SQLite WAL-Modus mit atomaren Commits für maximale Ausfallsicherheit. | Getestet in `SQLiteViewer.py` und Datenbankinspektions-Tests. |
-| `INV-INTEGRITY-08` | **SHA-256 Duplikatserkennung** | Findet exakte Datei-Duplikate über beliebige Verzeichnisse hinweg mittels kryptografischer Prüfsummen. | Getestet über diverse Dateiformate in der Testsuite. |
-| `INV-OFFLINE-09` | **Offline-OCR & Poppler-Sandbox** | Texterkennung (Tesseract) und PDF-Rendering erfolgen rein lokal über unprivilegierte Subprozesse ohne externe APIs. | Getestet in `tests/test_security_hardening.py`. |
-| `INV-SLA-10` | **48h Sicherheits-SLA & 5-Tage-Triage** | Sicherheitsrelevante Meldungen erhalten eine Erstbestätigung innerhalb von 48 Stunden und eine Triage binnen 5 Werktagen. | Festgelegt in `SECURITY.md` und verifiziert in `tests/test_metadata.py`. |
+| Bereich | Belegte Funktion | Grenze |
+|---|---|---|
+| Lokale Ablage | App-Einstellungen und Suchindizes liegen standardmäßig im Benutzerprofil; Pfade lassen sich konfigurieren. | Local-first beschreibt die Verarbeitung, keine Netzwerksperre. Der optionale Modulinstaller nutzt GitHub, wenn er aufgerufen wird. |
+| PDF-Passwörter | Die Anwendung speichert PDF-Passwörter nicht in den Einstellungen; dafür gibt es gezielte Regressionstests. | Daraus folgt keine allgemeine Aussage über alle Geheimnisse oder externe Prozesse. |
+| Datenschutzampel | Regel- und musterbasierte Prüfung markiert mögliche sensible Begriffe und Nummern. | Keine vollständige PII-Erkennung, Rechtsprüfung oder DSGVO-Konformitätsbewertung; Treffer und Schwärzungen müssen geprüft werden. |
+| Workspace-Austausch | Der Export nutzt ein JSON-Schema und filtert bestimmte lokale Pfade und Schlüssel. | Ein begrenztes Austauschformat, keine allgemeine Garantie für ein anonymes oder risikofreies Archiv. |
+| OCR und PDF | Tesseract und Poppler können für OCR und PDF-Rendering verwendet werden, wenn die externen Werkzeuge verfügbar sind. | Die Source-Smokes prüfen keine vollständige native Bündelung, WACK-Zertifizierung oder Store-Verteilung. |
+| Berechtigungen | ProFiler legt Konfiguration unter dem Benutzerprofil ab und läuft mit den Berechtigungen des aufrufenden Prozesses. | Es gibt keine bestätigte Sandbox, Egress-Sperre oder Privilegienabsenkung.
+
 
 <a id="sec-04"></a>
 <a id="4-zielgruppen--anwendungsfälle"></a>
@@ -169,12 +166,13 @@ sequenceDiagram
 <a id="target-personas--use-cases"></a>
 ## Zielgruppen & Anwendungsfälle
 
-| Zielgruppe | Typische Aufgaben & Workflows | Gelöste Kernprobleme |
+| Zielgruppe | Typische Aufgaben | Passende Einordnung |
 |---|---|---|
-| **Datenschutzbeauftragte, Juristen & Compliance** | Prüfung lokaler Aktenbestände auf DSGVO-Konformität, Schwärzung von Mandantendaten in PDFs und Beseitigung sensibler Daten vor Freigaben. | **Kein Cloud-Risiko**: Die integrierte Datenschutzampel erkennt PII automatisch und warnt per Farbschema. Schwärzungen erfolgen speicherbasiert ohne Datenreste. |
-| **Wissenschaftler, Archive & Historiker** | Erschließung heterogener Dokumentenbestände (PDF, DOCX, TXT, Scans), Volltextsuche in historischen Unterlagen und Beseitigung von Dubletten. | **Lokale OCR-Integration**: Tesseract liest eingescannte Bild-PDFs direkt in den lokalen SQLite-Suchindex ein, ohne historische Dokumente an Dritte zu übertragen. |
-| **Freiberufler & Kleinunternehmen** | Strukturierung von Eingangsrechnungen, Kundenverträgen und Belegen; seitenweises Teilen oder Verschlüsseln von PDF-Dokumenten für die Buchhaltung. | **Keine monatlichen Abo-Kosten**: Vollwertige Desktop-Zentrale ohne teure SaaS-Monatsabos (wie Adobe Acrobat oder Cloud-DMS), 100% offline nutzbar. |
-| **Power-User & Datenschutz-Enthusiasten** | Schnelle Dateiverwaltung mit Dark/Light-Themes, Tastaturnavigation und präziser Kontrolle über Speicherpfade und OneDrive-Synchronisation. | **Platzhalter-Schutz**: ProFiler lädt Cloud-Dateien in OneDrive nicht ungefragt herunter und schützt so vor Speicherplatzüberläufen auf lokalen SSDs. |
+| **Nutzer mit sensiblen Unterlagen** | Lokale Dokumente durchsuchen und Musterwarnungen vor einer Freigabe prüfen. | Die Datenschutzampel ist eine regelbasierte Hilfe, keine vollständige Erkennung personenbezogener Daten und keine Rechts- oder Compliance-Prüfung. |
+| **Forschung und Archive** | Scans indexieren, Dokumente durchsuchen und Dubletten finden. | OCR benötigt passende externe Werkzeuge; die angebotenen Source-Smokes zertifizieren keine vollständige native Bereitstellung. |
+| **Kleine Büros und Selbstständige** | Rechnungen, Verträge und Belege lokal organisieren und ausgewählte PDF-Schritte ausführen. | Ob Dateien lokal bleiben, hängt auch von Speicherorten, Betriebssystemdiensten und externen Komponenten ab. |
+| **Power-User** | Ordner, Indizes, Vorschau, Tastaturfunktionen und optionale Geschwisterwerkzeuge nutzen. | ProFiler kontrolliert nicht die Berechtigungen anderer Prozesse oder Synchronisationsdienste.
+
 
 <a id="sec-05"></a>
 <a id="5-vergleichsmatrix--alternativen"></a>
@@ -183,17 +181,15 @@ sequenceDiagram
 <a id="comparative-matrix--alternatives"></a>
 ## Vergleichsmatrix & Alternativen
 
-| Funktion / Eigenschaft | ProFiler Suite | Cloud-DMS SaaS (DocuWare / Dropbox) | Standard-Dateimanager (Windows Explorer) | Schweres Enterprise-ECM (Alfresco / Nextcloud) | Geschwistertool (KnowledgeDigest) |
-|---|---|---|---|---|---|
-| **Architektur** | **100% Local-First** | Cloud-Hosted SaaS | Lokale OS-Shell | Self-Hosted Server | Local-First Hub |
-| **Netzwerk-Egress** | **Zero-Egress** | Zwingender Upload | Rein lokal | Server-Sync erforderlich | Zero-Egress |
-| **SQLite-Volltextsuche** | **Ja (FTS & Metadaten)** | Nur im Cloud-Index | Einfache Windows-Suche | Lucene/Elasticsearch | Ja (FTS5 + BM25) |
-| **Integrierte OCR (Tesseract)**| **Ja (Offline)** | Proprietäre Cloud-OCR | Keine | Optionales Server-Modul | Reine Textextraktion |
-| **PDF-Werkzeuge (Schwärzen)** | **Ja (Integriert)** | Teures Zusatzpaket | Keine | Drittanbieter-Tools | Keine |
-| **Datenschutzampel (PII)** | **Ja (Integriert)** | Teure DLP-Erweiterung| Keine | Komplexe Regel-Engine | Keine |
-| **Cloud-Platzhalter-Schutz** | **Ja (OneDrive-Aware)**| Nativer Sync-Client | Nativer Sync-Client | Nicht zutreffend | Basis-Dateizugriff |
-| **Laufende Kosten** | **Kostenlos & Open Source**| 15–50 € / Monat / User | Im OS enthalten | Hardware- + Wartungskosten | Kostenlos & Open Source |
-| **Haupteinsatzbereich** | **Lokaler Dokumenten-Detektiv**| Team-Kollaboration | Allgemeine Dateiverwaltung| Großunternehmen | LLM-Wissens-Chunking |
+ProFiler konzentriert sich auf lokale Dateiverwaltung, Suchindizes und ausgewählte OCR-/PDF-Arbeitsabläufe. Die folgenden Projekte bedienen andere Arbeitsweisen; die Tabelle behauptet keine Funktions- oder Sicherheitsprüfung dieser Produkte.
+
+| Arbeitsweise | Einordnung |
+|---|---|
+| Lokale Dokumentensuche | ProFiler indexiert vom Nutzer ausgewählte Ordner und speichert den Suchindex lokal. |
+| Notizen und LLM-Suche | [KnowledgeDigest](https://github.com/file-bricks/knowledgedigest) ist ein separates Werkzeug; eine ProFiler-Integration ist nicht belegt. |
+| Batch-OCR und PDF-Aufbereitung | [PDFtoPDFocr](https://github.com/doc-bricks/PDFtoPDFocr) und [DokuZen](https://github.com/doc-bricks/DokuZen) sind eigenständige Werkzeuge mit anderem Schwerpunkt. |
+| Allgemeine Dateiverwaltung oder Cloud-DMS | Betrieb, Datenschutz, Kosten und Funktionen unterscheiden sich je nach Produkt und Konfiguration; bitte die jeweilige Produktdokumentation prüfen.
+
 
 <a id="sec-06"></a>
 <a id="6-funktions-highlights"></a>
@@ -207,8 +203,8 @@ sequenceDiagram
 - **Tesseract-OCR-Workflow**: Automatische Texterkennung für eingescannte Bild-PDFs und Grafikformate.
 - **Umfassende PDF-Werkzeuge**: Verschlüsseln, Entschlüsseln, Seiten extrahieren, Text schwärzen und bereinigen.
 - **Kryptografische Duplikaterkennung**: Schneller SHA-256-Fingerprint zur Identifikation identischer Dateien.
-- **Datenschutzampel (PII-Prüfung)**: Vorabprüfung auf sensible Nummern, Kontodaten und personenbezogene Informationen.
-- **Erkennung von Cloud-Platzhaltern**: Verhindert das automatische Herunterladen von OneDrive-Dateien bei Scans.
+- **Datenschutzampel**: Regelbasierte Hinweise auf mögliche sensible Begriffe; Treffer bitte selbst prüfen.
+- **Cloud-Platzhalter**: Der Crawler berücksichtigt erkannte Platzhalter in unterstützten Scanpfaden; das Verhalten hängt von Plattform und Dateisystem ab.
 - **ProSync-Integration**: Direkte Anbindung an das Ordnersynchronisations-Werkzeug ProSync.
 - **Redigierter Arbeitsbereich-Austausch**: Export und Import portabler Workspaces über JSON-Schema v1.
 - **Moderne Desktop-Oberfläche**: Native PySide6-GUI mit Dark-/Light-Theme-Umschaltung und System-Tray-Support.
@@ -233,11 +229,11 @@ sequenceDiagram
 ProFiler ist die ideale Wahl, wenn Sie ein privates Dokumentenwerkzeug benötigen für:
 
 - Durchsuchbare lokale Archive von PDFs, Office-Dokumenten, Texten und eingescannten Belegen.
-- OCR-unterstützte Volltextsuche in gescannten Dokumenten ohne Cloud-Gebühren oder Datenschutzbedenken.
+- OCR-unterstützte Volltextsuche in Scans, wenn die benötigten lokalen Werkzeuge verfügbar sind.
 - Erkennung von Dateidubletten und Prüfung von Versionsständen über komplexe Ordnerstrukturen hinweg.
 - Sichere PDF-Arbeiten (Passwortschutz, Auszüge, Schwärzungen) in einer einzigen lokalen Desktop-Anwendung.
-- Prüfung von Dokumentenpaketen auf sensible Daten vor der Weitergabe an Dritte (DSGVO-Prüfung).
-- Nutzung einer zentralen Desktop-Zentrale neben Begleitwerkzeugen wie [ProSync](https://github.com/file-bricks/ProSync) und [SQLiteViewer](https://github.com/file-bricks/SQLiteViewer).
+- Mögliche sensible Begriffe vor der Weitergabe markieren; dies ist keine Rechts- oder DSGVO-Konformitätsprüfung.
+- Das separate Werkzeug [ProSync](https://github.com/file-bricks/ProSync) optional über das Menü starten; SQLiteViewer liegt als eigenes Skript in diesem Repository.
 
 <a id="sec-09"></a>
 <a id="9-schnellstart--installation"></a>
@@ -275,19 +271,22 @@ START.bat
 <a id="windows-launcher--build-flow"></a>
 ## Windows-Launcher & Build-Prozess
 
-Für die lokale Nutzung als eigenständige Windows-Desktop-Anwendung kann eine EXE-Datei gebaut werden:
+Für einen lokalen Windows-EXE-Build:
 
 ```bat
 build_exe.bat
 ```
 
-Der Build setzt ein sauberes Git-Repository voraus, läuft außerhalb von OneDrive in `C:\_Local_DEV\codex_build\profiler`, nutzt fest definierte Abhängigkeiten und erzeugt:
+Das Skript bricht vor PyInstaller ab, wenn Dateien unter `runtime/tesseract/` oder `runtime/poppler/` fehlen. Außerdem benötigt es einen sauberen Git-Klon. `BUILD_ROOT` legt das konfigurierbare lokale Ausgabeverzeichnis fest.
 
-- `release/ProFiler-15.0.0-win64.exe`
-- `release/SHA256SUMS.txt`
-- `release/BUILD-PROVENANCE.json`
+Bei erfüllten Voraussetzungen entstehen unter anderem:
 
-Der Build schreibt niemals in OneDrive, GitHub Releases oder ein Store-Paket. `START.bat` startet die lokale EXE nur dann, wenn die Prüfsumme in `ProFiler.exe.sha256` übereinstimmt; andernfalls wird direkt `Profiler_Suite_V15.py` ausgeführt.
+- `<BUILD_ROOT>/dist/ProFiler.exe`
+- `<BUILD_ROOT>/release/SHA256SUMS.txt`
+- `<BUILD_ROOT>/release/BUILD-PROVENANCE.json`
+
+Dies ist ein lokaler Build-Ablauf. Das Skript veröffentlicht nicht bei GitHub Releases, in OneDrive oder im Microsoft Store.
+
 
 <a id="sec-11"></a>
 <a id="11-konfiguration--lokale-ablage"></a>
@@ -320,7 +319,7 @@ python import_excel_to_profiler.py --input INPUT.xlsx --database profiler.db --o
 | Datei | Funktion |
 |---|---|
 | `Profiler_Suite_V15.py` | Hauptanwendung mit grafischer Benutzeroberfläche (PySide6) |
-| `ProFiler_Datenschutzampel.py` | Eigenständiges Prüfwerkzeug für Datenschutz und PII-Filterung |
+| `ProFiler_Datenschutzampel.py` | Eigenständige regelbasierte Hinweise auf mögliche sensible Begriffe; keine vollständige PII-Erkennung |
 | `SQLiteViewer.py` | SQLite-Datenbankbetrachter zur Inspektion der lokalen Indizes |
 | `import_excel_to_profiler.py` | Befehlszeilenwerkzeug zum Import bestehender Excel-Dateilisten |
 | `indent_gui_checker.py` | Entwicklerwerkzeug zur Überprüfung von Einrückungen im GUI-Code |
@@ -344,73 +343,66 @@ python import_excel_to_profiler.py --input INPUT.xlsx --database profiler.db --o
 <a id="geschwister-ökosystem--integrationen"></a>
 <a id="14-sibling-ecosystem--integrations"></a>
 <a id="sibling-ecosystem--integrations"></a>
-## Geschwister-Ökosystem & Integrationen
+## Geschwister-Ökosystem & verwandte Werkzeuge
 
-ProFiler Suite ist fester Bestandteil der **file-bricks**-Werkzeugfamilie unter dem Dach von **[open-bricks](https://github.com/open-bricks)**:
+ProFiler gehört zur file-bricks-Werkzeugfamilie unter dem Dach von [open-bricks](https://github.com/open-bricks). Ein Link belegt keine technische Integration.
 
-| Werkzeug | Repository | Domäne / Fokus | Status |
-|---|---|---|---|
-| **ProFiler** | [file-bricks/ProFiler](https://github.com/file-bricks/ProFiler) | Lokale Dokumentenindexierung, OCR, Duplikaterkennung & Datenschutz | Aktives Flaggschiff |
-| **KnowledgeDigest** | [file-bricks/knowledgedigest](https://github.com/file-bricks/knowledgedigest) | Portable Wissensdatenbank, FTS5 BM25-Suche & LLM-Zusammenfassungen | Aktives Flaggschiff |
-| **PDFtoPDFocr** | [doc-bricks/PDFtoPDFocr](https://github.com/doc-bricks/PDFtoPDFocr) | Batch-OCR- & durchsuchbare PDF-Generierungs-Engine | Aktives Geschwistertool |
-| **DokuZen** | [doc-bricks/DokuZen](https://github.com/doc-bricks/DokuZen) | Desktop-PDF-Werkstatt, Formatkonverter & Sicherheitsentschlüsselung | Aktives Geschwistertool |
-| **MediaBrain** | [doc-bricks/MediaBrain](https://github.com/doc-bricks/MediaBrain) | Multimodale Medientranskription & strukturierte Indexierung | Aktives Geschwistertool |
-| **TextBrain** | [doc-bricks/TextBrain](https://github.com/doc-bricks/TextBrain) | Dokumentenintelligenz, semantische Klassifikation & Analysen | Aktives Geschwistertool |
-| **DevCenter** | [dev-bricks/DevCenter](https://github.com/dev-bricks/DevCenter) | Entwickler-Dashboard & Automations-Launcher | Aktives Geschwistertool |
-| **CodeBox** | [dev-bricks/CodeBox](https://github.com/dev-bricks/CodeBox) | Offline-Snippet-Tresor & Code-Runner-Sandbox | Aktives Geschwistertool |
-| **FileCommander MCP** | [ellmos-ai/ellmos-filecommander-mcp](https://github.com/ellmos-ai/ellmos-filecommander-mcp) | Sichere, isolierte MCP-Dateiverwaltung & Batch-Verarbeitung | Aktiver Begleiter |
-| **CodeCommander MCP** | [ellmos-ai/ellmos-codecommander-mcp](https://github.com/ellmos-ai/ellmos-codecommander-mcp) | MCP-Code-Intelligenz, AST-Analyse & Formatreparatur | Aktiver Begleiter |
-| **SQLite Transit Sync** | [dev-bricks/sqlite-transit-sync](https://github.com/dev-bricks/sqlite-transit-sync) | Verlustfreie Multi-Master SQLite-Replikation & Synchronisation | Aktiver Begleiter |
+| Werkzeug | Repository | Belegte Beziehung |
+|---|---|---|
+| **ProSync** | [file-bricks/ProSync](https://github.com/file-bricks/ProSync) | Kann über einen optionalen ProFiler-Menüpunkt als separates Programm gestartet werden. Die Synchronisierung läuft außerhalb von ProFiler. |
+| **SQLiteViewer** | [SQLiteViewer.py](SQLiteViewer.py) | Eigenes Skript in diesem Repository zur Anzeige von SQLite-Datenbanken. |
+| **KnowledgeDigest** | [file-bricks/knowledgedigest](https://github.com/file-bricks/knowledgedigest) | Eigenständiges Familienwerkzeug für Notizen und Wissenssuche; keine direkte ProFiler-Integration belegt. |
+| **PDFtoPDFocr** | [doc-bricks/PDFtoPDFocr](https://github.com/doc-bricks/PDFtoPDFocr) | Separates Werkzeug für Batch-OCR und durchsuchbare PDFs. |
+| **DokuZen** | [doc-bricks/DokuZen](https://github.com/doc-bricks/DokuZen) | Separates Desktopwerkzeug für PDF-Arbeitsabläufe. |
+| **MediaBrain** | [doc-bricks/MediaBrain](https://github.com/doc-bricks/MediaBrain) | Eigenständige Video- und Musikbibliothek mit Playlists und Verlauf; keine ProFiler-Integration belegt. |
+
+Weitere Organisationsprojekte findest du unter [file-bricks](https://github.com/file-bricks).
+
 
 <a id="sec-15"></a>
 <a id="15-drittanbieter-lizenzen--compliance"></a>
 <a id="drittanbieter-lizenzen--compliance"></a>
 <a id="15-third-party-licenses--compliance"></a>
 <a id="third-party-licenses--compliance"></a>
-## Drittanbieter-Lizenzen & Compliance
+## Drittanbieter-Lizenzen
 
-ProFiler Suite ist unter der **GNU Affero General Public License v3.0 (AGPL-3.0-only)** lizenziert. Siehe [LICENSE](LICENSE).
+ProFiler selbst ist unter **AGPL-3.0-only** lizenziert; maßgeblich ist [LICENSE](LICENSE).
 
-Durch die Nutzung von `PyMuPDF` unterliegt die Anwendung der AGPL-3.0. Ein vollständiges, auditiertes Verzeichnis aller direkten Pakete (`PySide6`, `pypdf`, `pikepdf`, `Pillow`, `watchdog`, `reportlab`, `pytesseract`) und Build-Werkzeuge ist in [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md) (sowie [`THIRD_PARTY_LICENSES.txt`](THIRD_PARTY_LICENSES.txt)) dokumentiert.
+[THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) und [THIRD_PARTY_LICENSES.txt](THIRD_PARTY_LICENSES.txt) führen deklarierte direkte Laufzeit- und optionale Abhängigkeiten sowie ausgewählte Entwicklungs- und Build-Werkzeuge mit Verweisen auf Upstream-Lizenzquellen auf. Das ist kein vollständiges Verzeichnis transitiver Pakete oder gebündelter Binärdateien und keine Lizenzkompatibilitäts- oder Rechtsprüfung.
 
-Die Vorbereitungen für den Microsoft Windows Store werden durch `store_package.json`, `STORE_LISTING.md`, `PRIVACY_POLICY.md`, `SUPPORT.md` und `WINDOWS_STORE_PREP.md` geregelt.
+Vor einer Binär- oder Store-Verteilung müssen die tatsächlichen Artefakte, eingebetteten Komponenten, Lizenztexte und Bündelungsbedingungen separat geprüft werden. Die vorhandenen Store-Dateien sind Vorbereitungsmaterial und belegen keine Veröffentlichung oder Zertifizierung.
+
 
 <a id="sec-16"></a>
 <a id="16-sicherheitsrichtlinie--slas"></a>
 <a id="sicherheitsrichtlinie--slas"></a>
 <a id="16-security-policy--slas"></a>
 <a id="security-policy--slas"></a>
-## Sicherheitsrichtlinie & SLAs
+## Sicherheitsrichtlinie
 
-ProFiler unterhält eine verbindliche, zweisprachige Sicherheitsrichtlinie unter [`SECURITY.md`](SECURITY.md).
+ProFiler nimmt vertrauliche Meldungen zu Sicherheitsproblemen entgegen. Nutzen Sie nach Möglichkeit [GitHub Security Advisories](https://github.com/file-bricks/ProFiler/security/advisories/new). Falls dieser Weg nicht verfügbar ist, finden Sie einen alternativen Kontakt und den Ablauf in [SECURITY.md](SECURITY.md).
 
-- **Sicherheits-Reaktions-SLA**: Erstbestätigung garantiert innerhalb von 48 Stunden.
-- **Triage- & Behebungs-SLA**: Strukturierte Triage und Handlungsplan binnen 5 Werktagen.
-- **Meldewege**: Per E-Mail an `security@open-bricks.org` und `support@lukasgeiger.com` oder über GitHub Security Advisories.
+Es werden keine festen Antwort-, Triage- oder Behebungsfristen zugesagt. Prüfung und Behebung hängen von Reproduzierbarkeit, Schweregrad und verfügbarer Maintainer-Zeit ab.
 
----
 
 <a id="sec-17"></a>
 <a id="17-zielgruppen--high-intent-seo"></a>
 <a id="zielgruppen--high-intent-seo"></a>
 <a id="17-target-personas--high-intent-seo"></a>
 <a id="target-personas--high-intent-seo"></a>
-## Zielgruppen & High-Intent SEO
+## Zielgruppen & Suchbegriffe
 
-ProFiler Suite ist passgenau auf datenschutzsensible Desktop-Umgebungen ausgerichtet. Die folgende Übersicht verknüpft unsere vier Kern-Zielgruppen mit konkreten Suchintentionen und architektonischen Antworten:
+ProFiler richtet sich an Nutzer, die lokale Dokumente organisieren und vor einer Weitergabe mögliche sensible Begriffe prüfen möchten. Die Musterprüfung bewertet keine Rechtslage und bestätigt keine DSGVO-Konformität.
 
-| Zielgruppe | Typische Aufgaben & Workflows | High-Intent Suchbegriffe |
+| Zielgruppe | Beispielbedarf | Suchbegriffe |
 |---|---|---|
-| **Datenschutzbeauftragte, Juristen & Compliance** | Prüfung lokaler Aktenbestände auf DSGVO-Konformität, Schwärzung von Mandantendaten in PDFs, Vorab-Prüfung mit Datenschutzampel. | `desktop pdf redaction privacy checker`, `DSGVO konforme Dokumentenverwaltung lokal`, `PDF Schwärzung Datenschutzampel Desktop` |
-| **Wissenschaftler, Archive & Historiker** | Erschließung großer historischer Dokumentenbestände, Volltext-OCR-Indexierung von Scans, Dublettenbeseitigung. | `pyside6 document manager ocr tesseract`, `offline pdf ocr tool without cloud`, `Tesseract OCR Desktop App offline` |
-| **Freiberufler & Kleinunternehmen** | Verwaltung von Rechnungsarchiven, Kundenverträgen und Belegen ohne laufende Cloud- und Software-Abos. | `local-first desktop file manager python`, `private document archive windows open source`, `Dokumentenverwaltung ohne Cloud Abo` |
-| **Power-User & Datenschutz-Enthusiasten** | Schnelle, tastaturgesteuerte lokale Indexierung, Dark/Light-Design, OneDrive-Platzhalter-Schutz, Zero-Network-Egress. | `sqlite document full text index offline`, `file deduplication sha256 desktop app`, `local file index database SQLite` |
+| **Nutzer mit sensiblen Unterlagen** | Begriffe und Muster in ausgewählten Dateien vor dem Teilen prüfen. | `lokale Dokumentensuche Datenschutzampel`, `PDF-Schwärzung Desktop` |
+| **Forschung und Archive** | Scans indexieren, OCR ausführen und Dubletten finden. | `PDF-OCR Desktop`, `lokale Volltextsuche für Dokumente` |
+| **Kleine Büros und Selbstständige** | Rechnungen, Verträge und Belege organisieren. | `lokaler Dokumentenmanager`, `SQLite-Dateiindex Desktop` |
+| **Power-User** | Mit lokalen Ordnern, Vorschau und optionalen separaten Geschwisterwerkzeugen arbeiten. | `PySide6-Dateiverwaltung`, `SQLite-Dokumentensuche` |
 
-### Suchbegriffe für Auffindbarkeit
+Diese Begriffe beschreiben Arbeitsabläufe, keine Datenschutz-, Rechts- oder Sicherheitszertifizierung.
 
-`lokaler Dokumentenmanager`, `Desktop Dateimanager`, `privates Dokumentenarchiv`, `OCR Desktop App`, `PDF OCR Werkzeug`, `PDF Schwärzung`, `Datenschutzprüfung`, `PySide6 Dateiverwaltung`, `SQLite Dokumentenindex`, `Windows Datei-Organizer`, `Datenschutzampel`, `DSGVO Dateiprüfung`.
-
----
 
 <a id="sec-18"></a>
 <a id="18-verifikation--test-suite"></a>
@@ -419,26 +411,16 @@ ProFiler Suite ist passgenau auf datenschutzsensible Desktop-Umgebungen ausgeric
 <a id="verification--test-suite"></a>
 ## Verifikation & Test-Suite
 
-ProFiler Suite unterliegt strengen automatisierten Verifikations-Gates. Jede Code- und Dokumentationsänderung wird gegen Vertragstests, Linter-Prüfungen und Bytecode-Kompilierung validiert:
+Lokale Entwicklungsprüfungen:
 
 ```bash
-# Gesamte automatisierte Vertrags- und Test-Suite ausführen (210 bestanden, 100% grün)
-pytest -ra -v
-
-# Schnellen Python-Linter ausführen (null Toleranz für Verstöße)
+python -m pytest -ra -v
 ruff check .
-
-# Python-Bytecode-Syntax aller Dateien validieren
 python -m compileall -q .
-
-# Git-Staging-Hygiene prüfen (keine trailing whitespaces)
 git diff --check
+python source_platform_smoke.py
 ```
 
-Alle 10 Governance- und Laufzeit-Invarianten (`INV-LOCAL-01` bis `INV-SLA-10`), PEP-621-Metadaten, zweisprachige Dokumentationsanker und die Lizenzintegrität werden kontinuierlich über `tests/test_metadata.py` und `tests/test_security_license_contract.py` überwacht.
+Der GitHub-Workflow [`source-platform-smoke.yml`](.github/workflows/source-platform-smoke.yml) führt Kompilierung, Basis-Smoke, Linux-/macOS-Smokes und Pytest auf Ubuntu und macOS mit Python 3.11 aus. Das belegt weder Windows-CI noch OCR-/Poppler-Binärdateien, native Paketierung, Tray-Verhalten oder eine Microsoft-Store-/WACK-Abnahme. Prüfen Sie aktuelle Ergebnisse im [Actions-Tab](https://github.com/file-bricks/ProFiler/actions/workflows/source-platform-smoke.yml) für den jeweiligen Commit.
 
-### ⚖️ Gesetzlicher Hinweis & Haftungsbeschränkung (§ 521 BGB)
-
-> [!IMPORTANT]
-> **Haftungsbeschränkung bei unentgeltlicher Softwareüberlassung (§ 521 BGB):**
-> Soweit diese Software, Vorabversionen oder Test-Releases unentgeltlich zur Verfügung gestellt werden, richtet sich die Haftung der Autoren und Bereitsteller ausschließlich nach den Vorschriften des Schenkungsrechts gemäß § 521 des Bürgerlichen Gesetzbuches (BGB) und ist auf Vorsatz und grobe Fahrlässigkeit beschränkt (*Haftung des Schenkers für Vorsatz und grobe Fahrlässigkeit*). Die Bereitstellung erfolgt unter Ausschluss jeglicher Sach- und Rechtsmängelhaftung für einfache Fahrlässigkeit.
+Die Datenschutzampel ist eine regelbasierte Prüfhilfe. Treffer und mögliche PDF-Schwärzungen müssen vor einer Weitergabe kontrolliert werden. ProFiler bietet keine Rechtsberatung.
