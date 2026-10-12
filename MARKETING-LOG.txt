@@ -1,4 +1,5 @@
 # MARKETING-LOG: ProFiler Suite (`file-bricks/ProFiler`)
+Current-status note (2026-10-12): Entries below are retained as historical records of earlier claims and work descriptions. They are not current privacy or security guarantees, legal conclusions, certifications, or response-time commitments. For current source-backed scope, use `README.md`, `PRIVACY_POLICY.md`, `SECURITY.md`, `THIRD_PARTY_LICENSES.md`, `THIRD_PARTY_LICENSES.txt`, and `WINDOWS_STORE_PREP.md`. The current source review did not show automatic upload of selected document contents or telemetry in the reviewed first-party paths; the optional module installer contacts GitHub when explicitly invoked, and the application does not block network traffic or sandbox external programs. The privacy review is pattern-based, the dependency notes are not a complete transitive or compatibility audit, and there is no current native executable, WACK result, or Store approval evidenced. Source version `15.0.2` remains frozen.
 Date: 2026-09-18 (Pfad A Hygiene; Previous Pfad B: 2026-09-16; Initial Pfad B: 2026-09-12)
 Operator: Antigravity / Gemini (via GITHUBBOT Pfad A & B)
 Target Repo: file-bricks/ProFiler

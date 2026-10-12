@@ -3,6 +3,22 @@ import re
 import sqlite3
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
+from pathlib import Path
+
+from translator import load_translator_from_settings
+
+_UI_TRANSLATOR = None
+
+
+def _ui_text(key: str, **values) -> str:
+    if _UI_TRANSLATOR is not None:
+        return _UI_TRANSLATOR.translate_ui(key, **values)
+    if not values:
+        return key
+    try:
+        return key.format_map(values)
+    except (KeyError, ValueError):
+        return key
 
 APP_TITLE = "Mini SQL Viewer (SQLite)"
 DEFAULT_LIMIT = 1000
@@ -11,7 +27,7 @@ DEFAULT_LIMIT = 1000
 class SqlViewer(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title(APP_TITLE)
+        self.title(_ui_text(APP_TITLE))
         self.geometry("900x600")
 
         # State
@@ -22,16 +38,16 @@ class SqlViewer(tk.Tk):
         self._build_menu()
         self._build_toolbar()
         self._build_table_area()
-        self._set_status("Keine Datenbank geöffnet")
+        self._set_status(_ui_text("Keine Datenbank geöffnet"))
 
     # ----- UI-Build -----
     def _build_menu(self):
         menubar = tk.Menu(self)
         file_menu = tk.Menu(menubar, tearoff=False)
-        file_menu.add_command(label="Datenbank öffnen…", command=self.open_db, accelerator="Ctrl+O")
+        file_menu.add_command(label=_ui_text("Datenbank öffnen…"), command=self.open_db, accelerator="Ctrl+O")
         file_menu.add_separator()
-        file_menu.add_command(label="Beenden", command=self.destroy, accelerator="Ctrl+Q")
-        menubar.add_cascade(label="Datei", menu=file_menu)
+        file_menu.add_command(label=_ui_text("Beenden"), command=self.destroy, accelerator="Ctrl+Q")
+        menubar.add_cascade(label=_ui_text("Datei"), menu=file_menu)
         self.config(menu=menubar)
 
         # Shortcuts
@@ -43,24 +59,24 @@ class SqlViewer(tk.Tk):
         bar.pack(side=tk.TOP, fill=tk.X)
 
         # DB-Pfad
-        self.db_label = ttk.Label(bar, text="DB: -", width=50, anchor="w")
+        self.db_label = ttk.Label(bar, text=_ui_text("DB: -"), width=50, anchor="w")
         self.db_label.pack(side=tk.LEFT, padx=(0, 10))
 
         # Tabellen-Auswahl
-        ttk.Label(bar, text="Tabelle:").pack(side=tk.LEFT)
+        ttk.Label(bar, text=_ui_text("Tabelle:")).pack(side=tk.LEFT)
         self.table_var = tk.StringVar()
         self.table_combo = ttk.Combobox(bar, textvariable=self.table_var, state="readonly", width=30)
         self.table_combo.pack(side=tk.LEFT, padx=6)
         self.table_combo.bind("<<ComboboxSelected>>", lambda e: self.load_selected_table())
 
         # Limit
-        ttk.Label(bar, text="Limit:").pack(side=tk.LEFT, padx=(10, 0))
+        ttk.Label(bar, text=_ui_text("Limit:")).pack(side=tk.LEFT, padx=(10, 0))
         self.limit_var = tk.IntVar(value=DEFAULT_LIMIT)
         self.limit_entry = ttk.Spinbox(bar, from_=1, to=1_000_000, increment=100, textvariable=self.limit_var, width=10)
         self.limit_entry.pack(side=tk.LEFT, padx=6)
 
         # Refresh
-        self.refresh_btn = ttk.Button(bar, text="Refresh", command=self.load_selected_table)
+        self.refresh_btn = ttk.Button(bar, text=_ui_text("Refresh"), command=self.load_selected_table)
         self.refresh_btn.pack(side=tk.LEFT, padx=(8, 0))
 
         # Status
@@ -91,8 +107,8 @@ class SqlViewer(tk.Tk):
     # ----- Actions -----
     def open_db(self):
         path = filedialog.askopenfilename(
-            title="SQLite-Datenbank öffnen",
-            filetypes=[("SQLite DB", "*.db *.sqlite *.sqlite3"), ("Alle Dateien", "*.*")]
+            title=_ui_text("SQLite-Datenbank öffnen"),
+            filetypes=[(_ui_text("SQLite DB"), "*.db *.sqlite *.sqlite3"), (_ui_text("Alle Dateien"), "*.*")]
         )
         if not path:
             return
@@ -110,12 +126,12 @@ class SqlViewer(tk.Tk):
             conn.row_factory = sqlite3.Row
             self.conn = conn
             self.db_path = path
-            self.db_label.config(text=f"DB: {os.path.basename(path)}")
-            self._set_status("Verbunden")
+            self.db_label.config(text=_ui_text("DB: {filename}", filename=os.path.basename(path)))
+            self._set_status(_ui_text("Verbunden"))
             self._load_tables()
         except Exception as e:
-            messagebox.showerror("Fehler beim Öffnen", str(e))
-            self._set_status("Fehler")
+            messagebox.showerror(_ui_text("Fehler beim Öffnen"), str(e))
+            self._set_status(_ui_text("Fehler"))
     
     def open_database(self, path):
         """Öffnet Datenbank direkt per Pfad (für CLI-Args)"""
@@ -135,12 +151,12 @@ class SqlViewer(tk.Tk):
             conn.row_factory = sqlite3.Row
             self.conn = conn
             self.db_path = path
-            self.db_label.config(text=f"DB: {os.path.basename(path)}")
-            self._set_status("Verbunden")
+            self.db_label.config(text=_ui_text("DB: {filename}", filename=os.path.basename(path)))
+            self._set_status(_ui_text("Verbunden"))
             self._load_tables()
         except Exception as e:
-            messagebox.showerror("Fehler beim Öffnen", str(e))
-            self._set_status("Fehler")
+            messagebox.showerror(_ui_text("Fehler beim Öffnen"), str(e))
+            self._set_status(_ui_text("Fehler"))
 
     def _load_tables(self):
         if not self.conn:
@@ -157,9 +173,9 @@ class SqlViewer(tk.Tk):
             else:
                 self.table_combo.set("")
                 self._clear_tree()
-                self._set_status("Keine Tabellen gefunden")
+                self._set_status(_ui_text("Keine Tabellen gefunden"))
         except Exception as e:
-            messagebox.showerror("Fehler", f"Tabellen konnten nicht geladen werden:\n{e}")
+            messagebox.showerror(_ui_text("Fehler"), _ui_text("Tabellen konnten nicht geladen werden:\n{detail}", detail=e))
 
     def load_selected_table(self):
         table = self.table_var.get()
@@ -172,7 +188,7 @@ class SqlViewer(tk.Tk):
             cols = [row[1] for row in cur.fetchall()]
             if not cols:
                 self._clear_tree()
-                self._set_status("Tabelle hat keine Spalten")
+                self._set_status(_ui_text("Tabelle hat keine Spalten"))
                 return
 
             # Daten holen
@@ -181,9 +197,9 @@ class SqlViewer(tk.Tk):
             rows = cur.fetchall()
 
             self._populate_tree(cols, rows)
-            self._set_status(f"Tabelle: {table} - Zeilen: {len(rows)} von max. {limit}")
+            self._set_status(_ui_text("Tabelle: {table} - Zeilen: {count} von max. {limit}", table=table, count=len(rows), limit=limit))
         except Exception as e:
-            messagebox.showerror("Fehler beim Laden", str(e))
+            messagebox.showerror(_ui_text("Fehler beim Laden"), str(e))
 
     # ----- Tree helpers -----
     def _clear_tree(self):
@@ -260,6 +276,7 @@ class SqlViewer(tk.Tk):
         
 if __name__ == "__main__":
     import sys
+    _UI_TRANSLATOR = load_translator_from_settings(app_dir=Path(__file__).resolve().parent)
     app = SqlViewer()
     
     # CLI-Argument: Datenbank-Pfad (NEU V13.1!)

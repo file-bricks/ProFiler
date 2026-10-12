@@ -1,94 +1,67 @@
 # ProFiler Suite
 
 Canonical repository: https://github.com/file-bricks/ProFiler
+Source version: 15.0.2 (frozen; no current release or Store approval is evidenced)
 
-ProFiler Suite is a local-first desktop file manager for private document collections. It is a Windows-oriented PySide6 application for indexing local folders, searching documents, running OCR, handling PDF workflows, detecting duplicates, and reviewing files for privacy risks before sharing.
+ProFiler Suite is a Windows-oriented PySide6 desktop application for working with user-selected local folders. It can build a SQLite search index, search documents, run OCR when external tools are available, perform selected PDF workflows, find duplicate files, and provide a pattern-based privacy review. The main GUI has six locale catalogs: English, German, Spanish, Simplified Chinese, Japanese, and Russian.
 
-## Audience
+The reviewed first-party paths did not show automatic upload of selected document contents or telemetry. This is a bounded source observation, not an egress guarantee. The optional module installer can contact GitHub when explicitly invoked. ProFiler does not block outbound traffic, sandbox external programs, or control third-party libraries and tools.
 
-- Windows users managing local document archives who need full-text search without cloud upload
-- Privacy-conscious users needing PDF redaction, anonymization, and pre-sharing review workflows
-- Small-office workers handling scanned documents, OCR processing, and file deduplication
-- Developers integrating ProSync folder sync or KnowledgeDigest LLM search into desktop workflows
-- LLM agents and crawlers indexing open-source PySide6 desktop application repositories
+## Main workflows
 
-## Primary Use
+- Index user-selected folders into a local SQLite database and search the resulting index.
+- Use OCR workflows when compatible host-installed Tesseract and Poppler tools are available.
+- Use selected PDF utilities for encryption, decryption, page extraction, and text removal.
+- Review pattern-based privacy matches and redactions before sharing; these features do not guarantee complete detection, anonymization, or legal compliance.
+- Export or import a redacted workspace for review or handoff.
+- Use `SQLiteViewer.py` to inspect a selected SQLite database.
 
-- Index local folders into a SQLite file database for fast search and filtering
-- Run OCR on scanned PDFs and images via Tesseract
-- Use PDF utilities for encryption, decryption, page extraction, and text removal
-- Run privacy review to find potentially sensitive files before sharing or archiving
-- Export a redacted workspace for reviews and cross-platform handoffs
+Application settings and indexes use local paths whose exact locations depend on configuration and operating system. PDF passwords are excluded from the persisted application settings covered by the targeted regression tests; this is not a general guarantee for every secret or external process.
 
-## Important Files
+## Important files
 
-- `README.md` — English overview with setup, features, and 18-point quick navigation
-- `README_de.md` — German overview with 18-point quick navigation
-- `NOTICE` — canonical attribution and copyright notice (Lukas Geiger, file-bricks, open-bricks)
-- `SECURITY.md` — bilingual security policy, 48h response / 5-day triage SLA, § 521 BGB notice
-- `THIRD_PARTY_LICENSES.md` — audited Level 1 SBOM dependency inventory, zero-copyleft user data guarantee
-- `MARKETING-LOG.txt` — Pfad B discoverability audit, target personas, SEO queries, governance invariants
-- `Profiler_Suite_V15.py` — main desktop application
-- `ProFiler_Datenschutzampel.py` — standalone privacy traffic-light helper
-- `SQLiteViewer.py` — local SQLite index viewer
-- `workspace_exchange.py` — redacted workspace export/import
-- `requirements.txt` — Python dependencies
-- `source_platform_smoke.py` — macOS/Linux CI smoke test
-- `tests/macos_platform_smoke.py` — dedicated macOS platform smoke suite
-- `tests/linux_platform_smoke.py` — dedicated Linux platform smoke suite
-- `PLATFORM_SUPPORT.md` — exact platform smoke evidence and boundary gates
-- `version.py` — canonical public version contract (`15.0.2`)
-- `CONTRIBUTING.md` — bilingual contribution guidelines, 10 invariants, Plan D workflow, § 521 BGB
-- `THIRD_PARTY_LICENSES.txt` — standardized 5-field plain-text Level 1 SBOM companion
-- `.github/workflows/auto-assign.yml` — PR auto-assignment lifecycle workflow
-- `.github/workflows/label-sync.yml` — canonical GitHub label synchronization
-- `STORE_LISTING.md` — bilingual Windows Store listing metadata
-- `store_package.json` — Store package configuration and parameters
+- `README.md` and `README_de.md` — English and German product overview, workflows, and limitations.
+- `SECURITY.md` — private vulnerability-reporting route and current response-policy scope; no response, triage, or remediation deadline is promised.
+- `PRIVACY_POLICY.md` — bounded description of reviewed first-party data flows.
+- `THIRD_PARTY_LICENSES.md` and `THIRD_PARTY_LICENSES.txt` — declared direct runtime/optional dependencies and selected build/development tools with upstream references. These are not a complete transitive inventory, binary bill of materials, or license-compatibility opinion.
+- `LICENSE` and `NOTICE` — project license and attribution.
+- `PLATFORM_SUPPORT.md` — source-platform evidence and its limits.
+- `WINDOWS_STORE_PREP.md` — current Store/release gate and preparation boundary.
+- `source_platform_smoke.py` and `tests/` — source checks and tests; see CI for the exact commit and platform results.
+- `.github/workflows/source-platform-smoke.yml` — Ubuntu/macOS source workflow. It does not establish Windows behavior, native packaging, OCR/Poppler bundling, or Store/WACK approval.
+- `github_installer.py` — optional GitHub module-installer utility; it is not a remote-control interface for the main GUI.
+- `version.py` and `pyproject.toml` — current source and Python-package metadata (`15.0.2`).
 
-## Search Phrases
+## Distribution boundary
+
+The Python wheel packages Python runtime modules, locale data, and selected icons; it is not a standalone native executable. The reviewed checkout lacks the Tesseract and Poppler files required by `build_exe.bat`, so the native executable build is currently blocked. No signed MSIX, current WACK result on a built package, or Store submission is evidenced. Staging files do not establish release approval.
+
+The project is licensed under AGPL-3.0-only; see `LICENSE`. Review the exact artifact contents and included license texts before any binary redistribution. The dependency notes do not determine license compatibility.
+
+## Search phrases
 
 ```
 ProFiler Suite file-bricks
-local-first desktop document manager Windows
-PySide6 file management OCR
-PDF redaction anonymization desktop app
-private document archive SQLite search
-OCR desktop application Tesseract Windows
-file deduplication SHA-256 local
-document privacy checker PySide6
-desktop document search offline-first
-PySide6 file manager Tesseract OCR
-local file index database SQLite
+PySide6 desktop document manager SQLite search
+local document indexing and OCR desktop application
+PDF utilities and duplicate-file review
+pattern-based privacy review desktop app
+Windows-oriented file manager Python PySide6
 ```
 
-## Disambiguation
+## Related projects
 
-ProFiler is not a cloud service, not a hosted SaaS document manager, not a web app, and not a general bookmark manager. It is a local Windows desktop app that keeps all data on-device in SQLite.
+- [ProSync](https://github.com/file-bricks/ProSync) — a separate companion program that ProFiler can launch from an optional menu item. Its synchronization runs outside ProFiler.
+- [KnowledgeDigest](https://github.com/file-bricks/knowledgedigest) — a separate notes and knowledge-search tool; a direct ProFiler integration is not established.
+- [PDFtoPDFocr](https://github.com/doc-bricks/PDFtoPDFocr) — a separate batch OCR and searchable-PDF tool; no direct integration is claimed.
+- [DokuZen](https://github.com/doc-bricks/DokuZen) — a separate desktop PDF-workflow tool; no direct integration is claimed.
 
-## Contract Boundaries
+These are related projects with separate repositories and behavior. The links do not imply shared runtime, data exchange, or a broader integration.
 
-- The product interface is the desktop GUI. No ProFiler REST API, OpenAPI,
-  JSON-RPC, or document-search CLI is implemented in V15.
-- `github_installer.py` has its own administrative module-installer CLI; it is
-  not a remote-control interface for the main application.
-- The Ubuntu/macOS workflow is a six-check basis source smoke, not OCR, PDF,
-  tray, packaging, or Store evidence.
-- PDF passwords are session-only and are not persisted to JSON settings.
+## Current CI status
 
-## Ecosystem Sibling Tools
+Check the [source-platform-smoke workflow](https://github.com/file-bricks/ProFiler/actions/workflows/source-platform-smoke.yml) for results on the exact commit. No test count or pass percentage is pinned here because it changes with the source and workflow.
 
-Part of the **file-bricks** desktop suite under the **open-bricks** umbrella:
-- `file-bricks/knowledgedigest`: Portable knowledge database with BM25 ranking & LLM summaries
-- `doc-bricks/PDFtoPDFocr`: Batch OCR & searchable PDF conversion engine
-- `doc-bricks/DokuZen`: Desktop PDF workshop, format converter & security unlocker
-- `doc-bricks/MediaBrain`: Multi-modal media transcription & structured indexing
-- `doc-bricks/TextBrain`: Document intelligence & text analysis
-- `dev-bricks/DevCenter`: Developer workspace dashboard & automation launcher
-- `dev-bricks/CodeBox`: Offline snippet vault & code runner sandbox
-- `ellmos-ai/ellmos-filecommander-mcp`: Safe, sandboxed MCP file management & batch processing
-- `ellmos-ai/ellmos-codecommander-mcp`: MCP code intelligence, AST analysis & format repair
-- `dev-bricks/sqlite-transit-sync`: Zero-loss multi-master SQLite replication & synchronization
+## Last checked
 
-Test status: 232+ Python tests and 18 subtests passing (100% green). Statutory notice: § 521 BGB gratuitous provision. Level 1 SBOM plain-text companion verified.
-
-## Last-checked: 2026-10-02
+2026-10-12

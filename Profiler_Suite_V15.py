@@ -146,10 +146,214 @@ except ImportError:
     _MODULE_REGISTRY_AVAILABLE = False
 
 try:
-    from translator import TranslationSystem
+    from translator import (
+        TranslationSystem,
+        bind_ui_text as _bind_ui_text,
+        create_ui_widget as _create_ui_widget,
+        retranslate_registered_ui as _retranslate_registered_ui,
+        set_application_translator as _set_application_translator,
+    )
     HAS_TRANSLATOR = True
 except ImportError:
     HAS_TRANSLATOR = False
+
+
+def _ui_text(key: str, **format_values) -> str:
+    """Translate a visible UI message using the shared application context."""
+    app = QApplication.instance()
+    translator = getattr(app, "_profiler_ui_translator", None) if app else None
+    if translator is not None:
+        return translator.translate_ui(key, **format_values)
+    if not format_values:
+        return key
+    try:
+        return key.format_map(format_values)
+    except (KeyError, ValueError):
+        return key
+
+
+class _UIMessage:
+    """Carry a catalog template to the GUI thread for locale-aware rendering."""
+
+    __slots__ = ("key", "format_values")
+
+    def __init__(self, key: str, format_values: dict):
+        self.key = key
+        self.format_values = dict(format_values)
+
+
+def _ui_message(key: str, **format_values) -> _UIMessage:
+    return _UIMessage(key, format_values)
+
+
+def _render_ui_message(message) -> str:
+    if isinstance(message, _UIMessage):
+        format_values = {
+            name: _render_ui_message(value)
+            if isinstance(value, _UIMessage)
+            else value
+            for name, value in message.format_values.items()
+        }
+        return _ui_text(message.key, **format_values)
+    return str(message)
+
+
+def _ui_set(widget, setter: str, key: str, **format_values) -> str:
+    """Set and register an explicitly translatable UI string."""
+    if HAS_TRANSLATOR:
+        return _bind_ui_text(
+            widget, key, setter, format_values=format_values
+        )
+    text = _ui_text(key, **format_values)
+    getattr(widget, setter)(text)
+    return text
+
+
+def _ui_widget(widget_type, key: str, *args, **kwargs):
+    """Create a widget with an explicitly bound text argument."""
+    if HAS_TRANSLATOR:
+        return _create_ui_widget(widget_type, key, *args, **kwargs)
+    return widget_type(_ui_text(key), *args, **kwargs)
+
+
+def _ui_message_box(kind: str, parent, title: str, message: str, *args):
+    """Show a modal message from already-rendered title/body strings.
+
+    Call sites translate catalog templates before passing them here. Keeping
+    this boundary avoids treating interpolated filenames or other user data as
+    a second catalog key.
+    """
+    icon = {
+        "information": QMessageBox.Icon.Information,
+        "warning": QMessageBox.Icon.Warning,
+        "critical": QMessageBox.Icon.Critical,
+        "question": QMessageBox.Icon.Question,
+        "about": QMessageBox.Icon.Information,
+    }[kind]
+    default_buttons = (
+        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        if kind == "question"
+        else QMessageBox.StandardButton.Ok
+    )
+    buttons = args[0] if args else default_buttons
+    default_button = args[1] if len(args) > 1 else QMessageBox.StandardButton.NoButton
+    box = QMessageBox(icon, title, message, buttons, parent)
+    button_labels = {
+        QMessageBox.StandardButton.Ok: "OK",
+        QMessageBox.StandardButton.Yes: "Ja",
+        QMessageBox.StandardButton.No: "Nein",
+        QMessageBox.StandardButton.Cancel: "Abbrechen",
+        QMessageBox.StandardButton.Abort: "Abbrechen",
+        QMessageBox.StandardButton.Save: "Speichern",
+        QMessageBox.StandardButton.SaveAll: "Alle speichern",
+        QMessageBox.StandardButton.Discard: "Verwerfen",
+        QMessageBox.StandardButton.Close: "Schließen",
+        QMessageBox.StandardButton.Open: "Öffnen",
+        QMessageBox.StandardButton.YesToAll: "Ja, alle",
+        QMessageBox.StandardButton.NoToAll: "Nein, alle",
+        QMessageBox.StandardButton.Retry: "Wiederholen",
+        QMessageBox.StandardButton.Ignore: "Ignorieren",
+        QMessageBox.StandardButton.Apply: "Anwenden",
+        QMessageBox.StandardButton.Reset: "Zurücksetzen",
+        QMessageBox.StandardButton.RestoreDefaults: "Standardwerte wiederherstellen",
+        QMessageBox.StandardButton.Help: "Hilfe",
+    }
+    for standard_button, label in button_labels.items():
+        if buttons & standard_button:
+            button = box.button(standard_button)
+            if button is not None:
+                button.setText(_ui_text(label))
+    if default_button != QMessageBox.StandardButton.NoButton:
+        box.setDefaultButton(default_button)
+    result = QMessageBox.StandardButton(box.exec())
+    # QMessageBox.about() is a fire-and-forget convenience API.
+    return None if kind == "about" else result
+
+
+def _ui_localize_dialog_buttons(button_box):
+    """Translate standard dialog buttons without changing their roles or signals."""
+    labels = {
+        QDialogButtonBox.StandardButton.Ok: "OK",
+        QDialogButtonBox.StandardButton.Save: "Speichern",
+        QDialogButtonBox.StandardButton.SaveAll: "Alle speichern",
+        QDialogButtonBox.StandardButton.Open: "Öffnen",
+        QDialogButtonBox.StandardButton.Yes: "Ja",
+        QDialogButtonBox.StandardButton.YesToAll: "Ja, alle",
+        QDialogButtonBox.StandardButton.No: "Nein",
+        QDialogButtonBox.StandardButton.NoToAll: "Nein, alle",
+        QDialogButtonBox.StandardButton.Abort: "Abbrechen",
+        QDialogButtonBox.StandardButton.Retry: "Wiederholen",
+        QDialogButtonBox.StandardButton.Ignore: "Ignorieren",
+        QDialogButtonBox.StandardButton.Close: "Schließen",
+        QDialogButtonBox.StandardButton.Cancel: "Abbrechen",
+        QDialogButtonBox.StandardButton.Discard: "Verwerfen",
+        QDialogButtonBox.StandardButton.Help: "Hilfe",
+        QDialogButtonBox.StandardButton.Apply: "Anwenden",
+        QDialogButtonBox.StandardButton.Reset: "Zurücksetzen",
+        QDialogButtonBox.StandardButton.RestoreDefaults: "Standardwerte wiederherstellen",
+    }
+    for standard_button, key in labels.items():
+        button = button_box.button(standard_button)
+        if button is None:
+            continue
+        if HAS_TRANSLATOR:
+            _bind_ui_text(button, key, "setText")
+        else:
+            button.setText(_ui_text(key))
+
+
+def _ui_add_action(owner, *args):
+    """Add an explicitly translated menu action and bind its label."""
+    if args and isinstance(args[0], str):
+        key, rest = args[0], args[1:]
+        action = owner.addAction(_ui_text(key), *rest)
+    elif len(args) >= 2 and isinstance(args[1], str):
+        icon, key, rest = args[0], args[1], args[2:]
+        action = owner.addAction(icon, _ui_text(key), *rest)
+    else:
+        return owner.addAction(*args)
+    if HAS_TRANSLATOR:
+        _bind_ui_text(action, key, "setText")
+    return action
+
+
+def _ui_add_menu(owner, *args):
+    """Add an explicitly translated menu and bind its title."""
+    if args and isinstance(args[0], str):
+        key, rest = args[0], args[1:]
+        menu = owner.addMenu(_ui_text(key), *rest)
+    elif len(args) >= 2 and isinstance(args[1], str):
+        icon, key, rest = args[0], args[1], args[2:]
+        menu = owner.addMenu(icon, _ui_text(key), *rest)
+    else:
+        return owner.addMenu(*args)
+    if HAS_TRANSLATOR:
+        _bind_ui_text(menu, key, "setTitle")
+    return menu
+
+
+def _ui_add_tab(tabs, *args):
+    """Add a translated tab and bind its label without rebuilding the page."""
+    if len(args) == 2 and isinstance(args[1], str):
+        page, key = args
+        index = tabs.addTab(page, _ui_text(key))
+    elif len(args) == 3 and isinstance(args[2], str):
+        icon, page, key = args
+        index = tabs.addTab(icon, page, _ui_text(key))
+    else:
+        return tabs.addTab(*args)
+    if HAS_TRANSLATOR:
+        _bind_ui_text(tabs, key, "setTabText", setter_args=(index,))
+    return index
+
+
+def _ui_add_row(form, key: str, field):
+    """Add a translated form label while retaining its field buddy."""
+    label = _ui_widget(QLabel, key)
+    if isinstance(field, QWidget):
+        label.setBuddy(field)
+    return form.addRow(label, field)
+
 
 # ============================================================================
 # ENCODING SETUP
@@ -362,9 +566,9 @@ def find_tool_path(tool_name):
 
 def configure_compact_picker_button(button, *, tooltip, accessible_name, accessible_description):
     """Ergänzt Icon-/Kurzbuttons um sprechende A11y- und Tooltip-Texte."""
-    button.setToolTip(tooltip)
-    button.setAccessibleName(accessible_name)
-    button.setAccessibleDescription(accessible_description)
+    _ui_set(button, "setToolTip", tooltip)
+    _ui_set(button, "setAccessibleName", accessible_name)
+    _ui_set(button, "setAccessibleDescription", accessible_description)
 
 # --- CONFIG MANAGERS ---
 
@@ -1911,6 +2115,20 @@ class DuplicateWorker(QThread):
 # 5A. BATCH PROCESSING SYSTEM (NEU V14.2)
 # ============================================================================
 
+class _BatchResultMessage(str):
+    """String-compatible app status with explicit translation provenance."""
+
+    def __new__(cls, text, ui_key, format_values=None):
+        value = super().__new__(cls, text)
+        value.ui_key = ui_key
+        value.format_values = dict(format_values or {})
+        return value
+
+
+def _batch_result_message(text, ui_key, **format_values):
+    return _BatchResultMessage(text, ui_key, format_values)
+
+
 class BatchProcessor(QThread):
     """Worker-Thread für Batch-Operationen (NEU V14.2)
     
@@ -1920,8 +2138,8 @@ class BatchProcessor(QThread):
     progress = Signal(int, int, str)  # current, total, current_filename
     file_completed = Signal(str, bool, str)  # filename, success, message
     all_completed = Signal(int, int)  # success_count, error_count
-    log_message = Signal(str)  # log entry
-    
+    log_message = Signal(object)  # catalog message or verbatim detail
+
     def __init__(self, files: list, operation: str, params: dict = None):
         super().__init__()
         self.files = files
@@ -1941,7 +2159,7 @@ class BatchProcessor(QThread):
         
         for idx, filepath in enumerate(self.files):
             if self._cancelled:
-                self.log_message.emit("⚠️ Verarbeitung abgebrochen")
+                self.log_message.emit(_ui_message("⚠️ Verarbeitung abgebrochen"))
                 break
             
             filename = os.path.basename(filepath)
@@ -1957,21 +2175,48 @@ class BatchProcessor(QThread):
                 elif self.operation == "pdf_extract_text":
                     result = self._extract_pdf_text(filepath)
                 else:
-                    result = (False, f"Unbekannte Operation: {self.operation}")
+                    result = (
+                        False,
+                        _batch_result_message(
+                            f"Unbekannte Operation: {self.operation}",
+                            "Unbekannte Operation: {value0}",
+                            value0=self.operation,
+                        ),
+                    )
                 
                 success, message = result
                 if success:
                     success_count += 1
-                    self.log_message.emit(f"✓ {filename} - OK")
+                    self.log_message.emit(_ui_message("✓ {value0} - OK", value0=filename))
                 else:
                     error_count += 1
-                    self.log_message.emit(f"✗ {filename} - {message}")
+                    if isinstance(message, _BatchResultMessage):
+                        detail = _ui_message(
+                            message.ui_key,
+                            **message.format_values,
+                        )
+                    else:
+                        # Exception text and other details remain verbatim data.
+                        detail = message
+                    self.log_message.emit(
+                        _ui_message(
+                            "✗ {value0} - {value1}",
+                            value0=filename,
+                            value1=detail,
+                        )
+                    )
                 
-                self.file_completed.emit(filename, success, message)
+                self.file_completed.emit(filename, success, str(message))
                 
             except Exception as e:
                 error_count += 1
-                self.log_message.emit(f"✗ {filename} - Fehler: {str(e)}")
+                self.log_message.emit(
+                    _ui_message(
+                        "✗ {value0} - Fehler: {value1}",
+                        value0=filename,
+                        value1=str(e),
+                    )
+                )
                 self.file_completed.emit(filename, False, str(e))
         
         self.all_completed.emit(success_count, error_count)
@@ -1980,7 +2225,9 @@ class BatchProcessor(QThread):
         """Kopiert eine Datei in den Zielordner"""
         target_dir = self.params.get("target_dir")
         if not target_dir:
-            return (False, "Kein Zielordner angegeben")
+            return (False, _batch_result_message(
+                "Kein Zielordner angegeben", "Kein Zielordner angegeben"
+            ))
         
         filename = os.path.basename(filepath)
         target_path = os.path.join(target_dir, filename)
@@ -1999,11 +2246,15 @@ class BatchProcessor(QThread):
     def _encrypt_pdf(self, filepath):
         """Verschlüsselt eine PDF-Datei"""
         if not HAS_PDF:
-            return (False, "pypdf nicht installiert")
+            return (False, _batch_result_message(
+                "pypdf nicht installiert", "pypdf nicht installiert"
+            ))
         
         password = self.params.get("password")
         if not password:
-            return (False, "Kein Passwort angegeben")
+            return (False, _batch_result_message(
+                "Kein Passwort angegeben", "Kein Passwort angegeben"
+            ))
         
         keep_original = self.params.get("keep_original", True)
         output_dir = self.params.get("output_dir", os.path.dirname(filepath))
@@ -2014,7 +2265,9 @@ class BatchProcessor(QThread):
         try:
             reader = PdfReader(filepath)
             if reader.is_encrypted:
-                return (False, "Bereits verschlüsselt")
+                return (False, _batch_result_message(
+                    "Bereits verschlüsselt", "Bereits verschlüsselt"
+                ))
             
             writer = PdfWriter()
             for page in reader.pages:
@@ -2035,11 +2288,15 @@ class BatchProcessor(QThread):
     def _decrypt_pdf(self, filepath):
         """Entschlüsselt eine PDF-Datei"""
         if not HAS_PDF:
-            return (False, "pypdf nicht installiert")
+            return (False, _batch_result_message(
+                "pypdf nicht installiert", "pypdf nicht installiert"
+            ))
         
         password = self.params.get("password")
         if not password:
-            return (False, "Kein Passwort angegeben")
+            return (False, _batch_result_message(
+                "Kein Passwort angegeben", "Kein Passwort angegeben"
+            ))
         
         output_dir = self.params.get("output_dir", os.path.dirname(filepath))
         base, ext = os.path.splitext(os.path.basename(filepath))
@@ -2048,10 +2305,14 @@ class BatchProcessor(QThread):
         try:
             reader = PdfReader(filepath)
             if not reader.is_encrypted:
-                return (False, "Nicht verschlüsselt")
+                return (False, _batch_result_message(
+                    "Nicht verschlüsselt", "Nicht verschlüsselt"
+                ))
             
             if not reader.decrypt(password):
-                return (False, "Falsches Passwort")
+                return (False, _batch_result_message(
+                    "Falsches Passwort", "Falsches Passwort"
+                ))
             
             writer = PdfWriter()
             for page in reader.pages:
@@ -2067,7 +2328,9 @@ class BatchProcessor(QThread):
     def _extract_pdf_text(self, filepath):
         """Extrahiert Text aus einer PDF-Datei"""
         if not HAS_PDF:
-            return (False, "pypdf nicht installiert")
+            return (False, _batch_result_message(
+                "pypdf nicht installiert", "pypdf nicht installiert"
+            ))
         
         output_dir = self.params.get("output_dir", os.path.dirname(filepath))
         base = os.path.splitext(os.path.basename(filepath))[0]
@@ -2083,7 +2346,9 @@ class BatchProcessor(QThread):
                     text_parts.append(f"--- Seite {i+1} ---\n{text}")
             
             if not text_parts:
-                return (False, "Kein Text gefunden")
+                return (False, _batch_result_message(
+                    "Kein Text gefunden", "Kein Text gefunden"
+                ))
             
             with open(output_path, "w", encoding="utf-8") as f:
                 f.write("\n\n".join(text_parts))
@@ -2107,7 +2372,7 @@ class BatchDialog(QDialog):
         self.processor = None
         self.params = {}
         
-        self.setWindowTitle(f"Batch: {operation_title}")
+        _ui_set(self, 'setWindowTitle', "Batch: {value0}", value0=operation_title)
         self.setMinimumSize(500, 400)
         self.setModal(True)
         
@@ -2118,12 +2383,12 @@ class BatchDialog(QDialog):
         layout = QVBoxLayout(self)
         
         # Header mit Dateianzahl
-        header_label = QLabel(f"📁 {len(self.files)} Dateien ausgewählt")
+        header_label = QLabel(_ui_text("📁 {value0} Dateien ausgewählt", value0=len(self.files)))
         header_label.setStyleSheet("font-weight: bold; font-size: 14px;")
         layout.addWidget(header_label)
         
         # Parameter-Bereich (wird je nach Operation gefüllt)
-        self.param_group = QGroupBox("Parameter")
+        self.param_group = _ui_widget(QGroupBox, "Parameter", setter='setTitle')
         self.param_layout = QFormLayout(self.param_group)
         layout.addWidget(self.param_group)
         
@@ -2131,12 +2396,12 @@ class BatchDialog(QDialog):
         self._setup_params()
         
         # Optionen
-        self.skip_errors_cb = QCheckBox("Fehler überspringen und fortfahren")
+        self.skip_errors_cb = _ui_widget(QCheckBox, "Fehler überspringen und fortfahren", setter='setText')
         self.skip_errors_cb.setChecked(True)
         layout.addWidget(self.skip_errors_cb)
         
         # Fortschritts-Bereich
-        progress_group = QGroupBox("Fortschritt")
+        progress_group = _ui_widget(QGroupBox, "Fortschritt", setter='setTitle')
         progress_layout = QVBoxLayout(progress_group)
         
         self.progress_bar = QProgressBar()
@@ -2145,13 +2410,13 @@ class BatchDialog(QDialog):
         self.progress_bar.setValue(0)
         progress_layout.addWidget(self.progress_bar)
         
-        self.status_label = QLabel("Bereit")
+        self.status_label = _ui_widget(QLabel, "Bereit", setter='setText')
         progress_layout.addWidget(self.status_label)
         
         layout.addWidget(progress_group)
         
         # Log-Bereich
-        log_group = QGroupBox("Log")
+        log_group = _ui_widget(QGroupBox, "Log", setter='setTitle')
         log_layout = QVBoxLayout(log_group)
         
         self.log_text = QTextEdit()
@@ -2164,11 +2429,11 @@ class BatchDialog(QDialog):
         # Buttons
         btn_layout = QHBoxLayout()
         
-        self.start_btn = QPushButton("▶ Starten")
+        self.start_btn = _ui_widget(QPushButton, "▶ Starten", setter='setText')
         self.start_btn.clicked.connect(self._start_processing)
         btn_layout.addWidget(self.start_btn)
         
-        self.cancel_btn = QPushButton("Abbrechen")
+        self.cancel_btn = _ui_widget(QPushButton, "Abbrechen", setter='setText')
         self.cancel_btn.clicked.connect(self._cancel_or_close)
         btn_layout.addWidget(self.cancel_btn)
         
@@ -2178,8 +2443,8 @@ class BatchDialog(QDialog):
         """Richtet operation-spezifische Parameter ein"""
         if self.operation == "copy":
             self.target_dir_edit = QLineEdit()
-            self.target_dir_edit.setPlaceholderText("Zielordner auswählen...")
-            self.target_dir_btn = QPushButton("...")
+            _ui_set(self.target_dir_edit, 'setPlaceholderText', "Zielordner auswählen...")
+            self.target_dir_btn = _ui_widget(QPushButton, "...", setter='setText')
             self.target_dir_btn.setMaximumWidth(30)
             self.target_dir_btn.clicked.connect(self._select_target_dir)
             configure_compact_picker_button(
@@ -2193,19 +2458,17 @@ class BatchDialog(QDialog):
             dir_layout.addWidget(self.target_dir_edit)
             dir_layout.addWidget(self.target_dir_btn)
             
-            self.param_layout.addRow("Zielordner:", dir_layout)
+            self.param_layout.addRow(_ui_text("Zielordner:"), dir_layout)
         
         elif self.operation in ("pdf_encrypt", "pdf_decrypt"):
             self.password_edit = QLineEdit()
             self.password_edit.setEchoMode(QLineEdit.EchoMode.Password)
             
-            self.show_pw_btn = QPushButton("👁")
+            self.show_pw_btn = _ui_widget(QPushButton, "👁", setter='setText')
             self.show_pw_btn.setMaximumWidth(30)
-            self.show_pw_btn.setToolTip("Passwort anzeigen, solange gedrückt")
-            self.show_pw_btn.setAccessibleName("Passwort anzeigen")
-            self.show_pw_btn.setAccessibleDescription(
-                "Zeigt das Passwort nur solange an, wie die Taste gedrückt bleibt."
-            )
+            _ui_set(self.show_pw_btn, 'setToolTip', "Passwort anzeigen, solange gedrückt")
+            _ui_set(self.show_pw_btn, 'setAccessibleName', "Passwort anzeigen")
+            _ui_set(self.show_pw_btn, 'setAccessibleDescription', "Zeigt das Passwort nur solange an, wie die Taste gedrückt bleibt.")
             self.show_pw_btn.pressed.connect(lambda: self.password_edit.setEchoMode(QLineEdit.EchoMode.Normal))
             self.show_pw_btn.released.connect(lambda: self.password_edit.setEchoMode(QLineEdit.EchoMode.Password))
             
@@ -2213,21 +2476,21 @@ class BatchDialog(QDialog):
             pw_layout.addWidget(self.password_edit)
             pw_layout.addWidget(self.show_pw_btn)
             
-            self.param_layout.addRow("Passwort:", pw_layout)
+            self.param_layout.addRow(_ui_text("Passwort:"), pw_layout)
             
             if self.operation == "pdf_encrypt":
                 self.password_confirm = QLineEdit()
                 self.password_confirm.setEchoMode(QLineEdit.EchoMode.Password)
-                self.param_layout.addRow("Bestätigen:", self.password_confirm)
+                self.param_layout.addRow(_ui_text("Bestätigen:"), self.password_confirm)
                 
-                self.keep_original_cb = QCheckBox("Originale behalten")
+                self.keep_original_cb = _ui_widget(QCheckBox, "Originale behalten", setter='setText')
                 self.keep_original_cb.setChecked(True)
-                self.param_layout.addRow("", self.keep_original_cb)
+                self.param_layout.addRow(_ui_text(""), self.keep_original_cb)
         
         elif self.operation == "pdf_extract_text":
             self.output_dir_edit = QLineEdit()
-            self.output_dir_edit.setPlaceholderText("Ausgabeordner (leer = neben Original)")
-            self.output_dir_btn = QPushButton("...")
+            _ui_set(self.output_dir_edit, 'setPlaceholderText', "Ausgabeordner (leer = neben Original)")
+            self.output_dir_btn = _ui_widget(QPushButton, "...", setter='setText')
             self.output_dir_btn.setMaximumWidth(30)
             self.output_dir_btn.clicked.connect(self._select_output_dir)
             configure_compact_picker_button(
@@ -2241,17 +2504,17 @@ class BatchDialog(QDialog):
             dir_layout.addWidget(self.output_dir_edit)
             dir_layout.addWidget(self.output_dir_btn)
             
-            self.param_layout.addRow("Ausgabeordner:", dir_layout)
+            self.param_layout.addRow(_ui_text("Ausgabeordner:"), dir_layout)
     
     def _select_target_dir(self):
         """Öffnet Dialog zur Ordnerauswahl"""
-        folder = QFileDialog.getExistingDirectory(self, "Zielordner wählen")
+        folder = QFileDialog.getExistingDirectory(self, _ui_text("Zielordner wählen"))
         if folder:
             self.target_dir_edit.setText(folder)
     
     def _select_output_dir(self):
         """Öffnet Dialog zur Ausgabeordner-Auswahl"""
-        folder = QFileDialog.getExistingDirectory(self, "Ausgabeordner wählen")
+        folder = QFileDialog.getExistingDirectory(self, _ui_text("Ausgabeordner wählen"))
         if folder:
             self.output_dir_edit.setText(folder)
     
@@ -2260,7 +2523,7 @@ class BatchDialog(QDialog):
         if self.operation == "copy":
             target = self.target_dir_edit.text().strip()
             if not target or not os.path.isdir(target):
-                QMessageBox.warning(self, "Fehler", "Bitte wählen Sie einen gültigen Zielordner!")
+                _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Bitte wählen Sie einen gültigen Zielordner!"))
                 return False
             self.params["target_dir"] = target
         
@@ -2268,10 +2531,10 @@ class BatchDialog(QDialog):
             pw = self.password_edit.text()
             pw_confirm = self.password_confirm.text()
             if not pw:
-                QMessageBox.warning(self, "Fehler", "Bitte geben Sie ein Passwort ein!")
+                _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Bitte geben Sie ein Passwort ein!"))
                 return False
             if pw != pw_confirm:
-                QMessageBox.warning(self, "Fehler", "Passwörter stimmen nicht überein!")
+                _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Passwörter stimmen nicht überein!"))
                 return False
             self.params["password"] = pw
             self.params["keep_original"] = self.keep_original_cb.isChecked()
@@ -2279,14 +2542,14 @@ class BatchDialog(QDialog):
         elif self.operation == "pdf_decrypt":
             pw = self.password_edit.text()
             if not pw:
-                QMessageBox.warning(self, "Fehler", "Bitte geben Sie das Passwort ein!")
+                _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Bitte geben Sie das Passwort ein!"))
                 return False
             self.params["password"] = pw
         
         elif self.operation == "pdf_extract_text":
             output_dir = self.output_dir_edit.text().strip()
             if output_dir and not os.path.isdir(output_dir):
-                QMessageBox.warning(self, "Fehler", "Ungültiger Ausgabeordner!")
+                _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Ungültiger Ausgabeordner!"))
                 return False
             if output_dir:
                 self.params["output_dir"] = output_dir
@@ -2301,7 +2564,7 @@ class BatchDialog(QDialog):
         # UI anpassen
         self.start_btn.setEnabled(False)
         self.param_group.setEnabled(False)
-        self.cancel_btn.setText("Abbrechen")
+        _ui_set(self.cancel_btn, 'setText', "Abbrechen")
         self.log_text.clear()
         
         # Processor starten
@@ -2314,39 +2577,28 @@ class BatchDialog(QDialog):
     def _on_progress(self, current, total, filename):
         """Aktualisiert Fortschrittsanzeige"""
         self.progress_bar.setValue(current)
-        self.status_label.setText(f"Verarbeite {current}/{total}: {filename}")
+        _ui_set(self.status_label, 'setText', "Verarbeite {value0}/{value1}: {value2}", value0=current, value1=total, value2=filename)
     
     def _on_log(self, message):
         """Fügt Log-Eintrag hinzu"""
-        self.log_text.append(message)
+        self.log_text.append(_render_ui_message(message))
     
     def _on_completed(self, success_count, error_count):
         """Wird aufgerufen wenn alle Dateien verarbeitet wurden"""
-        self.status_label.setText(f"Fertig: {success_count} OK, {error_count} Fehler")
-        self.start_btn.setText("Fertig")
-        self.cancel_btn.setText("Schließen")
+        _ui_set(self.status_label, 'setText', "Fertig: {value0} OK, {value1} Fehler", value0=success_count, value1=error_count)
+        _ui_set(self.start_btn, 'setText', "Fertig")
+        _ui_set(self.cancel_btn, 'setText', "Schließen")
         
         # Abschluss-Meldung
         if error_count == 0:
-            QMessageBox.information(
-                self, "Abgeschlossen",
-                f"Alle {success_count} Dateien erfolgreich verarbeitet!"
-            )
+            _ui_message_box('information', self, _ui_text("Abgeschlossen"), _ui_text("Alle {value0} Dateien erfolgreich verarbeitet!", value0=success_count))
         else:
-            QMessageBox.warning(
-                self, "Abgeschlossen mit Fehlern",
-                f"Verarbeitet: {success_count} OK, {error_count} Fehler\n\n"
-                "Details siehe Log."
-            )
+            _ui_message_box('warning', self, _ui_text("Abgeschlossen mit Fehlern"), _ui_text("Verarbeitet: {value0} OK, {value1} Fehler\n\nDetails siehe Log.", value0=success_count, value1=error_count))
     
     def _cancel_or_close(self):
         """Bricht ab oder schließt den Dialog"""
         if self.processor and self.processor.isRunning():
-            reply = QMessageBox.question(
-                self, "Abbrechen",
-                "Verarbeitung wirklich abbrechen?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-            )
+            reply = _ui_message_box('question', self, _ui_text("Abbrechen"), _ui_text("Verarbeitung wirklich abbrechen?"), QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
             if reply == QMessageBox.StandardButton.Yes:
                 self.processor.cancel()
                 self.processor.wait()
@@ -2529,8 +2781,8 @@ def shorten_filename(name, max_len):
 
 class SyncWorkerSignals(QObject):
     """Signals für SyncWorker"""
-    status = Signal(str)
-    progress = Signal(int, str)
+    status = Signal(object)
+    progress = Signal(int, object)
     finished = Signal()
 
 
@@ -2556,18 +2808,18 @@ class SyncWorker(QThread):
             
             db.close()
         except Exception as e:
-            self.signals.status.emit(f"Fehler: {str(e)}")
+            self.signals.status.emit(_ui_message("Fehler: {value0}", value0=str(e)))
         finally:
             self.signals.finished.emit()
     
     def _run_indexing(self, db):
         """Indiziert alle Source-Ordner (MULTI-SOURCE!)"""
-        self.signals.status.emit("Starte Indizierung...")
+        self.signals.status.emit(_ui_message("Starte Indizierung..."))
         
         # NDERUNG: sources ist jetzt ein Array!
         source_folders = self.cfg.get("sources", [])
         if not source_folders:
-            self.signals.status.emit("Keine Quellordner definiert!")
+            self.signals.status.emit(_ui_message("Keine Quellordner definiert!"))
             return
         
         all_files = []
@@ -2577,7 +2829,14 @@ class SyncWorker(QThread):
             if not os.path.exists(source):
                 continue
             
-            self.signals.status.emit(f"Durchsuche: {source} ({source_idx+1}/{len(source_folders)})")
+            self.signals.status.emit(
+                _ui_message(
+                    "Durchsuche: {value0} ({value1}/{value2})",
+                    value0=source,
+                    value1=source_idx + 1,
+                    value2=len(source_folders),
+                )
+            )
             
             for root, _, files in os.walk(source):
                 if self.is_killed:
@@ -2588,7 +2847,7 @@ class SyncWorker(QThread):
         total = len(all_files)
         done = 0
         
-        self.signals.status.emit(f"Indiziere {total} Dateien...")
+        self.signals.status.emit(_ui_message("Indiziere {value0} Dateien...", value0=total))
         
         for source_root, path in all_files:
             while self.is_paused:
@@ -2636,22 +2895,30 @@ class SyncWorker(QThread):
 
                 done += 1
                 pct = int(done * 100 / max(1, total))
-                self.signals.progress.emit(pct, f"{done}/{total} Dateien")
+                self.signals.progress.emit(
+                    pct, _ui_message("{value0}/{value1} Dateien", value0=done, value1=total)
+                )
 
             except Exception:
                 pass  # Datei überspringen, nächste verarbeiten
         
-        self.signals.status.emit(f"Indizierung abgeschlossen! {done} Dateien verarbeitet.")
-        self.signals.progress.emit(100, "Fertig")
+        self.signals.status.emit(
+            _ui_message(
+                "Indizierung abgeschlossen! {value0} Dateien verarbeitet.", value0=done
+            )
+        )
+        self.signals.progress.emit(100, _ui_message("Fertig."))
     
     def _run_sync(self, db):
         """Synchronisiert zum Ziel (falls konfiguriert)"""
         target = self.cfg.get("target", "")
         if not target:
-            self.signals.status.emit("Kein Ziel-Ordner konfiguriert!")
+            self.signals.status.emit(_ui_message("Kein Ziel-Ordner konfiguriert!"))
             return
         
-        self.signals.status.emit("Synchronisation noch nicht implementiert in V12")
+        self.signals.status.emit(
+            _ui_message("Synchronisation noch nicht implementiert in V12")
+        )
         # TODO: Implementierung bei Bedarf
 
 # ============================================================================
@@ -2669,43 +2936,51 @@ class PDFPasswordDialog(QDialog):
         self.password = None
         self.use_master = False
         
-        self.setWindowTitle("PDF-Verschlüsselung" if mode == "encrypt" else "PDF-Entschlüsselung")
+        self.setWindowTitle(
+            _ui_text("PDF-Verschlüsselung" if mode == "encrypt" else "PDF-Entschlüsselung")
+        )
         self.resize(500, 250)
-        self.setAccessibleName("PDF-Passwortdialog")
-        self.setAccessibleDescription("Dialog zur Eingabe oder Auswahl des Passworts für PDF-Sicherheitsoperationen")
+        _ui_set(self, 'setAccessibleName', "PDF-Passwortdialog")
+        _ui_set(self, 'setAccessibleDescription', "Dialog zur Eingabe oder Auswahl des Passworts für PDF-Sicherheitsoperationen")
         
         layout = QVBoxLayout(self)
         
         # Info
         if mode == "encrypt":
-            info_text = f"{len(file_paths)} Datei(en) ausgewählt\n\nPasswort zum Verschlüsseln festlegen:"
+            info_text = _ui_text(
+                "{value0} Datei(en) ausgewählt\n\nPasswort zum Verschlüsseln festlegen:",
+                value0=len(file_paths),
+            )
         else:
-            info_text = f"{len(file_paths)} verschlüsselte Datei(en) ausgewählt\n\nPasswort zum Entschlüsseln eingeben:"
+            info_text = _ui_text(
+                "{value0} verschlüsselte Datei(en) ausgewählt\n\nPasswort zum Entschlüsseln eingeben:",
+                value0=len(file_paths),
+            )
         
         info = QLabel(info_text)
         info.setStyleSheet("font-size: 12px; padding: 10px; background-color: #2b2b2b; border-radius: 4px;")
-        info.setAccessibleName("Operationshinweis")
+        _ui_set(info, 'setAccessibleName', "Operationshinweis")
         layout.addWidget(info)
         
         # Passwort-Gruppe
-        pwd_group = QGroupBox("Passwort")
+        pwd_group = _ui_widget(QGroupBox, "Passwort", setter='setTitle')
         pwd_layout = QVBoxLayout()
         
         # Individuelles Passwort
-        self.radio_individual = QRadioButton("&Individuelles Passwort eingeben")
+        self.radio_individual = _ui_widget(QRadioButton, "&Individuelles Passwort eingeben", setter='setText')
         self.radio_individual.setChecked(True)
-        self.radio_individual.setAccessibleName("Individuelles Passwort wählen")
-        self.radio_individual.setAccessibleDescription("Aktiviert das Eingabefeld für ein manuell eingegebenes Passwort")
-        self.radio_individual.setToolTip("Eigenes Passwort für diesen Vorgang eingeben")
+        _ui_set(self.radio_individual, 'setAccessibleName', "Individuelles Passwort wählen")
+        _ui_set(self.radio_individual, 'setAccessibleDescription', "Aktiviert das Eingabefeld für ein manuell eingegebenes Passwort")
+        _ui_set(self.radio_individual, 'setToolTip', "Eigenes Passwort für diesen Vorgang eingeben")
         self.radio_individual.toggled.connect(self.on_mode_changed)
         pwd_layout.addWidget(self.radio_individual)
         
         self.password_input = QLineEdit()
         self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
-        self.password_input.setPlaceholderText("Passwort eingeben...")
-        self.password_input.setAccessibleName("Passworteingabe")
-        self.password_input.setAccessibleDescription("Geben Sie hier das individuelle PDF-Passwort ein")
-        self.password_input.setToolTip("Passwort für die PDF-Operation eingeben")
+        _ui_set(self.password_input, 'setPlaceholderText', "Passwort eingeben...")
+        _ui_set(self.password_input, 'setAccessibleName', "Passworteingabe")
+        _ui_set(self.password_input, 'setAccessibleDescription', "Geben Sie hier das individuelle PDF-Passwort ein")
+        _ui_set(self.password_input, 'setToolTip', "Passwort für die PDF-Operation eingeben")
         pwd_layout.addWidget(self.password_input)
         
         # Masterpasswort
@@ -2716,14 +2991,14 @@ class PDFPasswordDialog(QDialog):
         
         has_master = bool(master_saved)
         
-        self.radio_master = QRadioButton("&Masterpasswort verwenden")
+        self.radio_master = _ui_widget(QRadioButton, "&Masterpasswort verwenden", setter='setText')
         self.radio_master.setEnabled(has_master)
-        self.radio_master.setAccessibleName("Hinterlegtes Masterpasswort verwenden")
-        self.radio_master.setAccessibleDescription("Nutzt das in den Einstellungen hinterlegte Masterpasswort für die Stapelverarbeitung")
+        _ui_set(self.radio_master, 'setAccessibleName', "Hinterlegtes Masterpasswort verwenden")
+        _ui_set(self.radio_master, 'setAccessibleDescription', "Nutzt das in den Einstellungen hinterlegte Masterpasswort für die Stapelverarbeitung")
         if not has_master:
-            self.radio_master.setToolTip("Kein Masterpasswort hinterlegt. Bitte in den Einstellungen konfigurieren.")
+            _ui_set(self.radio_master, 'setToolTip', "Kein Masterpasswort hinterlegt. Bitte in den Einstellungen konfigurieren.")
         else:
-            self.radio_master.setToolTip("Gespeichertes Masterpasswort verwenden")
+            _ui_set(self.radio_master, 'setToolTip', "Gespeichertes Masterpasswort verwenden")
         self.radio_master.toggled.connect(self.on_mode_changed)
         pwd_layout.addWidget(self.radio_master)
         
@@ -2731,10 +3006,10 @@ class PDFPasswordDialog(QDialog):
         layout.addWidget(pwd_group)
         
         # Checkbox: Passwort anzeigen
-        self.cb_show_password = QCheckBox("Passwort &anzeigen")
-        self.cb_show_password.setAccessibleName("Passwort im Klartext anzeigen")
-        self.cb_show_password.setAccessibleDescription("Schaltet die Passwortanzeige zwischen verdeckten Zeichen und lesbarem Klartext um")
-        self.cb_show_password.setToolTip("Passwort im Klartext anzeigen")
+        self.cb_show_password = _ui_widget(QCheckBox, "Passwort &anzeigen", setter='setText')
+        _ui_set(self.cb_show_password, 'setAccessibleName', "Passwort im Klartext anzeigen")
+        _ui_set(self.cb_show_password, 'setAccessibleDescription', "Schaltet die Passwortanzeige zwischen verdeckten Zeichen und lesbarem Klartext um")
+        _ui_set(self.cb_show_password, 'setToolTip', "Passwort im Klartext anzeigen")
         self.cb_show_password.toggled.connect(self.toggle_password_visibility)
         layout.addWidget(self.cb_show_password)
         
@@ -2744,6 +3019,7 @@ class PDFPasswordDialog(QDialog):
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
+        _ui_localize_dialog_buttons(buttons)
         buttons.accepted.connect(self.accept_and_validate)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
@@ -2771,13 +3047,13 @@ class PDFPasswordDialog(QDialog):
             self.use_master = True
             
             if not self.password:
-                QMessageBox.warning(self, "Fehler", "Kein Masterpasswort hinterlegt!")
+                _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Kein Masterpasswort hinterlegt!"))
                 return
         else:
             # Individuelles Passwort
             pwd = self.password_input.text().strip()
             if not pwd:
-                QMessageBox.warning(self, "Fehler", "Bitte Passwort eingeben!")
+                _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Bitte Passwort eingeben!"))
                 return
             
             self.password = pwd
@@ -2797,11 +3073,11 @@ class PDFExcerptDialog(QDialog):
         self.total_pages = 0
         self.pdf_reader = None
         
-        self.setWindowTitle(f"PDF-Auszug: {os.path.basename(pdf_path)}")
+        _ui_set(self, 'setWindowTitle', "PDF-Auszug: {value0}", value0=os.path.basename(pdf_path))
         self.resize(900, 700)
         
         if not self.load_pdf():
-            QMessageBox.critical(self, "Fehler", "PDF konnte nicht geladen werden.")
+            _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("PDF konnte nicht geladen werden."))
             self.reject()
             return
         
@@ -2810,13 +3086,13 @@ class PDFExcerptDialog(QDialog):
         # Top: Info & Controls
         top_layout = QHBoxLayout()
         
-        self.lbl_info = QLabel(f"Seite 1 von {self.total_pages}")
+        self.lbl_info = QLabel(_ui_text("Seite 1 von {value0}", value0=self.total_pages))
         self.lbl_info.setStyleSheet("font-size: 13px; font-weight: bold;")
         top_layout.addWidget(self.lbl_info)
         
         top_layout.addStretch()
         
-        self.lbl_selected = QLabel("Ausgewählt: 0 Seiten")
+        self.lbl_selected = _ui_widget(QLabel, "Ausgewählt: 0 Seiten", setter='setText')
         self.lbl_selected.setStyleSheet("color: #90ee90; font-weight: bold;")
         top_layout.addWidget(self.lbl_selected)
         
@@ -2837,45 +3113,45 @@ class PDFExcerptDialog(QDialog):
         # Navigation & Selection
         nav_layout = QHBoxLayout()
         
-        btn_prev = QPushButton("Vorherige")
+        btn_prev = _ui_widget(QPushButton, "Vorherige", setter='setText')
         btn_prev.clicked.connect(self.prev_page)
         nav_layout.addWidget(btn_prev)
         
-        self.btn_toggle = QPushButton(" Auswählen [SPACE]")
+        self.btn_toggle = _ui_widget(QPushButton, " Auswählen [SPACE]", setter='setText')
         self.btn_toggle.setStyleSheet("background-color: #2a82da; font-weight: bold; padding: 10px;")
         self.btn_toggle.clicked.connect(self.toggle_current_page)
         nav_layout.addWidget(self.btn_toggle)
         
-        btn_next = QPushButton("Nchste ")
+        btn_next = _ui_widget(QPushButton, "Nächste ", setter='setText')
         btn_next.clicked.connect(self.next_page)
         nav_layout.addWidget(btn_next)
         
         layout.addLayout(nav_layout)
         
         # Shortcuts Info
-        shortcuts = QLabel("Shortcuts: [SPACE] Auswahl umschalten | [][] Navigation | [A] Alle | [N] Keine")
+        shortcuts = _ui_widget(QLabel, "Shortcuts: [SPACE] Auswahl umschalten | [][] Navigation | [A] Alle | [N] Keine", setter='setText')
         shortcuts.setStyleSheet("color: #888; font-size: 11px; padding: 5px;")
         layout.addWidget(shortcuts)
         
         # Bottom Buttons
         btn_layout = QHBoxLayout()
         
-        btn_all = QPushButton("Alle auswählen [A]")
+        btn_all = _ui_widget(QPushButton, "Alle auswählen [A]", setter='setText')
         btn_all.clicked.connect(self.select_all)
         btn_layout.addWidget(btn_all)
         
-        btn_none = QPushButton("Keine [N]")
+        btn_none = _ui_widget(QPushButton, "Keine [N]", setter='setText')
         btn_none.clicked.connect(self.select_none)
         btn_layout.addWidget(btn_none)
         
         btn_layout.addStretch()
         
-        btn_save = QPushButton("Auszug speichern")
+        btn_save = _ui_widget(QPushButton, "Auszug speichern", setter='setText')
         btn_save.setStyleSheet("background-color: #28a745; color: white; font-weight: bold; padding: 10px;")
         btn_save.clicked.connect(self.save_excerpt)
         btn_layout.addWidget(btn_save)
         
-        btn_cancel = QPushButton("Abbrechen")
+        btn_cancel = _ui_widget(QPushButton, "Abbrechen", setter='setText')
         btn_cancel.clicked.connect(self.reject)
         btn_layout.addWidget(btn_cancel)
         
@@ -2903,18 +3179,18 @@ class PDFExcerptDialog(QDialog):
             return
         
         # Update Info
-        self.lbl_info.setText(f"Seite {self.current_page + 1} von {self.total_pages}")
+        _ui_set(self.lbl_info, 'setText', "Seite {value0} von {value1}", value0=self.current_page + 1, value1=self.total_pages)
         
         # Update Toggle Button
         if self.current_page in self.selected_pages:
-            self.btn_toggle.setText(" Abwählen [SPACE]")
+            _ui_set(self.btn_toggle, 'setText', " Abwählen [SPACE]")
             self.btn_toggle.setStyleSheet("background-color: #c9302c; font-weight: bold; padding: 10px;")
         else:
-            self.btn_toggle.setText(" Auswählen [SPACE]")
+            _ui_set(self.btn_toggle, 'setText', " Auswählen [SPACE]")
             self.btn_toggle.setStyleSheet("background-color: #2a82da; font-weight: bold; padding: 10px;")
         
         # Update Selected Count
-        self.lbl_selected.setText(f"Ausgewählt: {len(self.selected_pages)} Seiten")
+        _ui_set(self.lbl_selected, 'setText', "Ausgewählt: {value0} Seiten", value0=len(self.selected_pages))
         
         # Vereinfachte Vorschau (nur Text)
         try:
@@ -2932,7 +3208,7 @@ class PDFExcerptDialog(QDialog):
             self.preview_label.setWordWrap(True)
             
         except Exception as e:
-            self.preview_label.setText(f"Vorschau-Fehler: {html.escape(str(e))}")
+            _ui_set(self.preview_label, 'setText', "Vorschau-Fehler: {value0}", value0=html.escape(str(e)))
     
     def toggle_current_page(self):
         """Whlt/Abwhlt aktuelle Seite"""
@@ -2985,7 +3261,7 @@ class PDFExcerptDialog(QDialog):
     def save_excerpt(self):
         """Speichert Auszug"""
         if not self.selected_pages:
-            QMessageBox.warning(self, "Keine Auswahl", "Bitte mindestens eine Seite auswählen!")
+            _ui_message_box('warning', self, _ui_text("Keine Auswahl"), _ui_text("Bitte mindestens eine Seite auswählen!"))
             return
         
         # Dateiname generieren
@@ -3006,16 +3282,12 @@ class PDFExcerptDialog(QDialog):
             # PDF erstellen
             PDFUtils.extract_pages(self.pdf_path, output_path, sorted_pages)
             
-            QMessageBox.information(
-                self,
-                "Erfolg",
-                f" Auszug erstellt!\n\n{len(sorted_pages)} Seiten gespeichert:\n{output_path}"
-            )
+            _ui_message_box('information', self, _ui_text("Erfolg"), _ui_text(" Auszug erstellt!\n\n{value0} Seiten gespeichert:\n{value1}", value0=len(sorted_pages), value1=output_path))
             
             self.accept()
             
         except Exception as e:
-            QMessageBox.critical(self, "Fehler", f"Auszug-Erstellung fehlgeschlagen:\n\n{str(e)}")
+            _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("Auszug-Erstellung fehlgeschlagen:\n\n{value0}", value0=str(e)))
 
 
 # ============================================================================
@@ -3025,18 +3297,20 @@ class PDFExcerptDialog(QDialog):
 # ============================================================================
 
 # ============================================================================
-# 6b. BARRIEREFREIER TASTATURKUERZEL- & HILFE-DIALOG (WCAG 2.1 AA / BITV 2.0)
+# 6b. TASTATURKÜRZEL- & HILFE-DIALOG
 # ============================================================================
 
 class ShortcutsDialog(QDialog):
-    """Barrierefreier Modaldialog zur Anzeige aller Tastaturkürzel (WCAG 2.1 AA / BITV 2.0)."""
+    """Modal dialog listing the application's available keyboard shortcuts."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Tastaturkürzel & Barrierefreiheit")
-        self.setAccessibleName("Tastaturkürzel & Barrierefreiheit")
-        self.setAccessibleDescription(
-            "Übersicht aller verfügbaren Tastaturkombinationen, Navigationshilfen und Konformitätsangaben nach BITV 2.0 / WCAG 2.1 AA."
+        _ui_set(self, 'setWindowTitle', "Tastaturkürzel & Navigation")
+        _ui_set(self, 'setAccessibleName', "Tastaturkürzel & Navigation")
+        _ui_set(
+            self,
+            'setAccessibleDescription',
+            "Übersicht der vorhandenen Tastenkombinationen und Navigationshilfen für Suche, Menüleiste und Dialoge.",
         )
         self.resize(720, 520)
         self.setModal(True)
@@ -3044,21 +3318,23 @@ class ShortcutsDialog(QDialog):
         layout = QVBoxLayout(self)
 
         # Header Info
-        lbl_info = QLabel(
-            "<b>Tastaturkürzel und Bedienungshilfen (BITV 2.0 / WCAG 2.1 AA)</b><br>"
-            "Die ProFiler Suite unterstützt vollständige Tastaturnavigation ohne Mauszwang. "
-            "Alle wichtigen Funktionen erreichen Sie direkt über die folgenden Tastenkombinationen:"
+        lbl_info = _ui_widget(
+            QLabel,
+            "<b>Vorhandene Tastenkürzel und Bedienungshilfen</b><br>Hier finden Sie Tastenkombinationen und Navigationstasten, die ProFiler in den aufgeführten Bereichen anbietet.",
+            setter='setText',
         )
         lbl_info.setWordWrap(True)
-        lbl_info.setAccessibleName("Barrierefreiheits-Hinweistext")
+        _ui_set(lbl_info, 'setAccessibleName', "Hinweis zu Tastatur und Navigation")
         layout.addWidget(lbl_info)
 
         # Tabelle aller Shortcuts
         self.table = QTableWidget()
         self.table.setColumnCount(3)
-        self.table.setHorizontalHeaderLabels(["Tastenkombination", "Aktion / Funktion", "Bereich"])
-        self.table.setAccessibleName("Tabelle der Tastaturkürzel")
-        self.table.setAccessibleDescription("Tabelle mit 3 Spalten: Tastenkombination, Aktion und Bereich. Mit Pfeiltasten navigieren.")
+        self.table.setHorizontalHeaderLabels(
+            [_ui_text("Tastenkombination"), _ui_text("Aktion / Funktion"), _ui_text("Bereich")]
+        )
+        _ui_set(self.table, 'setAccessibleName', "Tabelle der Tastaturkürzel")
+        _ui_set(self.table, 'setAccessibleDescription', "Tabelle mit 3 Spalten: Tastenkombination, Aktion und Bereich. Mit Pfeiltasten navigieren.")
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
@@ -3067,7 +3343,7 @@ class ShortcutsDialog(QDialog):
         self.table.setAlternatingRowColors(True)
 
         shortcuts = [
-            ("F1", "Tastaturkürzel & Barrierefreiheits-Übersicht öffnen", "Global"),
+            ("F1", "Übersicht zu Tastaturkürzeln und Navigation öffnen", "Global"),
             ("Ctrl+F", "Zur Dateisuche wechseln und Suchfeld fokussieren", "Global"),
             ("Ctrl+1", "Reiter „Suche & Explorer“ aktivieren", "Navigation"),
             ("Ctrl+2", "Reiter „Verbindungen & Themen“ aktivieren", "Navigation"),
@@ -3088,12 +3364,12 @@ class ShortcutsDialog(QDialog):
         self.table.setRowCount(len(shortcuts))
         for row, (key, action, scope) in enumerate(shortcuts):
             item_key = QTableWidgetItem(key)
-            item_action = QTableWidgetItem(action)
-            item_scope = QTableWidgetItem(scope)
+            item_action = QTableWidgetItem(_ui_text(action))
+            item_scope = QTableWidgetItem(_ui_text(scope))
 
-            item_key.setToolTip(f"Taste: {key}")
-            item_action.setToolTip(action)
-            item_scope.setToolTip(f"Gültigkeitsbereich: {scope}")
+            _ui_set(item_key, 'setToolTip', "Taste: {value0}", value0=key)
+            item_action.setToolTip(_ui_text(action))
+            _ui_set(item_scope, 'setToolTip', "Gültigkeitsbereich: {value0}", value0=scope)
 
             self.table.setItem(row, 0, item_key)
             self.table.setItem(row, 1, item_action)
@@ -3101,22 +3377,22 @@ class ShortcutsDialog(QDialog):
 
         layout.addWidget(self.table)
 
-        # A11y / BITV Footer Note
-        lbl_footer = QLabel(
-            "<small><b>Konformitätshinweis:</b> Erfüllt BITV 2.0 / WCAG 2.1 AA Kriterien "
-            "2.1.1 (Ohne Tastaturfalle), 2.1.2 (Keine Tastatursperre) und 2.4.7 (Fokus sichtbar). "
-            "Farben und Kontraste sind für augenschonenden Dunkelmodus und Kontrast-Themes optimiert.</small>"
+        # Keep the scope explicit: this view lists features and makes no conformance claim.
+        lbl_footer = _ui_widget(
+            QLabel,
+            "<small><b>Hinweis:</b> Diese Übersicht beschreibt die aufgeführten Funktionen. Sie stellt keine formale BITV- oder WCAG-Konformitätsbewertung dar.</small>",
+            setter='setText',
         )
         lbl_footer.setWordWrap(True)
-        lbl_footer.setAccessibleName("Konformitätshinweis BITV 2.0 und WCAG 2.1 AA")
+        _ui_set(lbl_footer, 'setAccessibleName', "Hinweis zu Tastenkürzeln und Navigation")
         layout.addWidget(lbl_footer)
 
         # Buttons
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
-        self.btn_close = QPushButton("Schließen")
-        self.btn_close.setAccessibleName("Dialog schließen")
-        self.btn_close.setToolTip("Diesen Tastaturkürzel-Dialog schließen (Esc)")
+        self.btn_close = _ui_widget(QPushButton, "Schließen", setter='setText')
+        _ui_set(self.btn_close, 'setAccessibleName', "Dialog schließen")
+        _ui_set(self.btn_close, 'setToolTip', "Diesen Tastaturkürzel-Dialog schließen (Esc)")
         self.btn_close.clicked.connect(self.accept)
         btn_layout.addWidget(self.btn_close)
         layout.addLayout(btn_layout)
@@ -3141,58 +3417,90 @@ class SettingsDialog(QDialog):
         super().__init__(parent)
         self.settings = settings_manager
         
-        self.setWindowTitle("⚙️ Einstellungen")
+        self.setWindowTitle("⚙️ " + _ui_text("Einstellungen"))
         self.resize(600, 500)
-        self.setAccessibleName("Programmeinstellungen")
-        self.setAccessibleDescription("Konfigurationsdialog für Sprache, Löschverhalten, PDF und externe Werkzeuge")
+        _ui_set(self, 'setAccessibleName', "Programmeinstellungen")
+        _ui_set(self, 'setAccessibleDescription', "Konfigurationsdialog für Sprache, Löschverhalten, PDF und externe Werkzeuge")
         
         layout = QVBoxLayout(self)
         
         # Tab Widget
-        tabs = QTabWidget()
-        tabs.setAccessibleName("Einstellungskategorien")
-        tabs.setAccessibleDescription("Kategorien für Allgemein, Löschen, PDF und externe Werkzeuge")
+        self.tabs = QTabWidget()
+        self.tabs.setAccessibleName(_ui_text("Einstellungskategorien"))
+        self.tabs.setAccessibleDescription(
+            _ui_text("Kategorien für Allgemein, Löschen, PDF und externe Werkzeuge")
+        )
         
         # Tab 1: Allgemein & Sprache
         general_tab = self.create_general_tab()
-        tabs.addTab(general_tab, "Allgemein")
+        self.tabs.addTab(general_tab, _ui_text("Allgemein"))
         
         # Tab 2: Lösch-Verhalten
         delete_tab = self.create_delete_tab()
-        tabs.addTab(delete_tab, "Löschen")
+        self.tabs.addTab(delete_tab, _ui_text("Löschen"))
         
         # Tab 3: PDF-Einstellungen (NEU!)
         pdf_tab = self.create_pdf_tab()
-        tabs.addTab(pdf_tab, "PDF")
+        self.tabs.addTab(pdf_tab, _ui_text("PDF"))
         
         # Tab 4: Externe Tools (NEU V13!)
         tools_tab = self.create_tools_tab()
-        tabs.addTab(tools_tab, "Externe Tools")
+        self.tabs.addTab(tools_tab, _ui_text("Externe Tools"))
         
-        layout.addWidget(tabs)
+        layout.addWidget(self.tabs)
         
         # Buttons
-        buttons = QDialogButtonBox(
+        self.buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
         )
-        buttons.accepted.connect(self.save_and_close)
-        buttons.rejected.connect(self.reject)
-        layout.addWidget(buttons)
+        self.buttons.accepted.connect(self.save_and_close)
+        self.buttons.rejected.connect(self.reject)
+        layout.addWidget(self.buttons)
+        self.retranslate_ui()
+
+    def retranslate_ui(self):
+        """Refresh the persistent settings navigation and language controls."""
+        self.setWindowTitle("⚙️ " + _ui_text("Einstellungen"))
+        self.setAccessibleName(_ui_text("Programmeinstellungen"))
+        self.setAccessibleDescription(
+            _ui_text("Konfigurationsdialog für Sprache, Löschverhalten, PDF und externe Werkzeuge")
+        )
+        self.tabs.setTabText(0, _ui_text("Allgemein"))
+        self.tabs.setTabText(1, _ui_text("Löschen"))
+        self.tabs.setTabText(2, _ui_text("PDF"))
+        self.tabs.setTabText(3, _ui_text("Externe Tools"))
+        self.tabs.setAccessibleName(_ui_text("Einstellungskategorien"))
+        self.tabs.setAccessibleDescription(
+            _ui_text("Kategorien für Allgemein, Löschen, PDF und externe Werkzeuge")
+        )
+        self.lang_group.setTitle(_ui_text("Sprache / Language"))
+        self.combo_ui_lang.setAccessibleName(_ui_text("Oberflächensprache"))
+        self.combo_ui_lang.setAccessibleDescription(
+            _ui_text("Wählt die Anzeigesprache der Benutzeroberfläche aus")
+        )
+        self.combo_ui_lang.setToolTip(_ui_text("Oberflächensprache auswählen"))
+        self.lbl_lang.setText(_ui_text("&Oberflächensprache:"))
+        self.language_info_label.setText(
+            _ui_text("Änderungen der Oberflächensprache werden nach dem Speichern wirksam.")
+        )
+        self.buttons.button(QDialogButtonBox.StandardButton.Save).setText(_ui_text("Speichern"))
+        self.buttons.button(QDialogButtonBox.StandardButton.Cancel).setText(_ui_text("Abbrechen"))
 
     def create_general_tab(self):
         """Tab für allgemeine Einstellungen (Sprache, etc.)"""
         widget = QWidget()
-        widget.setAccessibleName("Allgemeine Einstellungen")
+        _ui_set(widget, 'setAccessibleName', "Allgemeine Einstellungen")
         layout = QVBoxLayout(widget)
 
         # Spracheinstellungen (Tier-2 Multi-Language)
-        lang_group = QGroupBox("Sprache / Language")
+        self.lang_group = QGroupBox(_ui_text("Sprache / Language"))
+        lang_group = self.lang_group
         lang_layout = QFormLayout()
 
         self.combo_ui_lang = QComboBox()
-        self.combo_ui_lang.setAccessibleName("Oberflächensprache")
-        self.combo_ui_lang.setAccessibleDescription("Wählt die Anzeigesprache der Benutzeroberfläche aus")
-        self.combo_ui_lang.setToolTip("Oberflächensprache auswählen")
+        _ui_set(self.combo_ui_lang, 'setAccessibleName', "Oberflächensprache")
+        _ui_set(self.combo_ui_lang, 'setAccessibleDescription', "Wählt die Anzeigesprache der Benutzeroberfläche aus")
+        _ui_set(self.combo_ui_lang, 'setToolTip', "Oberflächensprache auswählen")
         if HAS_TRANSLATOR:
             languages = list(TranslationSystem.LANGUAGE_DISPLAY_NAMES.items())
         else:
@@ -3213,14 +3521,16 @@ class SettingsDialog(QDialog):
                 self.combo_ui_lang.setCurrentIndex(i)
                 break
 
-        lbl_lang = QLabel("&Oberflächensprache:")
-        lbl_lang.setBuddy(self.combo_ui_lang)
-        lang_layout.addRow(lbl_lang, self.combo_ui_lang)
+        self.lbl_lang = QLabel(_ui_text("&Oberflächensprache:"))
+        self.lbl_lang.setBuddy(self.combo_ui_lang)
+        lang_layout.addRow(self.lbl_lang, self.combo_ui_lang)
 
-        info_label = QLabel("Änderungen der Oberflächensprache werden nach dem Speichern wirksam.")
-        info_label.setStyleSheet("color: #888; font-size: 11px; padding-top: 4px;")
-        info_label.setWordWrap(True)
-        lang_layout.addRow(info_label)
+        self.language_info_label = QLabel(
+            _ui_text("Änderungen der Oberflächensprache werden nach dem Speichern wirksam.")
+        )
+        self.language_info_label.setStyleSheet("color: #888; font-size: 11px; padding-top: 4px;")
+        self.language_info_label.setWordWrap(True)
+        lang_layout.addRow(self.language_info_label)
 
         lang_group.setLayout(lang_layout)
         layout.addWidget(lang_group)
@@ -3231,28 +3541,28 @@ class SettingsDialog(QDialog):
     def create_delete_tab(self):
         """Tab für Lösch-Einstellungen"""
         widget = QWidget()
-        widget.setAccessibleName("Löscheinstellungen")
+        _ui_set(widget, 'setAccessibleName', "Löscheinstellungen")
         layout = QVBoxLayout(widget)
         
         # Delete Mode
-        mode_group = QGroupBox("Lösch-Modus")
+        mode_group = _ui_widget(QGroupBox, "Lösch-Modus", setter='setTitle')
         mode_layout = QVBoxLayout()
         
-        self.radio_soft = QRadioButton("&Soft-Delete (Papierkorb)")
-        self.radio_soft.setToolTip("Dateien werden markiert, können wiederhergestellt werden")
-        self.radio_soft.setAccessibleName("Soft-Delete Modus")
-        self.radio_soft.setAccessibleDescription("Dateien in den internen Papierkorb verschieben; Wiederherstellung ist möglich")
+        self.radio_soft = _ui_widget(QRadioButton, "&Soft-Delete (Papierkorb)", setter='setText')
+        _ui_set(self.radio_soft, 'setToolTip', "Dateien werden markiert, können wiederhergestellt werden")
+        _ui_set(self.radio_soft, 'setAccessibleName', "Soft-Delete Modus")
+        _ui_set(self.radio_soft, 'setAccessibleDescription', "Dateien in den internen Papierkorb verschieben; Wiederherstellung ist möglich")
         
-        self.radio_hard = QRadioButton("&Hard-Delete (Permanent)")
-        self.radio_hard.setToolTip("Dateien werden sofort permanent gelöscht")
-        self.radio_hard.setAccessibleName("Hard-Delete Modus")
-        self.radio_hard.setAccessibleDescription("Dateien sofort und unwiderruflich von der Festplatte entfernen")
+        self.radio_hard = _ui_widget(QRadioButton, "&Hard-Delete (Permanent)", setter='setText')
+        _ui_set(self.radio_hard, 'setToolTip', "Dateien werden sofort permanent gelöscht")
+        _ui_set(self.radio_hard, 'setAccessibleName', "Hard-Delete Modus")
+        _ui_set(self.radio_hard, 'setAccessibleDescription', "Dateien sofort und unwiderruflich von der Festplatte entfernen")
         
         # HIER WAR DER FEHLER: Definition muss VOR dem addWidget kommen
-        self.radio_safety = QRadioButton("&Safety-Mode (Nur Ausblenden)")
-        self.radio_safety.setToolTip("Dateien werden NICHT gelöscht, nur in der Ansicht ausgeblendet.\nKeine Änderung auf Festplatte.")
-        self.radio_safety.setAccessibleName("Safety-Mode")
-        self.radio_safety.setAccessibleDescription("Dateien nur in der Ansicht ausblenden ohne Dateiänderungen auf der Festplatte")
+        self.radio_safety = _ui_widget(QRadioButton, "&Safety-Mode (Nur Ausblenden)", setter='setText')
+        _ui_set(self.radio_safety, 'setToolTip', "Dateien werden NICHT gelöscht, nur in der Ansicht ausgeblendet.\nKeine Änderung auf Festplatte.")
+        _ui_set(self.radio_safety, 'setAccessibleName', "Safety-Mode")
+        _ui_set(self.radio_safety, 'setAccessibleDescription', "Dateien nur in der Ansicht ausblenden ohne Dateiänderungen auf der Festplatte")
         
         # Aktuellen Modus setzen
         mode = self.settings.get("delete_mode", "soft")
@@ -3271,7 +3581,7 @@ class SettingsDialog(QDialog):
         layout.addWidget(mode_group)
         
         # Retention
-        retention_group = QGroupBox("Aufbewahrungsdauer (Soft-Delete)")
+        retention_group = _ui_widget(QGroupBox, "Aufbewahrungsdauer (Soft-Delete)", setter='setTitle')
         retention_layout = QFormLayout()
         
         self.spin_retention = QSpinBox()
@@ -3279,26 +3589,26 @@ class SettingsDialog(QDialog):
         self.spin_retention.setSuffix(" Tage")
         self.spin_retention.setValue(self.settings.get("trash_retention_days", 30))
         self.spin_retention.setSpecialValueText("Unbegrenzt")
-        self.spin_retention.setAccessibleName("Aufbewahrungsdauer im Papierkorb")
-        self.spin_retention.setAccessibleDescription("Anzahl der Tage, die gelöschte Dateien im Papierkorb verbleiben (0 für unbegrenzt)")
-        self.spin_retention.setToolTip("Aufbewahrungsdauer in Tagen festlegen")
+        _ui_set(self.spin_retention, 'setAccessibleName', "Aufbewahrungsdauer im Papierkorb")
+        _ui_set(self.spin_retention, 'setAccessibleDescription', "Anzahl der Tage, die gelöschte Dateien im Papierkorb verbleiben (0 für unbegrenzt)")
+        _ui_set(self.spin_retention, 'setToolTip', "Aufbewahrungsdauer in Tagen festlegen")
         
-        lbl_retention = QLabel("&Gelöschte Dateien behalten:")
+        lbl_retention = _ui_widget(QLabel, "&Gelöschte Dateien behalten:", setter='setText')
         lbl_retention.setBuddy(self.spin_retention)
         retention_layout.addRow(lbl_retention, self.spin_retention)
         retention_group.setLayout(retention_layout)
         layout.addWidget(retention_group)
         
         # Auto-Cleanup
-        self.cb_auto_cleanup = QCheckBox("&Automatisches Aufräumen beim Start")
+        self.cb_auto_cleanup = _ui_widget(QCheckBox, "&Automatisches Aufräumen beim Start", setter='setText')
         self.cb_auto_cleanup.setChecked(self.settings.get("auto_cleanup_enabled", True))
-        self.cb_auto_cleanup.setToolTip("Abgelaufene Papierkorb-Einträge beim Programmstart automatisch entfernen")
-        self.cb_auto_cleanup.setAccessibleName("Automatisches Aufräumen beim Start")
-        self.cb_auto_cleanup.setAccessibleDescription("Bereinigt abgelaufene Dateien im Papierkorb automatisch bei jedem Programmstart")
+        _ui_set(self.cb_auto_cleanup, 'setToolTip', "Abgelaufene Papierkorb-Einträge beim Programmstart automatisch entfernen")
+        _ui_set(self.cb_auto_cleanup, 'setAccessibleName', "Automatisches Aufräumen beim Start")
+        _ui_set(self.cb_auto_cleanup, 'setAccessibleDescription', "Bereinigt abgelaufene Dateien im Papierkorb automatisch bei jedem Programmstart")
         layout.addWidget(self.cb_auto_cleanup)
         
         # Spawn-Einstellungen (NEU V13.2!)
-        spawn_group = QGroupBox("Zwischenablage Spawning")
+        spawn_group = _ui_widget(QGroupBox, "Zwischenablage Spawning", setter='setTitle')
         spawn_layout = QFormLayout()
         
         self.combo_spawn_format = QComboBox()
@@ -3307,27 +3617,24 @@ class SettingsDialog(QDialog):
         index = self.combo_spawn_format.findText(current_format)
         if index >= 0:
             self.combo_spawn_format.setCurrentIndex(index)
-        self.combo_spawn_format.setAccessibleName("Standard-Spawn-Format")
-        self.combo_spawn_format.setAccessibleDescription("Standard-Dateiformat beim Erstellen neuer Dokumente aus der Zwischenablage")
-        self.combo_spawn_format.setToolTip("Dateiformat für Zwischenablage-Inhalte wählen")
+        _ui_set(self.combo_spawn_format, 'setAccessibleName', "Standard-Spawn-Format")
+        _ui_set(self.combo_spawn_format, 'setAccessibleDescription', "Standard-Dateiformat beim Erstellen neuer Dokumente aus der Zwischenablage")
+        _ui_set(self.combo_spawn_format, 'setToolTip', "Dateiformat für Zwischenablage-Inhalte wählen")
         
-        lbl_spawn = QLabel("Standard-&Spawn-Format:")
+        lbl_spawn = _ui_widget(QLabel, "Standard-&Spawn-Format:", setter='setText')
         lbl_spawn.setBuddy(self.combo_spawn_format)
         spawn_layout.addRow(lbl_spawn, self.combo_spawn_format)
         spawn_group.setLayout(spawn_layout)
         layout.addWidget(spawn_group)
 
         # Umbenennen-Einstellungen (NEU V13.2!)
-        rename_group = QGroupBox("Umbenennen")
+        rename_group = _ui_widget(QGroupBox, "Umbenennen", setter='setTitle')
         rename_layout = QVBoxLayout()
         
-        self.cb_rename_filesystem = QCheckBox("Umbenennung wirkt im Dateisystem")
-        self.cb_rename_filesystem.setToolTip(
-            "AN: Datei wird auf Festplatte umbenannt\n"
-            "AUS: Nur Anzeigename in ProFiler (Datei bleibt unverändert)"
-        )
-        self.cb_rename_filesystem.setAccessibleName("Umbenennung im Dateisystem anwenden")
-        self.cb_rename_filesystem.setAccessibleDescription("Steuert, ob Umbenennungen die tatsächliche Datei auf der Festplatte ändern")
+        self.cb_rename_filesystem = _ui_widget(QCheckBox, "Umbenennung wirkt im Dateisystem", setter='setText')
+        _ui_set(self.cb_rename_filesystem, 'setToolTip', "AN: Datei wird auf Festplatte umbenannt\nAUS: Nur Anzeigename in ProFiler (Datei bleibt unverändert)")
+        _ui_set(self.cb_rename_filesystem, 'setAccessibleName', "Umbenennung im Dateisystem anwenden")
+        _ui_set(self.cb_rename_filesystem, 'setAccessibleDescription', "Steuert, ob Umbenennungen die tatsächliche Datei auf der Festplatte ändern")
         self.cb_rename_filesystem.setChecked(self.settings.get("rename_in_filesystem", True))
         
         rename_layout.addWidget(self.cb_rename_filesystem)
@@ -3340,14 +3647,14 @@ class SettingsDialog(QDialog):
     def create_pdf_tab(self):
         """Tab für PDF-Einstellungen (NEU!)"""
         widget = QWidget()
-        widget.setAccessibleName("PDF-Einstellungen")
+        _ui_set(widget, 'setAccessibleName', "PDF-Einstellungen")
         layout = QVBoxLayout(widget)
         
         # Masterpasswörter (mit echtem Umlaut ö)
-        pwd_group = QGroupBox("Masterpasswörter")
+        pwd_group = _ui_widget(QGroupBox, "Masterpasswörter", setter='setTitle')
         pwd_layout = QFormLayout()
         
-        info = QLabel("Masterpasswörter für schnelle Batch-Operationen")
+        info = _ui_widget(QLabel, "Masterpasswörter für schnelle Batch-Operationen", setter='setText')
         info.setStyleSheet("color: #888; font-size: 11px; padding: 5px;")
         pwd_layout.addRow(info)
         
@@ -3355,19 +3662,19 @@ class SettingsDialog(QDialog):
         self.master_pwd1 = QLineEdit()
         self.master_pwd1.setEchoMode(QLineEdit.EchoMode.Password)
         self.master_pwd1.setText(self.settings.get("pdf_master_password_open", ""))
-        self.master_pwd1.setPlaceholderText("Leer = nicht gesetzt")
-        self.master_pwd1.setAccessibleName("Masterpasswort 1 zum Öffnen")
-        self.master_pwd1.setAccessibleDescription("Passwort zum automatischen Entschlüsseln geschützter PDF-Dateien bei Batch-Operationen")
-        self.master_pwd1.setToolTip("Masterpasswort zum Entschlüsseln eingeben (optional)")
+        _ui_set(self.master_pwd1, 'setPlaceholderText', "Leer = nicht gesetzt")
+        _ui_set(self.master_pwd1, 'setAccessibleName', "Masterpasswort 1 zum Öffnen")
+        _ui_set(self.master_pwd1, 'setAccessibleDescription', "Passwort zum automatischen Entschlüsseln geschützter PDF-Dateien bei Batch-Operationen")
+        _ui_set(self.master_pwd1, 'setToolTip', "Masterpasswort zum Entschlüsseln eingeben (optional)")
         
         pwd1_layout = QHBoxLayout()
         pwd1_layout.addWidget(self.master_pwd1)
         
         self.cb_show_pwd1 = QCheckBox("")
         self.cb_show_pwd1.setMaximumWidth(40)
-        self.cb_show_pwd1.setToolTip("Masterpasswort 1 im Klartext anzeigen")
-        self.cb_show_pwd1.setAccessibleName("Masterpasswort 1 im Klartext anzeigen")
-        self.cb_show_pwd1.setAccessibleDescription("Blendet das Masterpasswort 1 als sichtbaren Text ein oder maskiert es wieder")
+        _ui_set(self.cb_show_pwd1, 'setToolTip', "Masterpasswort 1 im Klartext anzeigen")
+        _ui_set(self.cb_show_pwd1, 'setAccessibleName', "Masterpasswort 1 im Klartext anzeigen")
+        _ui_set(self.cb_show_pwd1, 'setAccessibleDescription', "Blendet das Masterpasswort 1 als sichtbaren Text ein oder maskiert es wieder")
         self.cb_show_pwd1.toggled.connect(
             lambda checked: self.master_pwd1.setEchoMode(
                 QLineEdit.EchoMode.Normal if checked else QLineEdit.EchoMode.Password
@@ -3375,7 +3682,7 @@ class SettingsDialog(QDialog):
         )
         pwd1_layout.addWidget(self.cb_show_pwd1)
         
-        lbl_pwd1 = QLabel("Masterpasswort &1 (öffnen):")
+        lbl_pwd1 = _ui_widget(QLabel, "Masterpasswort &1 (öffnen):", setter='setText')
         lbl_pwd1.setBuddy(self.master_pwd1)
         pwd_layout.addRow(lbl_pwd1, pwd1_layout)
         
@@ -3383,19 +3690,19 @@ class SettingsDialog(QDialog):
         self.master_pwd2 = QLineEdit()
         self.master_pwd2.setEchoMode(QLineEdit.EchoMode.Password)
         self.master_pwd2.setText(self.settings.get("pdf_master_password_save", ""))
-        self.master_pwd2.setPlaceholderText("Leer = nicht gesetzt")
-        self.master_pwd2.setAccessibleName("Masterpasswort 2 zum Speichern")
-        self.master_pwd2.setAccessibleDescription("Standard-Passwort zum Verschlüsseln neu erzeugter PDF-Dateien")
-        self.master_pwd2.setToolTip("Masterpasswort zum Verschlüsseln eingeben (optional)")
+        _ui_set(self.master_pwd2, 'setPlaceholderText', "Leer = nicht gesetzt")
+        _ui_set(self.master_pwd2, 'setAccessibleName', "Masterpasswort 2 zum Speichern")
+        _ui_set(self.master_pwd2, 'setAccessibleDescription', "Standard-Passwort zum Verschlüsseln neu erzeugter PDF-Dateien")
+        _ui_set(self.master_pwd2, 'setToolTip', "Masterpasswort zum Verschlüsseln eingeben (optional)")
         
         pwd2_layout = QHBoxLayout()
         pwd2_layout.addWidget(self.master_pwd2)
         
         self.cb_show_pwd2 = QCheckBox("")
         self.cb_show_pwd2.setMaximumWidth(40)
-        self.cb_show_pwd2.setToolTip("Masterpasswort 2 im Klartext anzeigen")
-        self.cb_show_pwd2.setAccessibleName("Masterpasswort 2 im Klartext anzeigen")
-        self.cb_show_pwd2.setAccessibleDescription("Blendet das Masterpasswort 2 als sichtbaren Text ein oder maskiert es wieder")
+        _ui_set(self.cb_show_pwd2, 'setToolTip', "Masterpasswort 2 im Klartext anzeigen")
+        _ui_set(self.cb_show_pwd2, 'setAccessibleName', "Masterpasswort 2 im Klartext anzeigen")
+        _ui_set(self.cb_show_pwd2, 'setAccessibleDescription', "Blendet das Masterpasswort 2 als sichtbaren Text ein oder maskiert es wieder")
         self.cb_show_pwd2.toggled.connect(
             lambda checked: self.master_pwd2.setEchoMode(
                 QLineEdit.EchoMode.Normal if checked else QLineEdit.EchoMode.Password
@@ -3403,7 +3710,7 @@ class SettingsDialog(QDialog):
         )
         pwd2_layout.addWidget(self.cb_show_pwd2)
         
-        lbl_pwd2 = QLabel("Masterpasswort &2 (Speichern):")
+        lbl_pwd2 = _ui_widget(QLabel, "Masterpasswort &2 (Speichern):", setter='setText')
         lbl_pwd2.setBuddy(self.master_pwd2)
         pwd_layout.addRow(lbl_pwd2, pwd2_layout)
         
@@ -3411,14 +3718,14 @@ class SettingsDialog(QDialog):
         layout.addWidget(pwd_group)
         
         # OCR-Einstellungen
-        ocr_group = QGroupBox("OCR (Texterkennung)")
+        ocr_group = _ui_widget(QGroupBox, "OCR (Texterkennung)", setter='setTitle')
         ocr_layout = QFormLayout()
         
-        self.cb_ocr_enabled = QCheckBox("OCR aktiviert")
+        self.cb_ocr_enabled = _ui_widget(QCheckBox, "OCR aktiviert", setter='setText')
         self.cb_ocr_enabled.setChecked(self.settings.get("ocr_enabled", True))
-        self.cb_ocr_enabled.setToolTip("Tesseract-OCR für Bilddokumente und Scans aktivieren")
-        self.cb_ocr_enabled.setAccessibleName("OCR-Texterkennung aktivieren")
-        self.cb_ocr_enabled.setAccessibleDescription("Aktiviert die Tesseract-Texterkennung für durchsuchbare PDF-Generierung")
+        _ui_set(self.cb_ocr_enabled, 'setToolTip', "Tesseract-OCR für Bilddokumente und Scans aktivieren")
+        _ui_set(self.cb_ocr_enabled, 'setAccessibleName', "OCR-Texterkennung aktivieren")
+        _ui_set(self.cb_ocr_enabled, 'setAccessibleDescription', "Aktiviert die Tesseract-Texterkennung für durchsuchbare PDF-Generierung")
         ocr_layout.addRow(self.cb_ocr_enabled)
         
         self.combo_ocr_lang = QComboBox()
@@ -3427,15 +3734,15 @@ class SettingsDialog(QDialog):
         idx = self.combo_ocr_lang.findText(current_lang)
         if idx >= 0:
             self.combo_ocr_lang.setCurrentIndex(idx)
-        self.combo_ocr_lang.setToolTip("Sprachpaket für Tesseract OCR festlegen")
-        self.combo_ocr_lang.setAccessibleName("OCR-Sprache")
-        self.combo_ocr_lang.setAccessibleDescription("Auswahl des Tesseract-Sprachmodells für die Erkennung")
+        _ui_set(self.combo_ocr_lang, 'setToolTip', "Sprachpaket für Tesseract OCR festlegen")
+        _ui_set(self.combo_ocr_lang, 'setAccessibleName', "OCR-Sprache")
+        _ui_set(self.combo_ocr_lang, 'setAccessibleDescription', "Auswahl des Tesseract-Sprachmodells für die Erkennung")
         
-        lbl_ocr = QLabel("&OCR-Sprache:")
+        lbl_ocr = _ui_widget(QLabel, "&OCR-Sprache:", setter='setText')
         lbl_ocr.setBuddy(self.combo_ocr_lang)
         ocr_layout.addRow(lbl_ocr, self.combo_ocr_lang)
         
-        ocr_info = QLabel("Benötigt: Tesseract-OCR installiert")
+        ocr_info = _ui_widget(QLabel, "Benötigt: Tesseract-OCR installiert", setter='setText')
         ocr_info.setStyleSheet("color: #888; font-size: 10px;")
         ocr_layout.addRow(ocr_info)
         
@@ -3443,12 +3750,12 @@ class SettingsDialog(QDialog):
         layout.addWidget(ocr_group)
         
         # Datenschutz & Anonymisierung
-        anon_group = QGroupBox("Datenschutz & Anonymisierung")
+        anon_group = _ui_widget(QGroupBox, "Datenschutz & Anonymisierung", setter='setTitle')
         anon_layout = QVBoxLayout()
-        self.btn_open_anon = QPushButton("🔒 &Anonymisierungs-Filter konfigurieren...")
-        self.btn_open_anon.setAccessibleName("Anonymisierungs-Filter konfigurieren")
-        self.btn_open_anon.setAccessibleDescription("Öffnet den Dialog zur Verwaltung von Blacklist, Whitelist und Platzhaltern")
-        self.btn_open_anon.setToolTip("Blacklist, Whitelist und Platzhalter für Dokumenten-Anonymisierung bearbeiten")
+        self.btn_open_anon = _ui_widget(QPushButton, "🔒 &Anonymisierungs-Filter konfigurieren...", setter='setText')
+        _ui_set(self.btn_open_anon, 'setAccessibleName', "Anonymisierungs-Filter konfigurieren")
+        _ui_set(self.btn_open_anon, 'setAccessibleDescription', "Öffnet den Dialog zur Verwaltung von Blacklist, Whitelist und Platzhaltern")
+        _ui_set(self.btn_open_anon, 'setToolTip', "Blacklist, Whitelist und Platzhalter für Dokumenten-Anonymisierung bearbeiten")
         self.btn_open_anon.clicked.connect(self.open_anonymization_dialog)
         anon_layout.addWidget(self.btn_open_anon)
         anon_group.setLayout(anon_layout)
@@ -3461,14 +3768,14 @@ class SettingsDialog(QDialog):
     def create_tools_tab(self):
         """Tab für Externe Tools (NEU!)"""
         widget = QWidget()
-        widget.setAccessibleName("Externe Werkzeuge")
+        _ui_set(widget, 'setAccessibleName', "Externe Werkzeuge")
         layout = QVBoxLayout(widget)
         
         # PythonBox
-        pythonbox_group = QGroupBox("PythonBox")
+        pythonbox_group = _ui_widget(QGroupBox, "PythonBox", setter='setTitle')
         pythonbox_layout = QFormLayout()
         
-        info = QLabel("Python-Entwicklungsumgebung öffnen")
+        info = _ui_widget(QLabel, "Python-Entwicklungsumgebung öffnen", setter='setText')
         info.setStyleSheet("color: #888; font-size: 11px; padding: 5px;")
         pythonbox_layout.addRow(info)
         
@@ -3476,28 +3783,28 @@ class SettingsDialog(QDialog):
         path_layout = QHBoxLayout()
         self.pythonbox_path = QLineEdit()
         self.pythonbox_path.setText(self.settings.get("pythonbox_path", ""))
-        self.pythonbox_path.setPlaceholderText("Pfad zu PythonBox.py")
-        self.pythonbox_path.setToolTip("Pfad zur PythonBox-Skriptdatei oder ausführbaren Datei")
-        self.pythonbox_path.setAccessibleName("PythonBox-Pfad")
-        self.pythonbox_path.setAccessibleDescription("Dateipfad zur PythonBox-Entwicklungsumgebung")
+        _ui_set(self.pythonbox_path, 'setPlaceholderText', "Pfad zu PythonBox.py")
+        _ui_set(self.pythonbox_path, 'setToolTip', "Pfad zur PythonBox-Skriptdatei oder ausführbaren Datei")
+        _ui_set(self.pythonbox_path, 'setAccessibleName', "PythonBox-Pfad")
+        _ui_set(self.pythonbox_path, 'setAccessibleDescription', "Dateipfad zur PythonBox-Entwicklungsumgebung")
         path_layout.addWidget(self.pythonbox_path)
         
-        btn_browse = QPushButton("Durchsuchen")
-        btn_browse.setToolTip("Dateidialog öffnen, um PythonBox.py auszuwählen")
-        btn_browse.setAccessibleName("PythonBox-Pfad durchsuchen")
-        btn_browse.setAccessibleDescription("Öffnet einen Dateiauswahldialog für die PythonBox-Hauptdatei")
+        btn_browse = _ui_widget(QPushButton, "Durchsuchen", setter='setText')
+        _ui_set(btn_browse, 'setToolTip', "Dateidialog öffnen, um PythonBox.py auszuwählen")
+        _ui_set(btn_browse, 'setAccessibleName', "PythonBox-Pfad durchsuchen")
+        _ui_set(btn_browse, 'setAccessibleDescription', "Öffnet einen Dateiauswahldialog für die PythonBox-Hauptdatei")
         btn_browse.clicked.connect(self.browse_pythonbox)
         path_layout.addWidget(btn_browse)
         
-        lbl_pybox = QLabel("PythonBox-&Pfad:")
+        lbl_pybox = _ui_widget(QLabel, "PythonBox-&Pfad:", setter='setText')
         lbl_pybox.setBuddy(self.pythonbox_path)
         pythonbox_layout.addRow(lbl_pybox, path_layout)
         
         # Test Button
-        btn_test = QPushButton("Test")
-        btn_test.setToolTip("Testet den hinterlegten Pfad und startet PythonBox zur Probe")
-        btn_test.setAccessibleName("PythonBox-Start testen")
-        btn_test.setAccessibleDescription("Prüft die Verfügbarkeit und führt einen Teststart von PythonBox durch")
+        btn_test = _ui_widget(QPushButton, "Test", setter='setText')
+        _ui_set(btn_test, 'setToolTip', "Testet den hinterlegten Pfad und startet PythonBox zur Probe")
+        _ui_set(btn_test, 'setAccessibleName', "PythonBox-Start testen")
+        _ui_set(btn_test, 'setAccessibleDescription', "Prüft die Verfügbarkeit und führt einen Teststart von PythonBox durch")
         btn_test.clicked.connect(self.test_pythonbox)
         pythonbox_layout.addRow(btn_test)
         
@@ -3505,52 +3812,52 @@ class SettingsDialog(QDialog):
         layout.addWidget(pythonbox_group)
         
         # SQLiteViewer
-        sqlite_group = QGroupBox("SQLite Viewer")
+        sqlite_group = _ui_widget(QGroupBox, "SQLite Viewer", setter='setTitle')
         sqlite_layout = QFormLayout()
         
         path_layout2 = QHBoxLayout()
         self.sqlite_path = QLineEdit()
         self.sqlite_path.setText(self.settings.get("sqlite_viewer_path", ""))
-        self.sqlite_path.setPlaceholderText("Pfad zu SQLiteViewer.py")
-        self.sqlite_path.setToolTip("Pfad zum SQLite-Viewer-Werkzeug")
-        self.sqlite_path.setAccessibleName("SQLite-Viewer-Pfad")
-        self.sqlite_path.setAccessibleDescription("Dateipfad zum integrierten oder externen SQLite-Viewer")
+        _ui_set(self.sqlite_path, 'setPlaceholderText', "Pfad zu SQLiteViewer.py")
+        _ui_set(self.sqlite_path, 'setToolTip', "Pfad zum SQLite-Viewer-Werkzeug")
+        _ui_set(self.sqlite_path, 'setAccessibleName', "SQLite-Viewer-Pfad")
+        _ui_set(self.sqlite_path, 'setAccessibleDescription', "Dateipfad zum integrierten oder externen SQLite-Viewer")
         path_layout2.addWidget(self.sqlite_path)
         
-        btn_browse2 = QPushButton("Durchsuchen")
-        btn_browse2.setToolTip("Dateidialog öffnen, um SQLiteViewer.py auszuwählen")
-        btn_browse2.setAccessibleName("SQLite-Viewer-Pfad durchsuchen")
-        btn_browse2.setAccessibleDescription("Öffnet einen Dateiauswahldialog für den SQLite-Viewer")
+        btn_browse2 = _ui_widget(QPushButton, "Durchsuchen", setter='setText')
+        _ui_set(btn_browse2, 'setToolTip', "Dateidialog öffnen, um SQLiteViewer.py auszuwählen")
+        _ui_set(btn_browse2, 'setAccessibleName', "SQLite-Viewer-Pfad durchsuchen")
+        _ui_set(btn_browse2, 'setAccessibleDescription', "Öffnet einen Dateiauswahldialog für den SQLite-Viewer")
         btn_browse2.clicked.connect(self.browse_sqlite)
         path_layout2.addWidget(btn_browse2)
         
-        lbl_sqlite = QLabel("&SQLiteViewer-Pfad:")
+        lbl_sqlite = _ui_widget(QLabel, "&SQLiteViewer-Pfad:", setter='setText')
         lbl_sqlite.setBuddy(self.sqlite_path)
         sqlite_layout.addRow(lbl_sqlite, path_layout2)
         sqlite_group.setLayout(sqlite_layout)
         layout.addWidget(sqlite_group)
         
         # FormConstructor
-        form_group = QGroupBox("Form Constructor")
+        form_group = _ui_widget(QGroupBox, "Form Constructor", setter='setTitle')
         form_layout = QFormLayout()
         
         path_layout3 = QHBoxLayout()
         self.formconstr_path = QLineEdit()
         self.formconstr_path.setText(self.settings.get("formconstructor_path", ""))
-        self.formconstr_path.setPlaceholderText("Pfad zu FormConstructor_V1_5.py")
-        self.formconstr_path.setToolTip("Pfad zum Form-Constructor-Werkzeug")
-        self.formconstr_path.setAccessibleName("FormConstructor-Pfad")
-        self.formconstr_path.setAccessibleDescription("Dateipfad zum Form-Constructor-Generator")
+        _ui_set(self.formconstr_path, 'setPlaceholderText', "Pfad zu FormConstructor_V1_5.py")
+        _ui_set(self.formconstr_path, 'setToolTip', "Pfad zum Form-Constructor-Werkzeug")
+        _ui_set(self.formconstr_path, 'setAccessibleName', "FormConstructor-Pfad")
+        _ui_set(self.formconstr_path, 'setAccessibleDescription', "Dateipfad zum Form-Constructor-Generator")
         path_layout3.addWidget(self.formconstr_path)
         
-        btn_browse3 = QPushButton("Durchsuchen")
-        btn_browse3.setToolTip("Dateidialog öffnen, um FormConstructor_V1_5.py auszuwählen")
-        btn_browse3.setAccessibleName("FormConstructor-Pfad durchsuchen")
-        btn_browse3.setAccessibleDescription("Öffnet einen Dateiauswahldialog für den FormConstructor")
+        btn_browse3 = _ui_widget(QPushButton, "Durchsuchen", setter='setText')
+        _ui_set(btn_browse3, 'setToolTip', "Dateidialog öffnen, um FormConstructor_V1_5.py auszuwählen")
+        _ui_set(btn_browse3, 'setAccessibleName', "FormConstructor-Pfad durchsuchen")
+        _ui_set(btn_browse3, 'setAccessibleDescription', "Öffnet einen Dateiauswahldialog für den FormConstructor")
         btn_browse3.clicked.connect(self.browse_formconstructor)
         path_layout3.addWidget(btn_browse3)
         
-        lbl_form = QLabel("&FormConstructor-Pfad:")
+        lbl_form = _ui_widget(QLabel, "&FormConstructor-Pfad:", setter='setText')
         lbl_form.setBuddy(self.formconstr_path)
         form_layout.addRow(lbl_form, path_layout3)
         form_group.setLayout(form_layout)
@@ -3558,7 +3865,7 @@ class SettingsDialog(QDialog):
 
         # Modul-Status (auto-detection via ModuleRegistry)
         if _MODULE_REGISTRY_AVAILABLE:
-            status_group = QGroupBox("Modul-Status (automatische Erkennung)")
+            status_group = _ui_widget(QGroupBox, "Modul-Status (automatische Erkennung)", setter='setTitle')
             status_layout = QFormLayout()
             status_layout.setHorizontalSpacing(12)
 
@@ -3579,9 +3886,11 @@ class SettingsDialog(QDialog):
                 else:
                     icon = "✗"
                     color = "#f44336"
-                    detail = "Nicht gefunden — Pfad in Einstellungen eintragen oder neben diesen Ordner legen"
+                    detail = _ui_text(
+                        "Nicht gefunden — Pfad in Einstellungen eintragen oder neben diesen Ordner legen"
+                    )
 
-                row_label = QLabel(f'<span style="color:{color}; font-weight:bold;">{icon}</span> {module.display_name}')
+                row_label = QLabel(_ui_text("<span style=\"color:{value0}; font-weight:bold;\">{value1}</span> {value2}", value0=color, value1=icon, value2=module.display_name))
                 row_label.setTextFormat(Qt.TextFormat.RichText)
                 detail_label = QLabel(detail)
                 detail_label.setStyleSheet("color: #888; font-size: 10px;")
@@ -3597,7 +3906,7 @@ class SettingsDialog(QDialog):
     def browse_pythonbox(self):
         """Durchsuche nach PythonBox.py"""
         path, _ = QFileDialog.getOpenFileName(
-            self, "PythonBox.py auswählen", "", "Python Files (*.py)"
+            self, _ui_text("PythonBox.py auswählen"), "", _ui_text("Python Files (*.py)")
         )
         if path:
             self.pythonbox_path.setText(path)
@@ -3605,7 +3914,7 @@ class SettingsDialog(QDialog):
     def browse_sqlite(self):
         """Durchsuche nach SQLiteViewer.py"""
         path, _ = QFileDialog.getOpenFileName(
-            self, "SQLiteViewer.py auswählen", "", "Python Files (*.py)"
+            self, _ui_text("SQLiteViewer.py auswählen"), "", _ui_text("Python Files (*.py)")
         )
         if path:
             self.sqlite_path.setText(path)
@@ -3613,7 +3922,7 @@ class SettingsDialog(QDialog):
     def browse_formconstructor(self):
         """Durchsuche nach FormConstructor_V1_5.py"""
         path, _ = QFileDialog.getOpenFileName(
-            self, "FormConstructor_V1_5.py auswählen", "", "Python Files (*.py)"
+            self, _ui_text("FormConstructor_V1_5.py auswählen"), "", _ui_text("Python Files (*.py)")
         )
         if path:
             self.formconstr_path.setText(path)
@@ -3622,18 +3931,18 @@ class SettingsDialog(QDialog):
         """Teste PythonBox-Pfad"""
         path = self.pythonbox_path.text().strip()
         if not path:
-            QMessageBox.warning(self, "Fehler", "Kein Pfad angegeben!")
+            _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Kein Pfad angegeben!"))
             return
         
         if not os.path.exists(path):
-            QMessageBox.warning(self, "Fehler", "Datei nicht gefunden!")
+            _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Datei nicht gefunden!"))
             return
         
         try:
             subprocess.Popen([sys.executable, path])
-            QMessageBox.information(self, "Erfolg", "PythonBox wurde gestartet!")
+            _ui_message_box('information', self, _ui_text("Erfolg"), _ui_text("PythonBox wurde gestartet!"))
         except Exception as e:
-            QMessageBox.critical(self, "Fehler", f"Start fehlgeschlagen:\n{str(e)}")
+            _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("Start fehlgeschlagen:\n{value0}", value0=str(e)))
 
     def open_anonymization_dialog(self):
         """Öffnet den Anonymisierungs- und Schwärzungsdialog aus den Einstellungen"""
@@ -3683,7 +3992,7 @@ class MaterialReferenceDialog(QDialog):
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Neuer Materialverweis")
+        _ui_set(self, 'setWindowTitle', "Neuer Materialverweis")
         self.resize(600, 500)
         self.result_data = None
         self.init_ui()
@@ -3692,7 +4001,7 @@ class MaterialReferenceDialog(QDialog):
         layout = QVBoxLayout(self)
         
         # Info Label
-        info = QLabel("Erstellen Sie einen Verweis auf physisch vorhandenes Material:")
+        info = _ui_widget(QLabel, "Erstellen Sie einen Verweis auf physisch vorhandenes Material:", setter='setText')
         info.setWordWrap(True)
         layout.addWidget(info)
         
@@ -3700,44 +4009,44 @@ class MaterialReferenceDialog(QDialog):
         form = QFormLayout()
         
         self.bezeichnung_input = QLineEdit()
-        self.bezeichnung_input.setPlaceholderText("z.B. Ordner mit Dokumenten")
-        form.addRow("Bezeichnung*:", self.bezeichnung_input)
+        _ui_set(self.bezeichnung_input, 'setPlaceholderText', "z.B. Ordner mit Dokumenten")
+        form.addRow(_ui_text("Bezeichnung*:"), self.bezeichnung_input)
         
         self.raum_input = QLineEdit()
-        self.raum_input.setPlaceholderText("z.B. Büro, Keller, Raum 204")
-        form.addRow("Raum:", self.raum_input)
+        _ui_set(self.raum_input, 'setPlaceholderText', "z.B. Büro, Keller, Raum 204")
+        form.addRow(_ui_text("Raum:"), self.raum_input)
         
         self.regal_input = QLineEdit()
-        self.regal_input.setPlaceholderText("z.B. Regal A, Schrank 3")
-        form.addRow("Regal:", self.regal_input)
+        _ui_set(self.regal_input, 'setPlaceholderText', "z.B. Regal A, Schrank 3")
+        form.addRow(_ui_text("Regal:"), self.regal_input)
         
         self.bereich_input = QLineEdit()
-        self.bereich_input.setPlaceholderText("z.B. Fach 2, links oben")
-        form.addRow("Bereich:", self.bereich_input)
+        _ui_set(self.bereich_input, 'setPlaceholderText', "z.B. Fach 2, links oben")
+        form.addRow(_ui_text("Bereich:"), self.bereich_input)
         
         self.inventar_input = QLineEdit()
-        self.inventar_input.setPlaceholderText("z.B. INV-2024-001")
-        form.addRow("Inventarnummer:", self.inventar_input)
+        _ui_set(self.inventar_input, 'setPlaceholderText', "z.B. INV-2024-001")
+        form.addRow(_ui_text("Inventarnummer:"), self.inventar_input)
         
         self.tags_input = QLineEdit()
-        self.tags_input.setPlaceholderText("Tags mit Komma getrennt")
-        form.addRow("Tags:", self.tags_input)
+        _ui_set(self.tags_input, 'setPlaceholderText', "Tags mit Komma getrennt")
+        form.addRow(_ui_text("Tags:"), self.tags_input)
         
         self.beschreibung_input = QTextEdit()
-        self.beschreibung_input.setPlaceholderText("Weitere Details zum Material...")
+        _ui_set(self.beschreibung_input, 'setPlaceholderText', "Weitere Details zum Material...")
         self.beschreibung_input.setMaximumHeight(150)
-        form.addRow("Beschreibung:", self.beschreibung_input)
+        form.addRow(_ui_text("Beschreibung:"), self.beschreibung_input)
         
         layout.addLayout(form)
         
         # Buttons
         btn_layout = QHBoxLayout()
         
-        btn_save = QPushButton("Speichern")
+        btn_save = _ui_widget(QPushButton, "Speichern", setter='setText')
         btn_save.clicked.connect(self.save_material)
         btn_save.setDefault(True)
         
-        btn_cancel = QPushButton(" Abbrechen")
+        btn_cancel = _ui_widget(QPushButton, " Abbrechen", setter='setText')
         btn_cancel.clicked.connect(self.reject)
         
         btn_layout.addStretch()
@@ -3751,7 +4060,7 @@ class MaterialReferenceDialog(QDialog):
         bezeichnung = self.bezeichnung_input.text().strip()
         
         if not bezeichnung:
-            QMessageBox.warning(self, "Fehler", "Bezeichnung ist erforderlich!")
+            _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Bezeichnung ist erforderlich!"))
             return
         
         self.result_data = {
@@ -3772,7 +4081,8 @@ class PromptFileDialog(QDialog):
     
     def __init__(self, parent=None, existing_data=None):
         super().__init__(parent)
-        self.setWindowTitle("Prompt-Datei" + (" bearbeiten" if existing_data else " erstellen"))
+        title_key = "Prompt-Datei bearbeiten" if existing_data else "Prompt-Datei erstellen"
+        self.setWindowTitle(_ui_text(title_key))
         self.resize(800, 700)
         self.result_data = None
         self.existing_data = existing_data
@@ -3786,9 +4096,9 @@ class PromptFileDialog(QDialog):
         
         # Info
         if not self.existing_data:
-            info = QLabel("Erstellen Sie eine neue Prompt-Datei mit Versionsverwaltung:")
+            info = _ui_widget(QLabel, "Erstellen Sie eine neue Prompt-Datei mit Versionsverwaltung:", setter='setText')
         else:
-            info = QLabel("Neue Version wird in derselben Datei gespeichert:")
+            info = _ui_widget(QLabel, "Neue Version wird in derselben Datei gespeichert:", setter='setText')
         info.setWordWrap(True)
         layout.addWidget(info)
         
@@ -3796,49 +4106,49 @@ class PromptFileDialog(QDialog):
         form = QFormLayout()
         
         self.name_input = QLineEdit()
-        self.name_input.setPlaceholderText("z.B. Blog-Artikel Generator")
+        _ui_set(self.name_input, 'setPlaceholderText', "z.B. Blog-Artikel Generator")
         if self.existing_data:
             self.name_input.setEnabled(False)
-        form.addRow("Name*:", self.name_input)
+        form.addRow(_ui_text("Name*:"), self.name_input)
         
         # Version (auto oder manuell)
         version_layout = QHBoxLayout()
         self.version_input = QLineEdit()
-        self.version_input.setPlaceholderText("Auto-generiert")
+        _ui_set(self.version_input, 'setPlaceholderText', "Auto-generiert")
         self.version_input.setEnabled(False)
         version_layout.addWidget(self.version_input)
-        form.addRow("Version:", version_layout)
+        form.addRow(_ui_text("Version:"), version_layout)
         
         self.zweck_input = QTextEdit()
-        self.zweck_input.setPlaceholderText("Wofür ist dieser Prompt gedacht?")
+        _ui_set(self.zweck_input, 'setPlaceholderText', "Wofür ist dieser Prompt gedacht?")
         self.zweck_input.setMaximumHeight(80)
-        form.addRow("Zweck/Beschreibung*:", self.zweck_input)
+        form.addRow(_ui_text("Zweck/Beschreibung*:"), self.zweck_input)
         
         self.prompt_input = QTextEdit()
-        self.prompt_input.setPlaceholderText("Der eigentliche Prompt-Text...")
+        _ui_set(self.prompt_input, 'setPlaceholderText', "Der eigentliche Prompt-Text...")
         self.prompt_input.setMinimumHeight(200)
-        form.addRow("Prompt-Text*:", self.prompt_input)
+        form.addRow(_ui_text("Prompt-Text*:"), self.prompt_input)
         
         self.resultate_input = QTextEdit()
-        self.resultate_input.setPlaceholderText("Ergebnisse/Outputs (optional)")
+        _ui_set(self.resultate_input, 'setPlaceholderText', "Ergebnisse/Outputs (optional)")
         self.resultate_input.setMaximumHeight(100)
-        form.addRow("Resultate:", self.resultate_input)
+        form.addRow(_ui_text("Resultate:"), self.resultate_input)
         
         self.verbesserungen_input = QTextEdit()
-        self.verbesserungen_input.setPlaceholderText("Ideen für Verbesserungen (optional)")
+        _ui_set(self.verbesserungen_input, 'setPlaceholderText', "Ideen für Verbesserungen (optional)")
         self.verbesserungen_input.setMaximumHeight(80)
-        form.addRow("Verbesserungsvorschlge:", self.verbesserungen_input)
+        form.addRow(_ui_text("Verbesserungsvorschläge:"), self.verbesserungen_input)
         
         layout.addLayout(form)
         
         # Buttons
         btn_layout = QHBoxLayout()
         
-        btn_save = QPushButton("Speichern")
+        btn_save = _ui_widget(QPushButton, "Speichern", setter='setText')
         btn_save.clicked.connect(self.save_prompt)
         btn_save.setDefault(True)
         
-        btn_cancel = QPushButton(" Abbrechen")
+        btn_cancel = _ui_widget(QPushButton, " Abbrechen", setter='setText')
         btn_cancel.clicked.connect(self.reject)
         
         btn_layout.addStretch()
@@ -3862,7 +4172,7 @@ class PromptFileDialog(QDialog):
         prompt_text = self.prompt_input.toPlainText().strip()
         
         if not name or not zweck or not prompt_text:
-            QMessageBox.warning(self, "Fehler", "Name, Zweck und Prompt-Text sind erforderlich!")
+            _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Name, Zweck und Prompt-Text sind erforderlich!"))
             return
         
         # Version berechnen
@@ -3890,7 +4200,7 @@ class InternetResourceDialog(QDialog):
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle(" Neue Internetressource")
+        _ui_set(self, 'setWindowTitle', " Neue Internetressource")
         self.resize(600, 450)
         self.result_data = None
         self.init_ui()
@@ -3899,7 +4209,7 @@ class InternetResourceDialog(QDialog):
         layout = QVBoxLayout(self)
         
         # Info
-        info = QLabel("Erstellen Sie einen Verweis auf eine Internetressource:")
+        info = _ui_widget(QLabel, "Erstellen Sie einen Verweis auf eine Internetressource:", setter='setText')
         info.setWordWrap(True)
         layout.addWidget(info)
         
@@ -3907,36 +4217,36 @@ class InternetResourceDialog(QDialog):
         form = QFormLayout()
         
         self.bezeichnung_input = QLineEdit()
-        self.bezeichnung_input.setPlaceholderText("z.B. Anthropic Documentation")
-        form.addRow("Bezeichnung*:", self.bezeichnung_input)
+        _ui_set(self.bezeichnung_input, 'setPlaceholderText', "z.B. Anthropic Documentation")
+        form.addRow(_ui_text("Bezeichnung*:"), self.bezeichnung_input)
         
         self.anbieter_input = QLineEdit()
-        self.anbieter_input.setPlaceholderText("z.B. Anthropic, GitHub, Stack Overflow")
-        form.addRow("Anbieter:", self.anbieter_input)
+        _ui_set(self.anbieter_input, 'setPlaceholderText', "z.B. Anthropic, GitHub, Stack Overflow")
+        form.addRow(_ui_text("Anbieter:"), self.anbieter_input)
         
         self.adresse_input = QLineEdit()
-        self.adresse_input.setPlaceholderText("https://...")
-        form.addRow("Adresse (URL)*:", self.adresse_input)
+        _ui_set(self.adresse_input, 'setPlaceholderText', "https://...")
+        form.addRow(_ui_text("Adresse (URL)*:"), self.adresse_input)
         
         self.tags_input = QLineEdit()
-        self.tags_input.setPlaceholderText("Tags mit Komma getrennt")
-        form.addRow("Tags:", self.tags_input)
+        _ui_set(self.tags_input, 'setPlaceholderText', "Tags mit Komma getrennt")
+        form.addRow(_ui_text("Tags:"), self.tags_input)
         
         self.beschreibung_input = QTextEdit()
-        self.beschreibung_input.setPlaceholderText("Beschreibung der Ressource...")
+        _ui_set(self.beschreibung_input, 'setPlaceholderText', "Beschreibung der Ressource...")
         self.beschreibung_input.setMaximumHeight(150)
-        form.addRow("Beschreibung:", self.beschreibung_input)
+        form.addRow(_ui_text("Beschreibung:"), self.beschreibung_input)
         
         layout.addLayout(form)
         
         # Buttons
         btn_layout = QHBoxLayout()
         
-        btn_save = QPushButton("Speichern")
+        btn_save = _ui_widget(QPushButton, "Speichern", setter='setText')
         btn_save.clicked.connect(self.save_resource)
         btn_save.setDefault(True)
         
-        btn_cancel = QPushButton(" Abbrechen")
+        btn_cancel = _ui_widget(QPushButton, " Abbrechen", setter='setText')
         btn_cancel.clicked.connect(self.reject)
         
         btn_layout.addStretch()
@@ -3951,12 +4261,12 @@ class InternetResourceDialog(QDialog):
         adresse = self.adresse_input.text().strip()
         
         if not bezeichnung or not adresse:
-            QMessageBox.warning(self, "Fehler", "Bezeichnung und Adresse sind erforderlich!")
+            _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Bezeichnung und Adresse sind erforderlich!"))
             return
         
         # URL validieren
         if not adresse.startswith(('http://', 'https://', 'ftp://')):
-            QMessageBox.warning(self, "Fehler", "Adresse muss mit http://, https:// oder ftp:// beginnen!")
+            _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Adresse muss mit http://, https:// oder ftp:// beginnen!"))
             return
         
         self.result_data = {
@@ -3975,7 +4285,7 @@ class LiteratureReferenceDialog(QDialog):
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle(" Neuer Literaturverweis")
+        _ui_set(self, 'setWindowTitle', " Neuer Literaturverweis")
         self.resize(650, 550)
         self.result_data = None
         self.init_ui()
@@ -3984,7 +4294,7 @@ class LiteratureReferenceDialog(QDialog):
         layout = QVBoxLayout(self)
         
         # Info
-        info = QLabel("Erstellen Sie einen Literaturverweis:")
+        info = _ui_widget(QLabel, "Erstellen Sie einen Literaturverweis:", setter='setText')
         info.setWordWrap(True)
         layout.addWidget(info)
         
@@ -3992,58 +4302,58 @@ class LiteratureReferenceDialog(QDialog):
         form = QFormLayout()
         
         self.titel_input = QLineEdit()
-        self.titel_input.setPlaceholderText("z.B. Künstliche Intelligenz - Eine Einführung")
-        form.addRow("Titel*:", self.titel_input)
+        _ui_set(self.titel_input, 'setPlaceholderText', "z.B. Künstliche Intelligenz - Eine Einführung")
+        form.addRow(_ui_text("Titel*:"), self.titel_input)
         
         self.jahr_input = QLineEdit()
-        self.jahr_input.setPlaceholderText("z.B. 2024")
-        form.addRow("Jahr:", self.jahr_input)
+        _ui_set(self.jahr_input, 'setPlaceholderText', "z.B. 2024")
+        form.addRow(_ui_text("Jahr:"), self.jahr_input)
         
         self.autoren_input = QLineEdit()
-        self.autoren_input.setPlaceholderText("z.B. Max Mustermann, Anna Schmidt")
-        form.addRow("Autoren:", self.autoren_input)
+        _ui_set(self.autoren_input, 'setPlaceholderText', "z.B. Max Mustermann, Anna Schmidt")
+        form.addRow(_ui_text("Autoren:"), self.autoren_input)
         
         self.verlag_input = QLineEdit()
-        self.verlag_input.setPlaceholderText("z.B. Springer Verlag")
-        form.addRow("Verlag:", self.verlag_input)
+        _ui_set(self.verlag_input, 'setPlaceholderText', "z.B. Springer Verlag")
+        form.addRow(_ui_text("Verlag:"), self.verlag_input)
         
         self.isbn_input = QLineEdit()
-        self.isbn_input.setPlaceholderText("z.B. 978-3-16-148410-0")
-        form.addRow("ISBN:", self.isbn_input)
+        _ui_set(self.isbn_input, 'setPlaceholderText', "z.B. 978-3-16-148410-0")
+        form.addRow(_ui_text("ISBN:"), self.isbn_input)
         
         # Physische Standortangaben
         self.raum_input = QLineEdit()
-        self.raum_input.setPlaceholderText("z.B. Arbeitszimmer, Bibliothek")
-        form.addRow("Raum:", self.raum_input)
+        _ui_set(self.raum_input, 'setPlaceholderText', "z.B. Arbeitszimmer, Bibliothek")
+        form.addRow(_ui_text("Raum:"), self.raum_input)
         
         self.regal_input = QLineEdit()
-        self.regal_input.setPlaceholderText("z.B. Regal B, links")
-        form.addRow("Regal:", self.regal_input)
+        _ui_set(self.regal_input, 'setPlaceholderText', "z.B. Regal B, links")
+        form.addRow(_ui_text("Regal:"), self.regal_input)
         
         # Online
         self.internet_input = QLineEdit()
-        self.internet_input.setPlaceholderText("https://... (optional)")
-        form.addRow("Internetlink:", self.internet_input)
+        _ui_set(self.internet_input, 'setPlaceholderText', "https://... (optional)")
+        form.addRow(_ui_text("Internetlink:"), self.internet_input)
         
         self.tags_input = QLineEdit()
-        self.tags_input.setPlaceholderText("Tags mit Komma getrennt")
-        form.addRow("Tags:", self.tags_input)
+        _ui_set(self.tags_input, 'setPlaceholderText', "Tags mit Komma getrennt")
+        form.addRow(_ui_text("Tags:"), self.tags_input)
         
         self.beschreibung_input = QTextEdit()
-        self.beschreibung_input.setPlaceholderText("Notizen, Zusammenfassung...")
+        _ui_set(self.beschreibung_input, 'setPlaceholderText', "Notizen, Zusammenfassung...")
         self.beschreibung_input.setMaximumHeight(120)
-        form.addRow("Beschreibung:", self.beschreibung_input)
+        form.addRow(_ui_text("Beschreibung:"), self.beschreibung_input)
         
         layout.addLayout(form)
         
         # Buttons
         btn_layout = QHBoxLayout()
         
-        btn_save = QPushButton("Speichern")
+        btn_save = _ui_widget(QPushButton, "Speichern", setter='setText')
         btn_save.clicked.connect(self.save_reference)
         btn_save.setDefault(True)
         
-        btn_cancel = QPushButton(" Abbrechen")
+        btn_cancel = _ui_widget(QPushButton, " Abbrechen", setter='setText')
         btn_cancel.clicked.connect(self.reject)
         
         btn_layout.addStretch()
@@ -4057,7 +4367,7 @@ class LiteratureReferenceDialog(QDialog):
         titel = self.titel_input.text().strip()
         
         if not titel:
-            QMessageBox.warning(self, "Fehler", "Titel ist erforderlich!")
+            _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Titel ist erforderlich!"))
             return
         
         self.result_data = {
@@ -4086,9 +4396,9 @@ class AnonymizationSettingsDialog(QDialog):
     def __init__(self, settings, parent=None):
         super().__init__(parent)
         self.settings = settings
-        self.setWindowTitle("Anonymisierungs-Einstellungen")
-        self.setAccessibleName("Anonymisierungs-Einstellungen")
-        self.setAccessibleDescription("Dialog zur Verwaltung von Blacklist, Whitelist und Platzhaltern für die Anonymisierung")
+        _ui_set(self, 'setWindowTitle', "Anonymisierungs-Einstellungen")
+        _ui_set(self, 'setAccessibleName', "Anonymisierungs-Einstellungen")
+        _ui_set(self, 'setAccessibleDescription', "Dialog zur Verwaltung von Blacklist, Whitelist und Platzhaltern für die Anonymisierung")
         self.resize(700, 600)
         
         self.blacklist = list(self.settings.get("anonymization_blacklist", []))
@@ -4101,26 +4411,26 @@ class AnonymizationSettingsDialog(QDialog):
         
         # Tabs für Blacklist/Whitelist
         tabs = QTabWidget()
-        tabs.setAccessibleName("Anonymisierungs-Kategorien")
-        tabs.setAccessibleDescription("Tabs zur Verwaltung von Blacklist und Whitelist")
+        _ui_set(tabs, 'setAccessibleName', "Anonymisierungs-Kategorien")
+        _ui_set(tabs, 'setAccessibleDescription', "Tabs zur Verwaltung von Blacklist und Whitelist")
         
         # === BLACKLIST TAB ===
         blacklist_widget = QWidget()
-        blacklist_widget.setAccessibleName("Blacklist-Verwaltung")
+        _ui_set(blacklist_widget, 'setAccessibleName', "Blacklist-Verwaltung")
         bl_layout = QVBoxLayout(blacklist_widget)
         
         # Input
         input_layout = QHBoxLayout()
         self.blacklist_input = QLineEdit()
-        self.blacklist_input.setPlaceholderText("Wort zur Blacklist hinzufügen...")
-        self.blacklist_input.setAccessibleName("Blacklist-Begriffeingabe")
-        self.blacklist_input.setAccessibleDescription("Begriff zur Blacklist für automatische Anonymisierung oder Schwärzung hinzufügen")
-        self.blacklist_input.setToolTip("Zu schwärzenden Begriff eingeben")
+        _ui_set(self.blacklist_input, 'setPlaceholderText', "Wort zur Blacklist hinzufügen...")
+        _ui_set(self.blacklist_input, 'setAccessibleName', "Blacklist-Begriffeingabe")
+        _ui_set(self.blacklist_input, 'setAccessibleDescription', "Begriff zur Blacklist für automatische Anonymisierung oder Schwärzung hinzufügen")
+        _ui_set(self.blacklist_input, 'setToolTip', "Zu schwärzenden Begriff eingeben")
         self.blacklist_input.returnPressed.connect(self.add_to_blacklist)
-        btn_add_bl = QPushButton("&Hinzufügen")
-        btn_add_bl.setAccessibleName("Begriff zur Blacklist hinzufügen")
-        btn_add_bl.setAccessibleDescription("Fügt den eingegebenen Begriff zur Blacklist hinzu")
-        btn_add_bl.setToolTip("Gibt den eingegebenen Begriff in die Blacklist ein")
+        btn_add_bl = _ui_widget(QPushButton, "&Hinzufügen", setter='setText')
+        _ui_set(btn_add_bl, 'setAccessibleName', "Begriff zur Blacklist hinzufügen")
+        _ui_set(btn_add_bl, 'setAccessibleDescription', "Fügt den eingegebenen Begriff zur Blacklist hinzu")
+        _ui_set(btn_add_bl, 'setToolTip', "Gibt den eingegebenen Begriff in die Blacklist ein")
         btn_add_bl.clicked.connect(self.add_to_blacklist)
         input_layout.addWidget(self.blacklist_input)
         input_layout.addWidget(btn_add_bl)
@@ -4128,34 +4438,34 @@ class AnonymizationSettingsDialog(QDialog):
         # Liste
         self.blacklist_widget = QListWidget()
         self.blacklist_widget.setSelectionMode(QListWidget.SelectionMode.ExtendedSelection)
-        self.blacklist_widget.setAccessibleName("Blacklist-Begriffsliste")
-        self.blacklist_widget.setAccessibleDescription("Liste aller Begriffe, die bei Anonymisierung geschwärzt oder ersetzt werden")
+        _ui_set(self.blacklist_widget, 'setAccessibleName', "Blacklist-Begriffsliste")
+        _ui_set(self.blacklist_widget, 'setAccessibleDescription', "Liste aller Begriffe, die bei Anonymisierung geschwärzt oder ersetzt werden")
         self.update_blacklist_display()
         
         # Buttons
         btn_layout = QHBoxLayout()
-        btn_import_bl = QPushButton("&Importieren...")
-        btn_import_bl.setAccessibleName("Blacklist importieren")
-        btn_import_bl.setAccessibleDescription("Blacklist aus externer Textdatei importieren")
-        btn_import_bl.setToolTip("Blacklist aus Datei importieren")
+        btn_import_bl = _ui_widget(QPushButton, "&Importieren...", setter='setText')
+        _ui_set(btn_import_bl, 'setAccessibleName', "Blacklist importieren")
+        _ui_set(btn_import_bl, 'setAccessibleDescription', "Blacklist aus externer Textdatei importieren")
+        _ui_set(btn_import_bl, 'setToolTip', "Blacklist aus Datei importieren")
         btn_import_bl.clicked.connect(lambda: self.import_list("blacklist"))
         
-        btn_export_bl = QPushButton("&Exportieren...")
-        btn_export_bl.setAccessibleName("Blacklist exportieren")
-        btn_export_bl.setAccessibleDescription("Blacklist in Textdatei exportieren")
-        btn_export_bl.setToolTip("Blacklist in Textdatei exportieren")
+        btn_export_bl = _ui_widget(QPushButton, "&Exportieren...", setter='setText')
+        _ui_set(btn_export_bl, 'setAccessibleName', "Blacklist exportieren")
+        _ui_set(btn_export_bl, 'setAccessibleDescription', "Blacklist in Textdatei exportieren")
+        _ui_set(btn_export_bl, 'setToolTip', "Blacklist in Textdatei exportieren")
         btn_export_bl.clicked.connect(lambda: self.export_list("blacklist"))
         
-        btn_remove_bl = QPushButton("Ausgewählte &entfernen")
-        btn_remove_bl.setAccessibleName("Ausgewählte Blacklist-Begriffe entfernen")
-        btn_remove_bl.setAccessibleDescription("Entfernt die markierten Begriffe aus der Blacklist")
-        btn_remove_bl.setToolTip("Markierte Begriffe aus der Blacklist entfernen")
+        btn_remove_bl = _ui_widget(QPushButton, "Ausgewählte &entfernen", setter='setText')
+        _ui_set(btn_remove_bl, 'setAccessibleName', "Ausgewählte Blacklist-Begriffe entfernen")
+        _ui_set(btn_remove_bl, 'setAccessibleDescription', "Entfernt die markierten Begriffe aus der Blacklist")
+        _ui_set(btn_remove_bl, 'setToolTip', "Markierte Begriffe aus der Blacklist entfernen")
         btn_remove_bl.clicked.connect(self.remove_from_blacklist)
         
-        btn_clear_bl = QPushButton("Liste &leeren")
-        btn_clear_bl.setAccessibleName("Blacklist vollständig leeren")
-        btn_clear_bl.setAccessibleDescription("Löscht alle Einträge aus der Blacklist nach Bestätigung")
-        btn_clear_bl.setToolTip("Alle Begriffe aus der Blacklist entfernen")
+        btn_clear_bl = _ui_widget(QPushButton, "Liste &leeren", setter='setText')
+        _ui_set(btn_clear_bl, 'setAccessibleName', "Blacklist vollständig leeren")
+        _ui_set(btn_clear_bl, 'setAccessibleDescription', "Löscht alle Einträge aus der Blacklist nach Bestätigung")
+        _ui_set(btn_clear_bl, 'setToolTip', "Alle Begriffe aus der Blacklist entfernen")
         btn_clear_bl.clicked.connect(lambda: self.clear_list("blacklist"))
         btn_clear_bl.setStyleSheet("background-color: #d9534f; color: white;")
         
@@ -4170,21 +4480,21 @@ class AnonymizationSettingsDialog(QDialog):
         
         # === WHITELIST TAB ===
         whitelist_widget = QWidget()
-        whitelist_widget.setAccessibleName("Whitelist-Verwaltung")
+        _ui_set(whitelist_widget, 'setAccessibleName', "Whitelist-Verwaltung")
         wl_layout = QVBoxLayout(whitelist_widget)
         
         # Input
         input_layout2 = QHBoxLayout()
         self.whitelist_input = QLineEdit()
-        self.whitelist_input.setPlaceholderText("Wort zur Whitelist hinzufügen...")
-        self.whitelist_input.setAccessibleName("Whitelist-Begriffeingabe")
-        self.whitelist_input.setAccessibleDescription("Begriff zur Whitelist hinzufügen, der von der Anonymisierung ausgenommen bleibt")
-        self.whitelist_input.setToolTip("Ausnahmebegriff eingeben")
+        _ui_set(self.whitelist_input, 'setPlaceholderText', "Wort zur Whitelist hinzufügen...")
+        _ui_set(self.whitelist_input, 'setAccessibleName', "Whitelist-Begriffeingabe")
+        _ui_set(self.whitelist_input, 'setAccessibleDescription', "Begriff zur Whitelist hinzufügen, der von der Anonymisierung ausgenommen bleibt")
+        _ui_set(self.whitelist_input, 'setToolTip', "Ausnahmebegriff eingeben")
         self.whitelist_input.returnPressed.connect(self.add_to_whitelist)
-        btn_add_wl = QPushButton("&Hinzufügen")
-        btn_add_wl.setAccessibleName("Begriff zur Whitelist hinzufügen")
-        btn_add_wl.setAccessibleDescription("Fügt den Ausnahmebegriff zur Whitelist hinzu")
-        btn_add_wl.setToolTip("Gibt den Ausnahmebegriff in die Whitelist ein")
+        btn_add_wl = _ui_widget(QPushButton, "&Hinzufügen", setter='setText')
+        _ui_set(btn_add_wl, 'setAccessibleName', "Begriff zur Whitelist hinzufügen")
+        _ui_set(btn_add_wl, 'setAccessibleDescription', "Fügt den Ausnahmebegriff zur Whitelist hinzu")
+        _ui_set(btn_add_wl, 'setToolTip', "Gibt den Ausnahmebegriff in die Whitelist ein")
         btn_add_wl.clicked.connect(self.add_to_whitelist)
         input_layout2.addWidget(self.whitelist_input)
         input_layout2.addWidget(btn_add_wl)
@@ -4192,34 +4502,34 @@ class AnonymizationSettingsDialog(QDialog):
         # Liste
         self.whitelist_widget = QListWidget()
         self.whitelist_widget.setSelectionMode(QListWidget.SelectionMode.ExtendedSelection)
-        self.whitelist_widget.setAccessibleName("Whitelist-Begriffsliste")
-        self.whitelist_widget.setAccessibleDescription("Liste aller geschützten Begriffe, die niemals anonymisiert werden")
+        _ui_set(self.whitelist_widget, 'setAccessibleName', "Whitelist-Begriffsliste")
+        _ui_set(self.whitelist_widget, 'setAccessibleDescription', "Liste aller geschützten Begriffe, die niemals anonymisiert werden")
         self.update_whitelist_display()
         
         # Buttons
         btn_layout2 = QHBoxLayout()
-        btn_import_wl = QPushButton("&Importieren...")
-        btn_import_wl.setAccessibleName("Whitelist importieren")
-        btn_import_wl.setAccessibleDescription("Whitelist aus externer Textdatei importieren")
-        btn_import_wl.setToolTip("Whitelist aus Datei importieren")
+        btn_import_wl = _ui_widget(QPushButton, "&Importieren...", setter='setText')
+        _ui_set(btn_import_wl, 'setAccessibleName', "Whitelist importieren")
+        _ui_set(btn_import_wl, 'setAccessibleDescription', "Whitelist aus externer Textdatei importieren")
+        _ui_set(btn_import_wl, 'setToolTip', "Whitelist aus Datei importieren")
         btn_import_wl.clicked.connect(lambda: self.import_list("whitelist"))
         
-        btn_export_wl = QPushButton("&Exportieren...")
-        btn_export_wl.setAccessibleName("Whitelist exportieren")
-        btn_export_wl.setAccessibleDescription("Whitelist in Textdatei exportieren")
-        btn_export_wl.setToolTip("Whitelist in Textdatei exportieren")
+        btn_export_wl = _ui_widget(QPushButton, "&Exportieren...", setter='setText')
+        _ui_set(btn_export_wl, 'setAccessibleName', "Whitelist exportieren")
+        _ui_set(btn_export_wl, 'setAccessibleDescription', "Whitelist in Textdatei exportieren")
+        _ui_set(btn_export_wl, 'setToolTip', "Whitelist in Textdatei exportieren")
         btn_export_wl.clicked.connect(lambda: self.export_list("whitelist"))
         
-        btn_remove_wl = QPushButton("Ausgewählte &entfernen")
-        btn_remove_wl.setAccessibleName("Ausgewählte Whitelist-Begriffe entfernen")
-        btn_remove_wl.setAccessibleDescription("Entfernt die markierten Begriffe aus der Whitelist")
-        btn_remove_wl.setToolTip("Markierte Begriffe aus der Whitelist entfernen")
+        btn_remove_wl = _ui_widget(QPushButton, "Ausgewählte &entfernen", setter='setText')
+        _ui_set(btn_remove_wl, 'setAccessibleName', "Ausgewählte Whitelist-Begriffe entfernen")
+        _ui_set(btn_remove_wl, 'setAccessibleDescription', "Entfernt die markierten Begriffe aus der Whitelist")
+        _ui_set(btn_remove_wl, 'setToolTip', "Markierte Begriffe aus der Whitelist entfernen")
         btn_remove_wl.clicked.connect(self.remove_from_whitelist)
         
-        btn_clear_wl = QPushButton("Liste &leeren")
-        btn_clear_wl.setAccessibleName("Whitelist vollständig leeren")
-        btn_clear_wl.setAccessibleDescription("Löscht alle Einträge aus der Whitelist nach Bestätigung")
-        btn_clear_wl.setToolTip("Alle Begriffe aus der Whitelist entfernen")
+        btn_clear_wl = _ui_widget(QPushButton, "Liste &leeren", setter='setText')
+        _ui_set(btn_clear_wl, 'setAccessibleName', "Whitelist vollständig leeren")
+        _ui_set(btn_clear_wl, 'setAccessibleDescription', "Löscht alle Einträge aus der Whitelist nach Bestätigung")
+        _ui_set(btn_clear_wl, 'setToolTip', "Alle Begriffe aus der Whitelist entfernen")
         btn_clear_wl.clicked.connect(lambda: self.clear_list("whitelist"))
         btn_clear_wl.setStyleSheet("background-color: #d9534f; color: white;")
         
@@ -4232,19 +4542,19 @@ class AnonymizationSettingsDialog(QDialog):
         wl_layout.addWidget(self.whitelist_widget)
         wl_layout.addLayout(btn_layout2)
         
-        tabs.addTab(blacklist_widget, "Blacklist")
-        tabs.addTab(whitelist_widget, "Whitelist")
+        tabs.addTab(blacklist_widget, _ui_text("Blacklist"))
+        tabs.addTab(whitelist_widget, _ui_text("Whitelist"))
         
         # === EINSTELLUNGEN ===
-        settings_group = QGroupBox("⚙️ Einstellungen")
+        settings_group = _ui_widget(QGroupBox, "⚙️ Einstellungen", setter='setTitle')
         settings_layout = QFormLayout()
         
         self.placeholder_input = QLineEdit()
         self.placeholder_input.setText(self.settings.get("anonymization_placeholder", "[-----]"))
-        self.placeholder_input.setAccessibleName("Anonymisierungs-Platzhalter")
-        self.placeholder_input.setAccessibleDescription("Zeichenkette, die anstelle gefundener Blacklist-Begriffe eingesetzt wird")
-        self.placeholder_input.setToolTip("Ersatztext für geschwärzte Begriffe (z. B. [-----])")
-        lbl_placeholder = QLabel("&Platzhalter:")
+        _ui_set(self.placeholder_input, 'setAccessibleName', "Anonymisierungs-Platzhalter")
+        _ui_set(self.placeholder_input, 'setAccessibleDescription', "Zeichenkette, die anstelle gefundener Blacklist-Begriffe eingesetzt wird")
+        _ui_set(self.placeholder_input, 'setToolTip', "Ersatztext für geschwärzte Begriffe (z. B. [-----])")
+        lbl_placeholder = _ui_widget(QLabel, "&Platzhalter:", setter='setText')
         lbl_placeholder.setBuddy(self.placeholder_input)
         settings_layout.addRow(lbl_placeholder, self.placeholder_input)
         
@@ -4254,6 +4564,7 @@ class AnonymizationSettingsDialog(QDialog):
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
+        _ui_localize_dialog_buttons(buttons)
         buttons.accepted.connect(self.save_and_close)
         buttons.rejected.connect(self.reject)
         
@@ -4299,9 +4610,9 @@ class AnonymizationSettingsDialog(QDialog):
         """Importiert Liste aus TXT, Excel, Word oder PDF"""
         file_path, _ = QFileDialog.getOpenFileName(
             self,
-            f"{list_type.capitalize()} importieren",
+            _ui_text("{value0} importieren", value0=list_type.capitalize()),
             "",
-            "Alle Dateien (*.txt *.xlsx *.docx *.pdf);;Text (*.txt);;Excel (*.xlsx);;Word (*.docx);;PDF (*.pdf)"
+            _ui_text("Alle Dateien (*.txt *.xlsx *.docx *.pdf);;Text (*.txt);;Excel (*.xlsx);;Word (*.docx);;PDF (*.pdf)")
         )
         
         if not file_path:
@@ -4322,7 +4633,7 @@ class AnonymizationSettingsDialog(QDialog):
                     words = df.values.flatten().astype(str).tolist()
                     words = [w.strip() for w in words if str(w).strip() and str(w).strip() != 'nan']
                 except ImportError:
-                    QMessageBox.warning(self, "Fehler", "pandas nicht installiert für Excel-Import")
+                    _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("pandas nicht installiert für Excel-Import"))
                     return
             
             elif ext == '.docx':
@@ -4332,7 +4643,7 @@ class AnonymizationSettingsDialog(QDialog):
                         if para.text.strip():
                             words.extend([w.strip() for w in para.text.split() if w.strip()])
                 else:
-                    QMessageBox.warning(self, "Fehler", "python-docx nicht installiert")
+                    _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("python-docx nicht installiert"))
                     return
             
             elif ext == '.pdf':
@@ -4343,7 +4654,7 @@ class AnonymizationSettingsDialog(QDialog):
                         if text:
                             words.extend([w.strip() for w in text.split() if w.strip()])
                 else:
-                    QMessageBox.warning(self, "Fehler", "pypdf nicht installiert")
+                    _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("pypdf nicht installiert"))
                     return
             
             # Füge Wörter hinzu
@@ -4359,18 +4670,18 @@ class AnonymizationSettingsDialog(QDialog):
             else:
                 self.update_whitelist_display()
             
-            QMessageBox.information(self, "Erfolg", f"{count} Wörter importiert")
+            _ui_message_box('information', self, _ui_text("Erfolg"), _ui_text("{value0} Wörter importiert", value0=count))
         
         except Exception as e:
-            QMessageBox.critical(self, "Fehler", f"Import fehlgeschlagen: {str(e)}")
+            _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("Import fehlgeschlagen: {value0}", value0=str(e)))
     
     def export_list(self, list_type):
         """Exportiert Liste als TXT"""
         file_path, _ = QFileDialog.getSaveFileName(
             self,
-            f"{list_type.capitalize()} exportieren",
+            _ui_text("{value0} exportieren", value0=list_type.capitalize()),
             f"{list_type}.txt",
-            "Text (*.txt)"
+            _ui_text("Text (*.txt)")
         )
         
         if not file_path:
@@ -4381,19 +4692,14 @@ class AnonymizationSettingsDialog(QDialog):
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write('\n'.join(sorted(target_list)))
             
-            QMessageBox.information(self, "Erfolg", f"{len(target_list)} Wörter exportiert")
+            _ui_message_box('information', self, _ui_text("Erfolg"), _ui_text("{value0} Wörter exportiert", value0=len(target_list)))
         
         except Exception as e:
-            QMessageBox.critical(self, "Fehler", f"Export fehlgeschlagen: {str(e)}")
+            _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("Export fehlgeschlagen: {value0}", value0=str(e)))
     
     def clear_list(self, list_type):
         """Leert Liste"""
-        reply = QMessageBox.question(
-            self,
-            "Liste leeren",
-            f"{list_type.capitalize()} wirklich leeren?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-        )
+        reply = _ui_message_box('question', self, _ui_text("Liste leeren"), _ui_text("{value0} wirklich leeren?", value0=list_type.capitalize()), QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         
         if reply == QMessageBox.StandardButton.Yes:
             if list_type == "blacklist":
@@ -4660,7 +4966,7 @@ class ConnectionDialog(QDialog):
     
     def __init__(self, parent=None, existing=None):
         super().__init__(parent)
-        self.setWindowTitle("Verbindung/Thema konfigurieren")
+        _ui_set(self, 'setWindowTitle', "Verbindung/Thema konfigurieren")
         self.existing = existing
         self.resize(650, 700)
         
@@ -4669,11 +4975,11 @@ class ConnectionDialog(QDialog):
         
         # Name (= Thema)
         self.name = QLineEdit(existing["name"] if existing else "")
-        self.name.setPlaceholderText("z.B. Forschungsprojekt, Privat, Arbeitsordner...")
-        form.addRow(" Name/Thema:", self.name)
+        _ui_set(self.name, 'setPlaceholderText', "z.B. Forschungsprojekt, Privat, Arbeitsordner...")
+        form.addRow(_ui_text(" Name/Thema:"), self.name)
         
         # === MULTI-SOURCE LISTE ===
-        source_group = QGroupBox("Quellordner (mehrere möglich)")
+        source_group = _ui_widget(QGroupBox, "Quellordner (mehrere möglich)", setter='setTitle')
         source_layout = QVBoxLayout()
         
         self.source_list = QListWidget()
@@ -4685,8 +4991,8 @@ class ConnectionDialog(QDialog):
                 self.source_list.addItem(src)
         
         source_buttons = QHBoxLayout()
-        btn_add_source = QPushButton("+ Ordner hinzufügen")
-        btn_remove_source = QPushButton("- Entfernen")
+        btn_add_source = _ui_widget(QPushButton, "+ Ordner hinzufügen", setter='setText')
+        btn_remove_source = _ui_widget(QPushButton, "- Entfernen", setter='setText')
         btn_add_source.clicked.connect(self.add_source_folder)
         btn_remove_source.clicked.connect(self.remove_source_folder)
         
@@ -4700,8 +5006,8 @@ class ConnectionDialog(QDialog):
         
         # Ziel (optional)
         self.target = PathLineEdit(existing.get("target", "") if existing else "")
-        self.target.setPlaceholderText("Optional: Backup/Sync-Ziel")
-        btn_tgt = QPushButton("...")
+        _ui_set(self.target, 'setPlaceholderText', "Optional: Backup/Sync-Ziel")
+        btn_tgt = _ui_widget(QPushButton, "...", setter='setText')
         btn_tgt.clicked.connect(lambda: self.pick_folder(self.target))
         configure_compact_picker_button(
             btn_tgt,
@@ -4714,19 +5020,26 @@ class ConnectionDialog(QDialog):
         h_tgt.addWidget(btn_tgt)
         
         form.addRow(source_group)
-        form.addRow(" Ziel (optional):", h_tgt)
+        form.addRow(_ui_text(" Ziel (optional):"), h_tgt)
         
         # Modus
         self.direction = QComboBox()
-        self.direction.addItems(["index_only", "one_way", "two_way"])
+        for label, value in (
+            ("Nur indizieren", "index_only"),
+            ("Einweg-Sync", "one_way"),
+            ("Zweiweg-Sync", "two_way"),
+        ):
+            self.direction.addItem(_ui_text(label), value)
         if existing:
-            self.direction.setCurrentText(existing.get("direction", "index_only"))
-        form.addRow(" Modus:", self.direction)
+            current_index = self.direction.findData(existing.get("direction", "index_only"))
+            if current_index >= 0:
+                self.direction.setCurrentIndex(current_index)
+        form.addRow(" " + _ui_text("Modus:"), self.direction)
         
         # Optionen
-        self.physical = QCheckBox("Physische Struktur behalten")
+        self.physical = _ui_widget(QCheckBox, "Physische Struktur behalten", setter='setText')
         self.physical.setChecked(True)
-        self.tags_from_path = QCheckBox("Tags aus Ordnern generieren")
+        self.tags_from_path = _ui_widget(QCheckBox, "Tags aus Ordnern generieren", setter='setText')
         self.tags_from_path.setChecked(True)
         
         form.addRow(self.physical)
@@ -4734,8 +5047,8 @@ class ConnectionDialog(QDialog):
         
         # Datenbank
         self.db_path = QLineEdit(existing.get("db_path", "") if existing else "")
-        self.db_path.setPlaceholderText("Wird automatisch generiert, falls leer")
-        btn_db = QPushButton("...")
+        _ui_set(self.db_path, 'setPlaceholderText', "Wird automatisch generiert, falls leer")
+        btn_db = _ui_widget(QPushButton, "...", setter='setText')
         btn_db.clicked.connect(lambda: self.pick_db_file())
         configure_compact_picker_button(
             btn_db,
@@ -4747,11 +5060,10 @@ class ConnectionDialog(QDialog):
         h_db.addWidget(self.db_path)
         h_db.addWidget(btn_db)
         
-        form.addRow("Datenbank:", h_db)
+        form.addRow(_ui_text("Datenbank:"), h_db)
         
         # Info
-        info = QLabel("Die Datenbank speichert Hashes, Versionen und Tags aller Dateien.\n"
-                      "    Mehrere Quellordner werden in einer gemeinsamen DB indiziert.")
+        info = _ui_widget(QLabel, "Die Datenbank speichert Hashes, Versionen und Tags aller Dateien.\n    Mehrere Quellordner werden in einer gemeinsamen DB indiziert.", setter='setText')
         info.setStyleSheet("color: gray; font-size: 10px;")
         form.addRow(info)
         
@@ -4761,13 +5073,14 @@ class ConnectionDialog(QDialog):
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
+        _ui_localize_dialog_buttons(buttons)
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
     
     def add_source_folder(self):
         """Fgt einen neuen Quellordner hinzu"""
-        folder = QFileDialog.getExistingDirectory(self, "Quellordner wählen")
+        folder = QFileDialog.getExistingDirectory(self, _ui_text("Quellordner wählen"))
         if folder:
             # Prfen ob schon vorhanden
             existing = [self.source_list.item(i).text() 
@@ -4782,14 +5095,14 @@ class ConnectionDialog(QDialog):
     
     def pick_folder(self, line_edit):
         """Ordner-Auswahl für Target"""
-        folder = QFileDialog.getExistingDirectory(self, "Ordner wählen")
+        folder = QFileDialog.getExistingDirectory(self, _ui_text("Ordner wählen"))
         if folder:
             line_edit.setText(folder)
     
     def pick_db_file(self):
         """Datei-Auswahl für Datenbank"""
         file_path, _ = QFileDialog.getSaveFileName(
-            self, "Datenbank speichern", "", "SQLite (*.db)"
+            self, _ui_text("Datenbank speichern"), "", _ui_text("SQLite (*.db)")
         )
         if file_path:
             self.db_path.setText(file_path)
@@ -4803,7 +5116,7 @@ class ConnectionDialog(QDialog):
             sources.append(self.source_list.item(i).text())
         
         if not sources:
-            QMessageBox.warning(self, "Fehler", "Mindestens ein Quellordner muss angegeben werden!")
+            _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Mindestens ein Quellordner muss angegeben werden!"))
             return None
         
         # DB-Pfad generieren falls leer
@@ -4820,7 +5133,7 @@ class ConnectionDialog(QDialog):
             "name": self.name.text(),
             "sources": sources,  # ARRAY statt single string!
             "target": self.target.text(),
-            "direction": self.direction.currentText(),
+            "direction": self.direction.currentData(),
             "structure_handling": {
                 "physical_copy": self.physical.isChecked(),
                 "tags_from_path": self.tags_from_path.isChecked()
@@ -4968,7 +5281,7 @@ class IndexWorker(QThread):
 # ============================================================================
 
 class AccessibleResultTree(QTreeWidget):
-    """Barrierefreier Ergebnisbaum mit Tastaturnavigation (WCAG 2.1 AA / BITV 2.0)."""
+    """Result tree with keyboard actions for opening, deleting, and refreshing results."""
     def __init__(self, parent_search_widget=None):
         super().__init__(parent_search_widget)
         self.parent_search_widget = parent_search_widget
@@ -5032,24 +5345,24 @@ class SearchWidgetHybrid(QWidget):
         widget.setMaximumWidth(220)
         layout = QVBoxLayout(widget)
         
-        lbl = QLabel("Filter")
+        lbl = _ui_widget(QLabel, "Filter", setter='setText')
         lbl.setStyleSheet("font-weight: bold; font-size: 13px; padding: 5px;")
         layout.addWidget(lbl)
         
         # Favoriten
-        self.cb_favorites = QCheckBox(" Nur Favoriten")
+        self.cb_favorites = _ui_widget(QCheckBox, " Nur Favoriten", setter='setText')
         self.cb_favorites.toggled.connect(self.on_filter_changed)
         layout.addWidget(self.cb_favorites)
         
         # Dateitypen
-        type_group = QGroupBox("Dateitypen")
+        type_group = _ui_widget(QGroupBox, "Dateitypen", setter='setTitle')
         type_layout = QVBoxLayout()
         
         self.type_checks = {}
         categories = ["Dokumente", "Bilder", "Audio", "Video", "Archive", "Code", "Tabellen"]
         
         for cat in categories:
-            cb = QCheckBox(cat)
+            cb = _ui_widget(QCheckBox, cat, setter="setText")
             cb.toggled.connect(self.on_filter_changed)
             self.type_checks[cat] = cb
             type_layout.addWidget(cb)
@@ -5058,7 +5371,7 @@ class SearchWidgetHybrid(QWidget):
         layout.addWidget(type_group)
         
         # Collections
-        coll_label = QLabel(" Sammlungen")
+        coll_label = _ui_widget(QLabel, " Sammlungen", setter='setText')
         coll_label.setStyleSheet("font-weight: bold; margin-top: 10px;")
         layout.addWidget(coll_label)
         
@@ -5069,7 +5382,7 @@ class SearchWidgetHybrid(QWidget):
         self.collection_list.customContextMenuRequested.connect(self.show_collection_menu)
         layout.addWidget(self.collection_list)
         
-        btn_new_coll = QPushButton("Neue Sammlung")
+        btn_new_coll = _ui_widget(QPushButton, "Neue Sammlung", setter='setText')
         btn_new_coll.clicked.connect(self.create_new_collection)
         layout.addWidget(btn_new_coll)
         
@@ -5088,12 +5401,10 @@ class SearchWidgetHybrid(QWidget):
         search_layout = QHBoxLayout()
         
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("Suche... (Auto-Suche nach 300ms)")
-        self.search_input.setAccessibleName("Dateisuche")
-        self.search_input.setAccessibleDescription(
-            "Durchsucht die verbundenen Dokumentensammlungen. Die Ergebnisliste wird nach kurzer Eingabepause aktualisiert."
-        )
-        self.search_input.setToolTip("Dateien und Dokumente durchsuchen")
+        _ui_set(self.search_input, 'setPlaceholderText', "Suche... (Auto-Suche nach 300ms)")
+        _ui_set(self.search_input, 'setAccessibleName', "Dateisuche")
+        _ui_set(self.search_input, 'setAccessibleDescription', "Durchsucht die verbundenen Dokumentensammlungen. Die Ergebnisliste wird nach kurzer Eingabepause aktualisiert.")
+        _ui_set(self.search_input, 'setToolTip', "Dateien und Dokumente durchsuchen")
         self.search_input.textChanged.connect(self.on_search_text_changed)
         search_layout.addWidget(self.search_input)
         
@@ -5102,30 +5413,30 @@ class SearchWidgetHybrid(QWidget):
         # Toolbar
         toolbar = QHBoxLayout()
         
-        self.cb_show_deleted = QCheckBox("Gelöschte anzeigen")
-        self.cb_show_deleted.setToolTip("Gelöschte Dateien in den Suchergebnissen anzeigen")
-        self.cb_show_deleted.setAccessibleName("Gelöschte Dateien anzeigen")
+        self.cb_show_deleted = _ui_widget(QCheckBox, "Gelöschte anzeigen", setter='setText')
+        _ui_set(self.cb_show_deleted, 'setToolTip', "Gelöschte Dateien in den Suchergebnissen anzeigen")
+        _ui_set(self.cb_show_deleted, 'setAccessibleName', "Gelöschte Dateien anzeigen")
         self.cb_show_deleted.toggled.connect(self.perform_search)
         toolbar.addWidget(self.cb_show_deleted)
         
-        self.cb_show_hidden = QCheckBox(" Versteckte anzeigen")
-        self.cb_show_hidden.setToolTip("Safety-Mode: Zeigt ausgeblendete Dateien an")
+        self.cb_show_hidden = _ui_widget(QCheckBox, " Versteckte anzeigen", setter='setText')
+        _ui_set(self.cb_show_hidden, 'setToolTip', "Safety-Mode: Zeigt ausgeblendete Dateien an")
         self.cb_show_hidden.toggled.connect(self.perform_search)
         toolbar.addWidget(self.cb_show_hidden)
         
         
         # "Neues Dokument" Button (NEU V13.3!)
-        btn_new_doc = QPushButton(" Neues Dokument ")
+        btn_new_doc = _ui_widget(QPushButton, " Neues Dokument ", setter='setText')
         btn_new_doc_menu = QMenu(btn_new_doc)
-        btn_new_doc_menu.addAction(" Materialverweis", self.create_material_reference)
-        btn_new_doc_menu.addAction(" Prompt-Datei", self.create_prompt_file)
-        btn_new_doc_menu.addAction(" Internetressource", self.create_internet_resource)
-        btn_new_doc_menu.addAction(" Literaturverweis", self.create_literature_reference)
+        btn_new_doc_menu.addAction(_ui_text(" Materialverweis"), self.create_material_reference)
+        btn_new_doc_menu.addAction(_ui_text(" Prompt-Datei"), self.create_prompt_file)
+        btn_new_doc_menu.addAction(_ui_text(" Internetressource"), self.create_internet_resource)
+        btn_new_doc_menu.addAction(_ui_text(" Literaturverweis"), self.create_literature_reference)
         btn_new_doc.setMenu(btn_new_doc_menu)
         toolbar.addWidget(btn_new_doc)
         toolbar.addStretch()
         
-        self.status_label = QLabel("Bereit")
+        self.status_label = _ui_widget(QLabel, "Bereit", setter='setText')
         self.status_label.setStyleSheet("color: #888; font-size: 11px;")
         toolbar.addWidget(self.status_label)
         
@@ -5133,16 +5444,16 @@ class SearchWidgetHybrid(QWidget):
         
         # Results Tree (NEU: für gruppierte Anzeige)
         self.result_tree = AccessibleResultTree(self)
-        self.result_tree.setAccessibleName("Suchergebnisse")
-        self.result_tree.setAccessibleDescription(
-            "Zeigt gefundene Dateien mit Typ, Größe und Datum. Mit den Pfeiltasten navigieren, Enter öffnet die ausgewählte Datei."
-        )
-        self.result_tree.setToolTip("Suchergebnisse; Dateien können zur Organisation verschoben werden")
+        _ui_set(self.result_tree, 'setAccessibleName', "Suchergebnisse")
+        _ui_set(self.result_tree, 'setAccessibleDescription', "Zeigt gefundene Dateien mit Typ, Größe und Datum. Mit den Pfeiltasten navigieren, Enter öffnet die ausgewählte Datei.")
+        _ui_set(self.result_tree, 'setToolTip', "Suchergebnisse; Dateien können zur Organisation verschoben werden")
         # Drag & Drop aktivieren (NEU V13.1!)
         self.result_tree.setDragEnabled(True)
         self.result_tree.setAcceptDrops(True)
         self.result_tree.setDragDropMode(QTreeWidget.DragDropMode.DragDrop)
-        self.result_tree.setHeaderLabels(["Datei", "Typ", "Größe", "Datum"])
+        self.result_tree.setHeaderLabels(
+            [_ui_text(key) for key in ("Datei", "Typ", "Größe", "Datum")]
+        )
         self.result_tree.setColumnWidth(0, 400)
         self.result_tree.setColumnWidth(1, 100)
         self.result_tree.setColumnWidth(2, 100)
@@ -5157,33 +5468,39 @@ class SearchWidgetHybrid(QWidget):
         layout.addWidget(self.result_tree)
         
         return widget
+
+    def retranslate_result_headers(self):
+        """Update localized column labels without rebuilding result rows or widths."""
+        header = self.result_tree.headerItem()
+        if header is None:
+            return
+        for column, key in enumerate(("Datei", "Typ", "Größe", "Datum")):
+            header.setText(column, _ui_text(key))
     
     def create_right_panel(self):
         """Rechte Vorschau"""
         widget = QWidget()
         layout = QVBoxLayout(widget)
         
-        lbl = QLabel("Vorschau")
+        lbl = _ui_widget(QLabel, "Vorschau", setter='setText')
         lbl.setStyleSheet("font-weight: bold; padding: 5px;")
         layout.addWidget(lbl)
         
         self.preview_text = QTextEdit()
         self.preview_text.setReadOnly(True)
-        self.preview_text.setAccessibleName("Dateivorschau")
-        self.preview_text.setAccessibleDescription(
-            "Zeigt Details und eine Textvorschau der in den Suchergebnissen ausgewählten Datei."
-        )
-        self.preview_text.setToolTip("Vorschau der ausgewählten Datei")
+        _ui_set(self.preview_text, 'setAccessibleName', "Dateivorschau")
+        _ui_set(self.preview_text, 'setAccessibleDescription', "Zeigt Details und eine Textvorschau der in den Suchergebnissen ausgewählten Datei.")
+        _ui_set(self.preview_text, 'setToolTip', "Vorschau der ausgewählten Datei")
         layout.addWidget(self.preview_text)
         
         # Buttons
         btn_layout = QHBoxLayout()
         
-        self.btn_open = QPushButton(" Öffnen")
+        self.btn_open = _ui_widget(QPushButton, " Öffnen", setter='setText')
         self.btn_open.clicked.connect(self.open_selected_file)
         btn_layout.addWidget(self.btn_open)
         
-        self.btn_show = QPushButton("Im Explorer")
+        self.btn_show = _ui_widget(QPushButton, "Im Explorer", setter='setText')
         self.btn_show.clicked.connect(self.show_in_explorer)
         btn_layout.addWidget(self.btn_show)
         
@@ -5216,11 +5533,7 @@ class SearchWidgetHybrid(QWidget):
         item = self.result_tree.itemAt(pos)
         
         if not item:
-            QMessageBox.information(
-                self,
-                "Kein Ziel",
-                "Bitte Dateien auf eine Zieldatei ziehen zum Poolen."
-            )
+            _ui_message_box('information', self, _ui_text("Kein Ziel"), _ui_text("Bitte Dateien auf eine Zieldatei ziehen zum Poolen."))
             return
         
         # Wenn Gruppen-Header -> nimm erstes Kind
@@ -5237,11 +5550,7 @@ class SearchWidgetHybrid(QWidget):
         try:
             self.pool_files(source_files, target_file)
         except Exception as e:
-            QMessageBox.critical(
-                self,
-                "Pooling fehlgeschlagen",
-                f"Fehler beim Poolen:\n{str(e)}"
-            )
+            _ui_message_box('critical', self, _ui_text("Pooling fehlgeschlagen"), _ui_text("Fehler beim Poolen:\n{value0}", value0=str(e)))
     
     def get_pdf_icon_text(self, result):
         """Gibt PDF-Icon-Text zurück"""
@@ -5258,7 +5567,7 @@ class SearchWidgetHybrid(QWidget):
             return " 📷"
     
     def focus_search_input(self):
-        """Fokussiert das Suchfeld und markiert den aktuellen Text (WCAG 2.1.1 Tastaturnavigation)."""
+        """Focuses the search field and selects its current contents."""
         if hasattr(self, "search_input") and self.search_input:
             self.search_input.setFocus()
             self.search_input.selectAll()
@@ -5292,11 +5601,11 @@ class SearchWidgetHybrid(QWidget):
             "show_hidden": self.cb_show_hidden.isChecked()
         }
         
-        self.status_label.setText("Suche läuft...")
+        _ui_set(self.status_label, 'setText', "Suche läuft...")
         
         self.worker = SearchWorker(self.manager, params, self.settings)
         self.worker.results_found.connect(self.display_results)
-        self.worker.finished.connect(lambda: self.status_label.setText("Fertig"))
+        self.worker.finished.connect(lambda: _ui_set(self.status_label, 'setText', "Fertig"))
         self.worker.start()
     
     def display_results(self, results):
@@ -5305,7 +5614,7 @@ class SearchWidgetHybrid(QWidget):
         self.result_tree.clear()
         
         if not results:
-            self.status_label.setText("Keine Ergebnisse")
+            _ui_set(self.status_label, 'setText', "Keine Ergebnisse")
             return
         
         # Gruppierung nach content_hash
@@ -5348,8 +5657,11 @@ class SearchWidgetHybrid(QWidget):
                 
                 # Gruppen-Item
                 group_item = QTreeWidgetItem(self.result_tree)
-                group_item.setText(0, f"{group_name} ({len(files)} Versionen)")
-                group_item.setText(1, first_file['category'])
+                group_item.setText(
+                    0,
+                    _ui_text("{value0} ({value1} Versionen)", value0=group_name, value1=len(files)),
+                )
+                group_item.setText(1, _ui_text(first_file['category']))
                 group_item.setText(2, f"{size_mb:.1f} MB")
                 group_item.setText(3, "")
                 
@@ -5374,7 +5686,7 @@ class SearchWidgetHybrid(QWidget):
                 item = self.create_tree_item(f, is_child=False)
                 self.result_tree.addTopLevelItem(item)
         
-        self.status_label.setText(f"{total_files} Dateien | {duplicate_groups} Gruppen")
+        _ui_set(self.status_label, 'setText', "{value0} Dateien | {value1} Gruppen", value0=total_files, value1=duplicate_groups)
     
     def create_tree_item(self, result, is_child=False, child_index=0):
         """Erstellt ein Tree-Item für eine Datei"""
@@ -5403,7 +5715,7 @@ class SearchWidgetHybrid(QWidget):
         # Item erstellen
         item = QTreeWidgetItem()
         item.setText(0, display_name)
-        item.setText(1, result['category'])
+        item.setText(1, _ui_text(result['category']))
         
         # Size
         size_mb = result.get('size', 0) / (1024 * 1024)
@@ -5427,7 +5739,14 @@ class SearchWidgetHybrid(QWidget):
         if result.get('is_deleted', False):
             item.setForeground(0, QColor("#888888"))
             deleted_date = result.get('deleted_at', '')[:10]
-            item.setToolTip(0, f"Gelöscht am {deleted_date}\n{result['path']}")
+            item.setToolTip(
+                0,
+                _ui_text(
+                    "Gelöscht am {value0}\n{value1}",
+                    value0=deleted_date,
+                    value1=result["path"],
+                ),
+            )
         elif result.get('is_favorite', False):
             item.setForeground(0, QColor("#FFD700"))
         
@@ -5537,45 +5856,45 @@ class SearchWidgetHybrid(QWidget):
         
         if is_hidden:
             # Versteckte Datei - nur Einblenden anbieten
-            menu.addAction(" Einblenden (Safety-Mode)", self.unhide_selected)
-            menu.addAction(" Permanent löschen", self.hard_delete_selected)
+            menu.addAction(_ui_text(" Einblenden (Safety-Mode)"), self.unhide_selected)
+            menu.addAction(_ui_text(" Permanent löschen"), self.hard_delete_selected)
         
         elif not is_deleted:
             # Standard-Aktionen
-            menu.addAction(" Öffnen", self.open_selected_file)
-            menu.addAction(" Im Explorer anzeigen", self.show_in_explorer)
+            menu.addAction(_ui_text(" Öffnen"), self.open_selected_file)
+            menu.addAction(_ui_text(" Im Explorer anzeigen"), self.show_in_explorer)
             
             menu.addSeparator()
             
             # Kopieren/Einfgen/Umbenennen (NEU V13.2!)
-            menu.addAction(" Kopieren", self.copy_selected)
-            menu.addAction(" Umbenennen...", self.rename_selected)
+            menu.addAction(_ui_text(" Kopieren"), self.copy_selected)
+            menu.addAction(_ui_text(" Umbenennen..."), self.rename_selected)
             
             # Text kopieren für Textdateien (NEU V13.3!)
             if self.is_text_file(path):
-                menu.addAction(" Text kopieren", self.copy_text_from_file)
+                menu.addAction(_ui_text(" Text kopieren"), self.copy_text_from_file)
             
             menu.addSeparator()
             
             # Favoriten
             if result.get('is_favorite'):
-                menu.addAction(" Favorit entfernen", self.toggle_favorite)
+                menu.addAction(_ui_text(" Favorit entfernen"), self.toggle_favorite)
             else:
-                menu.addAction(" Als Favorit markieren", self.toggle_favorite)
+                menu.addAction(_ui_text(" Als Favorit markieren"), self.toggle_favorite)
             
             menu.addSeparator()
             
             # Version
-            version_menu = menu.addMenu(" Version")
-            version_menu.addAction(" Erhöhen (+)", self.version_increase)
-            version_menu.addAction(" Verringern (-)", self.version_decrease)
+            version_menu = menu.addMenu(_ui_text(" Version"))
+            version_menu.addAction(_ui_text(" Erhöhen (+)"), self.version_increase)
+            version_menu.addAction(_ui_text(" Verringern (-)"), self.version_decrease)
             version_menu.addSeparator()
-            version_menu.addAction(" Label setzen...", self.set_version_label)
+            version_menu.addAction(_ui_text(" Label setzen..."), self.set_version_label)
             
             menu.addSeparator()
             
             # Collections
-            coll_menu = menu.addMenu(" Zu Sammlung")
+            coll_menu = menu.addMenu(_ui_text(" Zu Sammlung"))
             collections = self.get_all_collections()
             for coll_id, coll_name in collections:
                 coll_menu.addAction(coll_name, lambda cid=coll_id: self.add_to_collection(cid))
@@ -5584,41 +5903,41 @@ class SearchWidgetHybrid(QWidget):
             
             # PDF-spezifisch
             if is_pdf:
-                pdf_menu = menu.addMenu(" PDF")
-                pdf_menu.addAction(" Auszug erstellen...", self.create_pdf_excerpt)
-                pdf_menu.addAction(" Verschlüsseln...", self.encrypt_pdf)
-                pdf_menu.addAction(" Entschlüsseln", self.decrypt_pdf)
+                pdf_menu = menu.addMenu(_ui_text(" PDF"))
+                pdf_menu.addAction(_ui_text(" Auszug erstellen..."), self.create_pdf_excerpt)
+                pdf_menu.addAction(_ui_text(" Verschlüsseln..."), self.encrypt_pdf)
+                pdf_menu.addAction(_ui_text(" Entschlüsseln"), self.decrypt_pdf)
             
             # Python-spezifisch
             if path.lower().endswith('.py'):
-                py_menu = menu.addMenu(" Python-Tools")
-                py_menu.addAction(" In PythonBox öffnen", self.open_in_pythonbox)
-                py_menu.addAction(" In Klassen zerlegen", self.split_into_classes)
-                py_menu.addAction(" Encoding reparieren", self.fix_encoding)
+                py_menu = menu.addMenu(_ui_text(" Python-Tools"))
+                py_menu.addAction(_ui_text(" In PythonBox öffnen"), self.open_in_pythonbox)
+                py_menu.addAction(_ui_text(" In Klassen zerlegen"), self.split_into_classes)
+                py_menu.addAction(_ui_text(" Encoding reparieren"), self.fix_encoding)
             
             # SQLite-spezifisch
             if path.lower().endswith(('.db', '.sqlite', '.sqlite3')):
                 menu.addSeparator()
-                menu.addAction(" In SQLite Viewer öffnen", self.open_sqlite_viewer)
+                menu.addAction(_ui_text(" In SQLite Viewer öffnen"), self.open_sqlite_viewer)
             
             menu.addSeparator()
             
             # Löschen
             delete_mode = self.settings.get("delete_mode", "soft")
             if delete_mode == "soft":
-                menu.addAction(" Löschen (Papierkorb)", self.delete_selected)
+                menu.addAction(_ui_text(" Löschen (Papierkorb)"), self.delete_selected)
             elif delete_mode == "hard":
-                menu.addAction(" Löschen (Permanent)", self.delete_selected)
+                menu.addAction(_ui_text(" Löschen (Permanent)"), self.delete_selected)
             else:  # safety
-                menu.addAction(" Ausblenden (Safety-Mode)", self.delete_selected)
+                menu.addAction(_ui_text(" Ausblenden (Safety-Mode)"), self.delete_selected)
             
             if is_deleted:
-                menu.addAction(" Permanent löschen", self.delete_selected)
+                menu.addAction(_ui_text(" Permanent löschen"), self.delete_selected)
         
         else:
             # Deleted file actions
-            menu.addAction(" Wiederherstellen", self.restore_selected)
-            menu.addAction(" Permanent löschen", self.hard_delete_selected)
+            menu.addAction(_ui_text(" Wiederherstellen"), self.restore_selected)
+            menu.addAction(_ui_text(" Permanent löschen"), self.hard_delete_selected)
         
         menu.exec(self.result_tree.mapToGlobal(pos))
     
@@ -5628,21 +5947,21 @@ class SearchWidgetHybrid(QWidget):
         text = clipboard.text()
         
         menu = QMenu(self)
-        menu.setTitle(" Aus Zwischenablage erstellen")
+        _ui_set(menu, 'setTitle', " Aus Zwischenablage erstellen")
         
         if not text:
-            menu.addAction(" Zwischenablage leer").setEnabled(False)
+            menu.addAction(_ui_text(" Zwischenablage leer")).setEnabled(False)
         else:
             # Zeige Vorschau (erste 50 Zeichen)
             preview = text[:50] + ("..." if len(text) > 50 else "")
-            menu.addAction(f" Vorschau: {preview}").setEnabled(False)
+            menu.addAction(_ui_text(" Vorschau: {value0}", value0=preview)).setEnabled(False)
             menu.addSeparator()
             
-            menu.addAction(" Als PDF spawnen", lambda: self.spawn_from_clipboard("pdf"))
-            menu.addAction(" Als TXT spawnen", lambda: self.spawn_from_clipboard("txt"))
-            menu.addAction(" Als Word spawnen", lambda: self.spawn_from_clipboard("docx"))
-            menu.addAction(" Als RTF spawnen", lambda: self.spawn_from_clipboard("rtf"))
-            menu.addAction(" Als ODT spawnen", lambda: self.spawn_from_clipboard("odt"))
+            menu.addAction(_ui_text(" Als PDF spawnen"), lambda: self.spawn_from_clipboard("pdf"))
+            menu.addAction(_ui_text(" Als TXT spawnen"), lambda: self.spawn_from_clipboard("txt"))
+            menu.addAction(_ui_text(" Als Word spawnen"), lambda: self.spawn_from_clipboard("docx"))
+            menu.addAction(_ui_text(" Als RTF spawnen"), lambda: self.spawn_from_clipboard("rtf"))
+            menu.addAction(_ui_text(" Als ODT spawnen"), lambda: self.spawn_from_clipboard("odt"))
         
         menu.exec(self.result_tree.mapToGlobal(pos))
     
@@ -5672,43 +5991,43 @@ class SearchWidgetHybrid(QWidget):
         menu = QMenu(self)
         
         # Header mit Anzahl
-        header = menu.addAction(f" {len(paths)} Dateien ausgewählt")
+        header = menu.addAction(_ui_text(" {value0} Dateien ausgewählt", value0=len(paths)))
         header.setEnabled(False)
         menu.addSeparator()
         
         # Batch-Operationen Untermenü
-        batch_menu = menu.addMenu(" Batch-Operationen")
-        batch_menu.addAction(" In Ordner kopieren...", lambda: self.batch_copy_to_folder(paths))
-        batch_menu.addAction(" Auswahl exportieren (CSV)", lambda: self.batch_export_csv(paths))
+        batch_menu = menu.addMenu(_ui_text(" Batch-Operationen"))
+        batch_menu.addAction(_ui_text(" In Ordner kopieren..."), lambda: self.batch_copy_to_folder(paths))
+        batch_menu.addAction(_ui_text(" Auswahl exportieren (CSV)"), lambda: self.batch_export_csv(paths))
         
         # PDF-Operationen wenn mindestens eine PDF dabei
         if pdf_count > 0:
             batch_menu.addSeparator()
-            batch_menu.addAction(f" PDF verschlüsseln... ({pdf_count})", 
+            batch_menu.addAction(_ui_text(" PDF verschlüsseln... ({value0})", value0=pdf_count),
                                lambda: self.batch_encrypt_pdf(paths))
-            batch_menu.addAction(f" PDF entschlüsseln ({pdf_count})", 
+            batch_menu.addAction(_ui_text(" PDF entschlüsseln ({value0})", value0=pdf_count),
                                lambda: self.batch_decrypt_pdf(paths))
-            batch_menu.addAction(f" Text extrahieren (OCR) ({pdf_count})", 
+            batch_menu.addAction(_ui_text(" Text extrahieren (OCR) ({value0})", value0=pdf_count),
                                lambda: self.batch_extract_text(paths))
         
         # Python-Operationen
         if py_count > 0:
             batch_menu.addSeparator()
-            batch_menu.addAction(f" Encoding reparieren ({py_count})",
+            batch_menu.addAction(_ui_text(" Encoding reparieren ({value0})", value0=py_count),
                                lambda: self.batch_fix_encoding(paths))
         
         menu.addSeparator()
         
         # Auswahl-Aktionen
-        menu.addAction(" Auswahl aufheben", self.clear_selection)
-        menu.addAction(" Alle auswählen", self.select_all_items)
+        menu.addAction(_ui_text(" Auswahl aufheben"), self.clear_selection)
+        menu.addAction(_ui_text(" Alle auswählen"), self.select_all_items)
         
         menu.exec(self.result_tree.mapToGlobal(pos))
     
     def batch_copy_to_folder(self, paths):
         """Kopiert mehrere Dateien in einen Ordner (NEU V14.1)"""
         folder = QFileDialog.getExistingDirectory(
-            self, "Zielordner wählen", str(Path.home())
+            self, _ui_text("Zielordner wählen"), str(Path.home())
         )
         if not folder:
             return
@@ -5732,17 +6051,25 @@ class SearchWidgetHybrid(QWidget):
             except Exception as e:
                 errors.append(f"{Path(path).name}: {e}")
         
-        msg = f"{copied} von {len(paths)} Dateien kopiert."
+        msg = _ui_text(
+            "{value0} von {value1} Dateien kopiert.",
+            value0=copied,
+            value1=len(paths),
+        )
         if errors:
-            msg += f"\n\nFehler ({len(errors)}):\n" + "\n".join(errors[:5])
+            msg += _ui_text(
+                "\n\nFehler ({value0}):\n{value1}",
+                value0=len(errors),
+                value1="\n".join(errors[:5]),
+            )
             if len(errors) > 5:
-                msg += f"\n... und {len(errors)-5} weitere"
-        QMessageBox.information(self, "Batch-Kopieren", msg)
+                msg += _ui_text("\n... und {value0} weitere", value0=len(errors) - 5)
+        _ui_message_box("information", self, _ui_text("Batch-Kopieren"), msg)
     
     def batch_export_csv(self, paths):
         """Exportiert Auswahl als CSV-Liste (NEU V14.1)"""
         csv_path, _ = QFileDialog.getSaveFileName(
-            self, "CSV speichern", str(Path.home() / "auswahl.csv"), "CSV (*.csv)"
+            self, _ui_text("CSV speichern"), str(Path.home() / "auswahl.csv"), _ui_text("CSV (*.csv)")
         )
         if not csv_path:
             return
@@ -5757,15 +6084,15 @@ class SearchWidgetHybrid(QWidget):
                     size = p.stat().st_size / 1024 if p.exists() else 0
                     mtime = datetime.fromtimestamp(p.stat().st_mtime).strftime('%Y-%m-%d %H:%M') if p.exists() else ''
                     writer.writerow([p.name, str(p), f"{size:.1f}", mtime])
-            QMessageBox.information(self, "Export", f"CSV exportiert:\n{csv_path}")
+            _ui_message_box('information', self, _ui_text("Export"), _ui_text("CSV exportiert:\n{value0}", value0=csv_path))
         except Exception as e:
-            QMessageBox.warning(self, "Fehler", f"Export fehlgeschlagen:\n{e}")
+            _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Export fehlgeschlagen:\n{value0}", value0=e))
     
     def batch_encrypt_pdf(self, paths):
         """Verschlüsselt mehrere PDFs (NEU V14.2) - Mit BatchDialog"""
         pdf_paths = [p for p in paths if p.lower().endswith('.pdf')]
         if not pdf_paths:
-            QMessageBox.warning(self, "Keine PDFs", "Keine PDF-Dateien in der Auswahl!")
+            _ui_message_box('warning', self, _ui_text("Keine PDFs"), _ui_text("Keine PDF-Dateien in der Auswahl!"))
             return
         dialog = BatchDialog(pdf_paths, "pdf_encrypt", "PDF Verschlüsselung", self)
         dialog.exec()
@@ -5774,7 +6101,7 @@ class SearchWidgetHybrid(QWidget):
         """Entschlüsselt mehrere PDFs (NEU V14.2) - Mit BatchDialog"""
         pdf_paths = [p for p in paths if p.lower().endswith('.pdf')]
         if not pdf_paths:
-            QMessageBox.warning(self, "Keine PDFs", "Keine PDF-Dateien in der Auswahl!")
+            _ui_message_box('warning', self, _ui_text("Keine PDFs"), _ui_text("Keine PDF-Dateien in der Auswahl!"))
             return
         dialog = BatchDialog(pdf_paths, "pdf_decrypt", "PDF Entschlüsselung", self)
         dialog.exec()
@@ -5783,7 +6110,7 @@ class SearchWidgetHybrid(QWidget):
         """Extrahiert Text aus mehreren PDFs (NEU V14.2) - Mit BatchDialog"""
         pdf_paths = [p for p in paths if p.lower().endswith('.pdf')]
         if not pdf_paths:
-            QMessageBox.warning(self, "Keine PDFs", "Keine PDF-Dateien in der Auswahl!")
+            _ui_message_box('warning', self, _ui_text("Keine PDFs"), _ui_text("Keine PDF-Dateien in der Auswahl!"))
             return
         dialog = BatchDialog(pdf_paths, "pdf_extract_text", "Text-Extraktion", self)
         dialog.exec()
@@ -5791,11 +6118,7 @@ class SearchWidgetHybrid(QWidget):
     def batch_fix_encoding(self, paths):
         """Repariert Encoding in mehreren Python-Dateien (NEU V14.1) - Platzhalter"""
         py_paths = [p for p in paths if p.lower().endswith('.py')]
-        QMessageBox.information(
-            self, "Batch Encoding-Reparatur",
-            f"{len(py_paths)} Python-Dateien ausgewählt.\n\n"
-            "Diese Funktion wird später implementiert."
-        )
+        _ui_message_box('information', self, _ui_text("Batch Encoding-Reparatur"), _ui_text("{value0} Python-Dateien ausgewählt.\n\nDiese Funktion wird später implementiert.", value0=len(py_paths)))
     
     def clear_selection(self):
         """Hebt Auswahl auf (NEU V14.1)"""
@@ -5811,15 +6134,15 @@ class SearchWidgetHybrid(QWidget):
         text = clipboard.text()
         
         if not text:
-            QMessageBox.warning(self, "Leer", "Zwischenablage ist leer!")
+            _ui_message_box('warning', self, _ui_text("Leer"), _ui_text("Zwischenablage ist leer!"))
             return
         
         # Frage nach Dateinamen
         default_name = f"clipboard_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         filename, ok = QInputDialog.getText(
             self,
-            "Dateiname",
-            f"Name für neue .{format} Datei:",
+            _ui_text("Dateiname"),
+            _ui_text("Name für neue .{value0} Datei:", value0=format),
             text=default_name
         )
         
@@ -5844,7 +6167,7 @@ class SearchWidgetHybrid(QWidget):
         if not target_dir or not os.path.exists(target_dir):
             target_dir = QFileDialog.getExistingDirectory(
                 self, 
-                "Zielordner für neue Datei auswählen",
+                _ui_text("Zielordner für neue Datei auswählen"),
                 ""
             )
         
@@ -5856,12 +6179,7 @@ class SearchWidgetHybrid(QWidget):
         
         # Prüfe ob Datei existiert
         if os.path.exists(output_path):
-            reply = QMessageBox.question(
-                self,
-                "Datei existiert",
-                f"Datei existiert bereits:\n{output_path}\n\nÜberschreiben?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-            )
+            reply = _ui_message_box('question', self, _ui_text("Datei existiert"), _ui_text("Datei existiert bereits:\n{value0}\n\nÜberschreiben?", value0=output_path), QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
             if reply == QMessageBox.StandardButton.No:
                 return
         
@@ -5895,11 +6213,7 @@ class SearchWidgetHybrid(QWidget):
                     
                     doc.build(story)
                 except ImportError:
-                    QMessageBox.warning(
-                        self,
-                        "Modul fehlt",
-                        "reportlab nicht installiert.\nVerwende TXT stattdessen."
-                    )
+                    _ui_message_box('warning', self, _ui_text("Modul fehlt"), _ui_text("reportlab nicht installiert.\nVerwende TXT stattdessen."))
                     # Fallback auf TXT
                     output_path = output_path.replace('.pdf', '.txt')
                     with open(output_path, 'w', encoding='utf-8') as f:
@@ -5915,11 +6229,7 @@ class SearchWidgetHybrid(QWidget):
                         doc.add_paragraph(para)
                     doc.save(output_path)
                 except ImportError:
-                    QMessageBox.warning(
-                        self,
-                        "Modul fehlt",
-                        "python-docx nicht installiert.\nVerwende TXT stattdessen."
-                    )
+                    _ui_message_box('warning', self, _ui_text("Modul fehlt"), _ui_text("python-docx nicht installiert.\nVerwende TXT stattdessen."))
                     output_path = output_path.replace('.docx', '.txt')
                     with open(output_path, 'w', encoding='utf-8') as f:
                         f.write(text)
@@ -5948,20 +6258,12 @@ class SearchWidgetHybrid(QWidget):
                         textdoc.text.addElement(p)
                     textdoc.save(output_path)
                 except ImportError:
-                    QMessageBox.warning(
-                        self,
-                        "Modul fehlt",
-                        "odfpy nicht installiert.\nVerwende TXT stattdessen."
-                    )
+                    _ui_message_box('warning', self, _ui_text("Modul fehlt"), _ui_text("odfpy nicht installiert.\nVerwende TXT stattdessen."))
                     output_path = output_path.replace('.odt', '.txt')
                     with open(output_path, 'w', encoding='utf-8') as f:
                         f.write(text)
             
-            QMessageBox.information(
-                self,
-                "Erfolgreich",
-                f"✅ Datei erstellt:\n{os.path.basename(output_path)}"
-            )
+            _ui_message_box('information', self, _ui_text("Erfolgreich"), _ui_text("✅ Datei erstellt:\n{value0}", value0=os.path.basename(output_path)))
             
             # Aktualisiere Ansicht (Re-Indexierung/Suche)
             self.perform_search()
@@ -5969,11 +6271,7 @@ class SearchWidgetHybrid(QWidget):
         except Exception as e:
             import traceback
             traceback.print_exc()
-            QMessageBox.critical(
-                self,
-                "Fehler",
-                f"Fehler beim Erstellen der Datei:\n{str(e)}"
-            )
+            _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("Fehler beim Erstellen der Datei:\n{value0}", value0=str(e)))
             
     def show_group_context_menu(self, pos, group_item):
         """Zeigt Kontext-Menfr Gruppen"""
@@ -5981,9 +6279,9 @@ class SearchWidgetHybrid(QWidget):
         
         # Expand/Collapse
         if group_item.isExpanded():
-            menu.addAction("Zuklappen", lambda: group_item.setExpanded(False))
+            menu.addAction(_ui_text("Zuklappen"), lambda: group_item.setExpanded(False))
         else:
-            menu.addAction(" Aufklappen", lambda: group_item.setExpanded(True))
+            menu.addAction(_ui_text(" Aufklappen"), lambda: group_item.setExpanded(True))
         
         menu.addSeparator()
         
@@ -5994,24 +6292,19 @@ class SearchWidgetHybrid(QWidget):
                 child = group_item.child(i)
                 child.setSelected(True)
         
-        menu.addAction(" Alle Versionen auswählen", select_all_children)
+        menu.addAction(_ui_text(" Alle Versionen auswählen"), select_all_children)
         
         menu.addSeparator()
         
         # Toggle für alle Gruppen (NEU V13!)
-        menu.addAction("Alle Gruppen aufklappen", self.expand_all_groups)
-        menu.addAction("Alle Gruppen zuklappen", self.collapse_all_groups)
+        menu.addAction(_ui_text("Alle Gruppen aufklappen"), self.expand_all_groups)
+        menu.addAction(_ui_text("Alle Gruppen zuklappen"), self.collapse_all_groups)
         
         menu.addSeparator()
         
         # Alte Versionen löschen (alle außer neueste)
         def delete_old_versions():
-            reply = QMessageBox.question(
-                self,
-                "Alte Versionen löschen",
-                f"Alle Versionen außer der neuesten löschen?\n({group_item.childCount() - 1} Dateien)",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-            )
+            reply = _ui_message_box('question', self, _ui_text("Alte Versionen löschen"), _ui_text("Alle Versionen außer der neuesten löschen?\n({value0} Dateien)", value0=group_item.childCount() - 1), QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
             
             if reply == QMessageBox.StandardButton.Yes:
                 delete_mode = self.settings.get("delete_mode", "soft")
@@ -6035,7 +6328,7 @@ class SearchWidgetHybrid(QWidget):
                 
                 self.perform_search()
         
-        menu.addAction("Alte Versionen löschen", delete_old_versions)
+        menu.addAction(_ui_text("Alte Versionen löschen"), delete_old_versions)
         
         menu.exec(self.result_tree.mapToGlobal(pos))
 
@@ -6112,11 +6405,7 @@ class SearchWidgetHybrid(QWidget):
         
         self.statusBar().removeWidget(progress)
         
-        QMessageBox.information(
-            self,
-            "Verschlüsselung abgeschlossen",
-            f" {success_count} von {len(paths)} Dateien verschlüsselt"
-        )
+        _ui_message_box('information', self, _ui_text("Verschlüsselung abgeschlossen"), _ui_text(" {value0} von {value1} Dateien verschlüsselt", value0=success_count, value1=len(paths)))
         
         self.perform_search()
     
@@ -6146,14 +6435,10 @@ class SearchWidgetHybrid(QWidget):
                 success_count += 1
                 
             except Exception as e:
-                QMessageBox.warning(self, "Fehler", f"Entschlüsselung fehlgeschlagen:\n{str(e)}")
+                _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Entschlüsselung fehlgeschlagen:\n{value0}", value0=str(e)))
                 break
         
-        QMessageBox.information(
-            self,
-            "Entschlüsselung abgeschlossen",
-            f" {success_count} von {len(paths)} Dateien entschlüsselt"
-        )
+        _ui_message_box('information', self, _ui_text("Entschlüsselung abgeschlossen"), _ui_text(" {value0} von {value1} Dateien entschlüsselt", value0=success_count, value1=len(paths)))
         
         self.perform_search()
     
@@ -6185,10 +6470,10 @@ class SearchWidgetHybrid(QWidget):
                 
                 PDFUtils.remove_text_from_pdf(path, output)
                 
-                QMessageBox.information(self, "Erfolg", f" Text entfernt:\n{output}")
+                _ui_message_box('information', self, _ui_text("Erfolg"), _ui_text(" Text entfernt:\n{value0}", value0=output))
                 
             except Exception as e:
-                QMessageBox.critical(self, "Fehler", f"Fehler:\n{str(e)}")
+                _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("Fehler:\n{value0}", value0=str(e)))
         
         self.perform_search()
     
@@ -6209,10 +6494,10 @@ class SearchWidgetHybrid(QWidget):
                 
                 PDFUtils.apply_ocr_to_pdf(path, output, lang)
                 
-                QMessageBox.information(self, "Erfolg", f" OCR angewendet:\n{output}")
+                _ui_message_box('information', self, _ui_text("Erfolg"), _ui_text(" OCR angewendet:\n{value0}", value0=output))
                 
             except Exception as e:
-                QMessageBox.critical(self, "Fehler", f"OCR fehlgeschlagen:\n{str(e)}")
+                _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("OCR fehlgeschlagen:\n{value0}", value0=str(e)))
         
         self.perform_search()
     
@@ -6234,7 +6519,7 @@ class SearchWidgetHybrid(QWidget):
             else:
                 subprocess.run(['xdg-open', path], timeout=10)
         except Exception as e:
-            QMessageBox.warning(self, "Fehler", f"Datei konnte nicht geöffnet werden:\n{str(e)}")
+            _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Datei konnte nicht geöffnet werden:\n{value0}", value0=str(e)))
 
     def open_on_double_click(self, item, column):
         """Öffnet Datei bei Doppelklick (NEU V13.1!)"""
@@ -6255,7 +6540,7 @@ class SearchWidgetHybrid(QWidget):
                 else:
                     subprocess.run(['xdg-open', path], timeout=10)
             except Exception as e:
-                QMessageBox.warning(self, "Fehler", f"Datei konnte nicht geöffnet werden:\n{str(e)}")
+                _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Datei konnte nicht geöffnet werden:\n{value0}", value0=str(e)))
     
     def show_in_explorer(self):
         """Zeigt Datei im Explorer"""
@@ -6273,7 +6558,7 @@ class SearchWidgetHybrid(QWidget):
             else:
                 subprocess.run(['xdg-open', os.path.dirname(path)], timeout=10)
         except Exception as e:
-            QMessageBox.warning(self, "Fehler", f"Explorer konnte nicht geöffnet werden:\n{str(e)}")
+            _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Explorer konnte nicht geöffnet werden:\n{value0}", value0=str(e)))
     
     def toggle_favorite(self):
         """Favoriten-Status umschalten"""
@@ -6325,8 +6610,8 @@ class SearchWidgetHybrid(QWidget):
         
         label, ok = QInputDialog.getItem(
             self,
-            "Version Label",
-            "Label auswählen:",
+            _ui_text("Version Label"),
+            _ui_text("Label auswählen:"),
             labels,
             0,
             False
@@ -6370,12 +6655,7 @@ class SearchWidgetHybrid(QWidget):
         else:
             mode_text = "Permanent löschen"
         
-        reply = QMessageBox.question(
-            self,
-            "Löschen bestätigen",
-            f"{mode_text}: {len(results)} Datei(en)?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-        )
+        reply = _ui_message_box('question', self, _ui_text("Löschen bestätigen"), _ui_text("{value0}: {value1} Datei(en)?", value0=mode_text, value1=len(results)), QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         
         if reply == QMessageBox.StandardButton.Yes:
             for result in results:
@@ -6421,11 +6701,7 @@ class SearchWidgetHybrid(QWidget):
             db.safety_unhide_version(vid)
             db.close()
         
-        QMessageBox.information(
-            self,
-            "Eingeblendet",
-            f"{len(results)} Datei(en) wieder sichtbar gemacht."
-        )
+        _ui_message_box('information', self, _ui_text("Eingeblendet"), _ui_text("{value0} Datei(en) wieder sichtbar gemacht.", value0=len(results)))
         self.perform_search()
     def copy_selected(self):
         """Kopiert ausgewählte Dateien in System-Zwischenablage (NEU V13.2!)"""
@@ -6451,20 +6727,12 @@ class SearchWidgetHybrid(QWidget):
                 win32clipboard.SetClipboardData(win32con.CF_HDROP, files_data.encode('utf-16-le'))
                 win32clipboard.CloseClipboard()
                 
-                QMessageBox.information(
-                    self,
-                    "Kopiert",
-                    f"{len(paths)} Datei(en) in Zwischenablage kopiert.\nKann jetzt eingefügt werden."
-                )
+                _ui_message_box('information', self, _ui_text("Kopiert"), _ui_text("{value0} Datei(en) in Zwischenablage kopiert.\nKann jetzt eingefügt werden.", value0=len(paths)))
             except ImportError:
                 # Fallback: Pfade als Text
                 clipboard = QApplication.clipboard()
                 clipboard.setText('\n'.join(paths))
-                QMessageBox.information(
-                    self,
-                    "Kopiert (Text)",
-                    f"{len(paths)} Dateipfad(e) als Text kopiert."
-                )
+                _ui_message_box('information', self, _ui_text("Kopiert (Text)"), _ui_text("{value0} Dateipfad(e) als Text kopiert.", value0=len(paths)))
         else:
             # macOS/Linux: Verwende QMimeData
             clipboard = QApplication.clipboard()
@@ -6480,21 +6748,13 @@ class SearchWidgetHybrid(QWidget):
             
             clipboard.setMimeData(mime_data)
             
-            QMessageBox.information(
-                self,
-                "Kopiert",
-                f"{len(paths)} Datei(en) in Zwischenablage kopiert.\nKann jetzt eingefügt werden."
-            )
+            _ui_message_box('information', self, _ui_text("Kopiert"), _ui_text("{value0} Datei(en) in Zwischenablage kopiert.\nKann jetzt eingefügt werden.", value0=len(paths)))
     
     def rename_selected(self):
         """Benennt ausgewählte Datei um (NEU V13.2!)"""
         results = self.get_selected_results()
         if not results or len(results) != 1:
-            QMessageBox.information(
-                self,
-                "Hinweis",
-                "Bitte genau EINE Datei zum Umbenennen auswählen."
-            )
+            _ui_message_box('information', self, _ui_text("Hinweis"), _ui_text("Bitte genau EINE Datei zum Umbenennen auswählen."))
             return
         
         result = results[0]
@@ -6505,8 +6765,8 @@ class SearchWidgetHybrid(QWidget):
         # Frage nach neuem Namen
         new_name, ok = QInputDialog.getText(
             self,
-            "Umbenennen",
-            "Neuer Dateiname:",
+            _ui_text("Umbenennen"),
+            _ui_text("Neuer Dateiname:"),
             text=old_name
         )
         
@@ -6522,11 +6782,7 @@ class SearchWidgetHybrid(QWidget):
             
             # Prfe ob Ziel existiert
             if os.path.exists(new_path):
-                QMessageBox.warning(
-                    self,
-                    "Datei existiert",
-                    f"Eine Datei mit dem Namen '{new_name}' existiert bereits."
-                )
+                _ui_message_box('warning', self, _ui_text("Datei existiert"), _ui_text("Eine Datei mit dem Namen '{value0}' existiert bereits.", value0=new_name))
                 return
             
             try:
@@ -6543,21 +6799,13 @@ class SearchWidgetHybrid(QWidget):
                 db.conn.commit()
                 db.close()
                 
-                QMessageBox.information(
-                    self,
-                    "Umbenannt",
-                    f"Datei umbenannt:\n{old_name}  {new_name}"
-                )
+                _ui_message_box('information', self, _ui_text("Umbenannt"), _ui_text("Datei umbenannt:\n{value0}  {value1}", value0=old_name, value1=new_name))
                 
                 # Re-Indexierung triggern
                 self.perform_search()
                 
             except Exception as e:
-                QMessageBox.critical(
-                    self,
-                    "Fehler",
-                    f"Umbenennen fehlgeschlagen:\n{str(e)}"
-                )
+                _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("Umbenennen fehlgeschlagen:\n{value0}", value0=str(e)))
         else:
             # Nur lokale Umbenennung (display_name in DB)
             vid = result['id']
@@ -6584,20 +6832,12 @@ class SearchWidgetHybrid(QWidget):
                 db.conn.commit()
                 db.close()
                 
-                QMessageBox.information(
-                    self,
-                    "Umbenannt (Lokal)",
-                    f"Anzeigename geändert:\n{old_name}  {new_name}\n\n(Datei auf Festplatte unverändert)"
-                )
+                _ui_message_box('information', self, _ui_text("Umbenannt (Lokal)"), _ui_text("Anzeigename geändert:\n{value0}  {value1}\n\n(Datei auf Festplatte unverändert)", value0=old_name, value1=new_name))
                 
                 self.perform_search()
                 
             except Exception as e:
-                QMessageBox.critical(
-                    self,
-                    "Fehler",
-                    f"Lokale Umbenennung fehlgeschlagen:\n{str(e)}"
-                )
+                _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("Lokale Umbenennung fehlgeschlagen:\n{value0}", value0=str(e)))
                 if db:
                     db.close()
     
@@ -6607,12 +6847,7 @@ class SearchWidgetHybrid(QWidget):
         if not results:
             return
         
-        reply = QMessageBox.warning(
-            self,
-            "Permanent löschen",
-            f" {len(results)} Datei(en) PERMANENT löschen?\nDies kann nicht rückgängig gemacht werden!",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-        )
+        reply = _ui_message_box('warning', self, _ui_text("Permanent löschen"), _ui_text(" {value0} Datei(en) PERMANENT löschen?\nDies kann nicht rückgängig gemacht werden!", value0=len(results)), QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         
         if reply == QMessageBox.StandardButton.Yes:
             for result in results:
@@ -6641,21 +6876,13 @@ class SearchWidgetHybrid(QWidget):
         """Kopiert gesamten Text aus Datei in Zwischenablage (NEU V13.3!)"""
         results = self.get_selected_results()
         if not results or len(results) != 1:
-            QMessageBox.information(
-                self,
-                "Hinweis",
-                "Bitte genau EINE Textdatei auswählen."
-            )
+            _ui_message_box('information', self, _ui_text("Hinweis"), _ui_text("Bitte genau EINE Textdatei auswählen."))
             return
         
         path = results[0]['path']
         
         if not self.is_text_file(path):
-            QMessageBox.warning(
-                self,
-                "Keine Textdatei",
-                "Diese Datei ist keine Textdatei."
-            )
+            _ui_message_box('warning', self, _ui_text("Keine Textdatei"), _ui_text("Diese Datei ist keine Textdatei."))
             return
         
         try:
@@ -6688,33 +6915,16 @@ class SearchWidgetHybrid(QWidget):
             lines = text.count('\n') + 1
             chars = len(text)
             
-            QMessageBox.information(
-                self,
-                "Text kopiert",
-                f"Text erfolgreich kopiert:\n\n"
-                f" Datei: {os.path.basename(path)}\n"
-                f" Zeilen: {lines:,}\n"
-                f" Zeichen: {chars:,}\n"
-                f" Encoding: {used_encoding}"
-            )
+            _ui_message_box('information', self, _ui_text("Text kopiert"), _ui_text("Text erfolgreich kopiert:\n\n Datei: {value0}\n Zeilen: {value1:,}\n Zeichen: {value2:,}\n Encoding: {value3}", value0=os.path.basename(path), value1=lines, value2=chars, value3=used_encoding))
             
         except Exception as e:
-            QMessageBox.critical(
-                self,
-                "Fehler",
-                f"Fehler beim Lesen der Datei:\n{str(e)}"
-            )
+            _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("Fehler beim Lesen der Datei:\n{value0}", value0=str(e)))
         """Löscht permanent"""
         results = self.get_selected_results()
         if not results:
             return
         
-        reply = QMessageBox.warning(
-            self,
-            "Permanent löschen",
-            f" {len(results)} Datei(en) PERMANENT löschen?\nDies kann nicht rückgängig gemacht werden!",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-        )
+        reply = _ui_message_box('warning', self, _ui_text("Permanent löschen"), _ui_text(" {value0} Datei(en) PERMANENT löschen?\nDies kann nicht rückgängig gemacht werden!", value0=len(results)), QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         
         if reply == QMessageBox.StandardButton.Yes:
             for result in results:
@@ -6744,7 +6954,7 @@ class SearchWidgetHybrid(QWidget):
             for coll_id, name, desc in collections:
                 item = QListWidgetItem(name)
                 item.setData(Qt.ItemDataRole.UserRole, coll_id)
-                item.setToolTip(desc or "Keine Beschreibung")
+                item.setToolTip(desc or _ui_text("Keine Beschreibung"))
                 self.collection_list.addItem(item)
     
     def get_all_collections(self):
@@ -6765,7 +6975,7 @@ class SearchWidgetHybrid(QWidget):
     
     def create_new_collection(self):
         """Erstellt neue Collection"""
-        name, ok = QInputDialog.getText(self, "Neue Sammlung", "Name:")
+        name, ok = QInputDialog.getText(self, _ui_text("Neue Sammlung"), _ui_text("Name:"))
         
         if ok and name:
             # In erste DB einfgen
@@ -6777,7 +6987,7 @@ class SearchWidgetHybrid(QWidget):
                 if success:
                     self.load_collections()
                 else:
-                    QMessageBox.warning(self, "Fehler", "Sammlung existiert bereits!")
+                    _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Sammlung existiert bereits!"))
     
     def show_collection_menu(self, pos):
         """Zeigt Collection-Menü"""
@@ -6786,21 +6996,16 @@ class SearchWidgetHybrid(QWidget):
             return
         
         menu = QMenu(self)
-        menu.addAction(" Als PDF exportieren", lambda: self.export_collection_list(item))
+        menu.addAction(_ui_text(" Als PDF exportieren"), lambda: self.export_collection_list(item))
         menu.addSeparator()
-        menu.addAction(" Löschen", lambda: self.delete_collection(item))
+        menu.addAction(_ui_text(" Löschen"), lambda: self.delete_collection(item))
         menu.exec(self.collection_list.mapToGlobal(pos))
     
     def delete_collection(self, item):
         """Löscht Collection"""
         coll_id = item.data(Qt.ItemDataRole.UserRole)
         
-        reply = QMessageBox.question(
-            self,
-            "Löschen bestätigen",
-            f"Sammlung '{item.text()}' löschen?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-        )
+        reply = _ui_message_box('question', self, _ui_text("Löschen bestätigen"), _ui_text("Sammlung '{value0}' löschen?", value0=item.text()), QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         
         if reply == QMessageBox.StandardButton.Yes:
             for db_path in self.manager.dbs:
@@ -6877,11 +7082,7 @@ class SearchWidgetHybrid(QWidget):
                     conn.close()
         
         if not all_files:
-            QMessageBox.information(
-                self,
-                "Keine Dateien",
-                f"Sammlung '{coll_name}' enthält keine Dateien."
-            )
+            _ui_message_box('information', self, _ui_text("Keine Dateien"), _ui_text("Sammlung '{value0}' enthält keine Dateien.", value0=coll_name))
             return
         
         # PDF-Pfad wählen
@@ -6890,9 +7091,9 @@ class SearchWidgetHybrid(QWidget):
         
         pdf_path, _ = QFileDialog.getSaveFileName(
             self,
-            "Sammlung exportieren",
+            _ui_text("Sammlung exportieren"),
             safe_name,
-            "PDF-Dateien (*.pdf)"
+            _ui_text("PDF-Dateien (*.pdf)")
         )
         
         if not pdf_path:
@@ -6900,11 +7101,7 @@ class SearchWidgetHybrid(QWidget):
         
         try:
             if not HAS_REPORTLAB:
-                QMessageBox.warning(
-                    self,
-                    "Bibliothek fehlt",
-                    "reportlab ist nicht installiert.\n\nInstalliere mit: pip install reportlab"
-                )
+                _ui_message_box('warning', self, _ui_text("Bibliothek fehlt"), _ui_text("reportlab ist nicht installiert.\n\nInstalliere mit: pip install reportlab"))
                 return
             
             # PDF erstellen
@@ -6968,35 +7165,22 @@ class SearchWidgetHybrid(QWidget):
             # PDF bauen
             doc.build(story)
             
-            QMessageBox.information(
-                self,
-                "Export erfolgreich",
-                f" Sammlung exportiert:\n{pdf_path}\n\n{len(all_files)} Dateien"
-            )
+            _ui_message_box('information', self, _ui_text("Export erfolgreich"), _ui_text(" Sammlung exportiert:\n{value0}\n\n{value1} Dateien", value0=pdf_path, value1=len(all_files)))
         
         except Exception as e:
-            QMessageBox.critical(
-                self,
-                "Fehler",
-                f"Export fehlgeschlagen:\n{str(e)}\n\nTraceback:\n{traceback.format_exc()}"
-            )
+            _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("Export fehlgeschlagen:\n{value0}\n\nTraceback:\n{value1}", value0=str(e), value1=traceback.format_exc()))
     
     def anonymize_file(self):
         """Anonymisiert ausgewählte Datei(en) mit Platzhalter"""
         selected_paths = self.get_selected_paths()
         if not selected_paths:
-            QMessageBox.warning(self, "Keine Auswahl", "Bitte wählen Sie mindestens eine Datei aus")
+            _ui_message_box('warning', self, _ui_text("Keine Auswahl"), _ui_text("Bitte wählen Sie mindestens eine Datei aus"))
             return
         
         # Prüfe ob Blacklist leer ist
         blacklist = self.settings.get("anonymization_blacklist", [])
         if not blacklist:
-            reply = QMessageBox.question(
-                self,
-                "Blacklist leer",
-                "Die Blacklist ist leer. Möchten Sie jetzt Begriffe hinzufügen?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-            )
+            reply = _ui_message_box('question', self, _ui_text("Blacklist leer"), _ui_text("Die Blacklist ist leer. Möchten Sie jetzt Begriffe hinzufügen?"), QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
             if reply == QMessageBox.StandardButton.Yes:
                 self.show_anonymization_settings()
                 return
@@ -7009,7 +7193,7 @@ class SearchWidgetHybrid(QWidget):
         
         # Progress Dialog
         progress = QProgressBar()
-        progress.setWindowTitle("Anonymisierung")
+        _ui_set(progress, 'setWindowTitle', "Anonymisierung")
         progress.setRange(0, len(selected_paths))
         progress.show()
         
@@ -7021,7 +7205,7 @@ class SearchWidgetHybrid(QWidget):
         self.anon_worker.log_message.connect(lambda msg: print(msg))
         self.anon_worker.finished.connect(lambda: [
             progress.close(),
-            QMessageBox.information(self, "Fertig", "Anonymisierung abgeschlossen"),
+            _ui_message_box('information', self, _ui_text("Fertig"), _ui_text("Anonymisierung abgeschlossen")),
             self.perform_search()  # Refresh
         ])
         self.anon_worker.start()
@@ -7030,18 +7214,13 @@ class SearchWidgetHybrid(QWidget):
         """Schwärzt ausgewählte PDF(s)"""
         selected_paths = self.get_selected_paths()
         if not selected_paths:
-            QMessageBox.warning(self, "Keine Auswahl", "Bitte wählen Sie mindestens eine Datei aus")
+            _ui_message_box('warning', self, _ui_text("Keine Auswahl"), _ui_text("Bitte wählen Sie mindestens eine Datei aus"))
             return
         
         # Prfe ob Blacklist leer ist
         blacklist = self.settings.get("anonymization_blacklist", [])
         if not blacklist:
-            reply = QMessageBox.question(
-                self,
-                "Blacklist leer",
-                "Die Blacklist ist leer. Möchten Sie jetzt Begriffe hinzufügen?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-            )
+            reply = _ui_message_box('question', self, _ui_text("Blacklist leer"), _ui_text("Die Blacklist ist leer. Möchten Sie jetzt Begriffe hinzufügen?"), QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
             if reply == QMessageBox.StandardButton.Yes:
                 self.show_anonymization_settings()
                 return
@@ -7050,11 +7229,7 @@ class SearchWidgetHybrid(QWidget):
         
         # Prfe ob fitz installiert ist
         if not HAS_FITZ:
-            QMessageBox.critical(
-                self,
-                "Fehler",
-                "PyMuPDF (fitz) ist nicht installiert.\n\nInstallieren Sie es mit:\npip install PyMuPDF"
-            )
+            _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("PyMuPDF (fitz) ist nicht installiert.\n\nInstallieren Sie es mit:\npip install PyMuPDF"))
             return
         
         # Starte Schwärzung
@@ -7062,7 +7237,7 @@ class SearchWidgetHybrid(QWidget):
         
         # Progress Dialog
         progress = QProgressBar()
-        progress.setWindowTitle("PDF-Schwärzung")
+        _ui_set(progress, 'setWindowTitle', "PDF-Schwärzung")
         progress.setRange(0, len(selected_paths))
         progress.show()
         
@@ -7074,7 +7249,7 @@ class SearchWidgetHybrid(QWidget):
         self.redact_worker.log_message.connect(lambda msg: print(msg))
         self.redact_worker.finished.connect(lambda: [
             progress.close(),
-            QMessageBox.information(self, "Fertig", "Schwärzung abgeschlossen"),
+            _ui_message_box('information', self, _ui_text("Fertig"), _ui_text("Schwärzung abgeschlossen")),
             self.perform_search()  # Refresh
         ])
         self.redact_worker.start()
@@ -7170,16 +7345,12 @@ class SearchWidgetHybrid(QWidget):
                 with open(os.path.join(outdir, f"Hilfsfunktionen{ext}"), "w", encoding="utf-8") as out:
                     out.write("\n".join(helper_lines))
             
-            QMessageBox.information(
-                self,
-                "Erfolg",
-                f"{len(classes)} Klassen extrahiert!\n\nOrdner: {outdir}"
-            )
+            _ui_message_box('information', self, _ui_text("Erfolg"), _ui_text("{value0} Klassen extrahiert!\n\nOrdner: {value1}", value0=len(classes), value1=outdir))
             
             self.perform_search()  # Refresh
         
         except Exception as e:
-            QMessageBox.critical(self, "Fehler", f"Zerlegung fehlgeschlagen:\n{str(e)}")
+            _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("Zerlegung fehlgeschlagen:\n{value0}", value0=str(e)))
     
     def fix_python_encoding(self):
         """Repariert Encoding-Probleme in Python-Datei"""
@@ -7197,11 +7368,7 @@ class SearchWidgetHybrid(QWidget):
         try:
             from ftfy import fix_text
         except ImportError:
-            QMessageBox.warning(
-                self,
-                "Modul fehlt",
-                "Das Modul 'ftfy' ist nicht installiert.\n\nInstallieren Sie es mit:\npip install ftfy"
-            )
+            _ui_message_box('warning', self, _ui_text("Modul fehlt"), _ui_text("Das Modul 'ftfy' ist nicht installiert.\n\nInstallieren Sie es mit:\npip install ftfy"))
             return
         
         try:
@@ -7220,14 +7387,10 @@ class SearchWidgetHybrid(QWidget):
             with open(path, 'w', encoding='utf-8') as f:
                 f.write(fixed_content)
             
-            QMessageBox.information(
-                self,
-                "Erfolg",
-                f"Encoding repariert!\n\nBackup: {backup_path}"
-            )
+            _ui_message_box('information', self, _ui_text("Erfolg"), _ui_text("Encoding repariert!\n\nBackup: {value0}", value0=backup_path))
             
         except Exception as e:
-            QMessageBox.critical(self, "Fehler", f"Encoding-Reparatur fehlgeschlagen:\n{str(e)}")
+            _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("Encoding-Reparatur fehlgeschlagen:\n{value0}", value0=str(e)))
     
     def check_python_indentation(self):
         """Prüft Python-Datei auf Einrckungsfehler"""
@@ -7269,15 +7432,15 @@ class SearchWidgetHybrid(QWidget):
                 error_text = "\n".join(errors)
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Icon.Warning)
-                msg.setWindowTitle("Einrckungsfehler gefunden")
-                msg.setText(f"{len(errors)} Fehler gefunden:")
+                _ui_set(msg, 'setWindowTitle', "Einrückungsfehler gefunden")
+                _ui_set(msg, 'setText', "{value0} Fehler gefunden:", value0=len(errors))
                 msg.setDetailedText(error_text)
                 msg.exec()
             else:
-                QMessageBox.information(self, "Erfolg", " Keine Einrckungsfehler gefunden!")
+                _ui_message_box('information', self, _ui_text("Erfolg"), _ui_text(" Keine Einrückungsfehler gefunden!"))
         
         except Exception as e:
-            QMessageBox.critical(self, "Fehler", f"Prüfung fehlgeschlagen:\n{str(e)}")
+            _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("Prüfung fehlgeschlagen:\n{value0}", value0=str(e)))
     
     def analyze_python_methods(self):
         """öffnet MethodenAnalyser3 als externes Tool"""
@@ -7294,23 +7457,15 @@ class SearchWidgetHybrid(QWidget):
         
         # Prfe ob Tool existiert
         if not os.path.exists(analyzer_path):
-            QMessageBox.warning(
-                self,
-                "Tool nicht gefunden",
-                "MethodenAnalyser3.py wurde nicht gefunden.\n\nLegen Sie es neben die Hauptdatei."
-            )
+            _ui_message_box('warning', self, _ui_text("Tool nicht gefunden"), _ui_text("MethodenAnalyser3.py wurde nicht gefunden.\n\nLegen Sie es neben die Hauptdatei."))
             return
         
         try:
             # Starte als separater Prozess
             subprocess.Popen([sys.executable, analyzer_path, path])
-            QMessageBox.information(
-                self,
-                "MethodenAnalyser gestartet",
-                f"Analyse läuft...\n\nDatei: {os.path.basename(path)}"
-            )
+            _ui_message_box('information', self, _ui_text("MethodenAnalyser gestartet"), _ui_text("Analyse läuft...\n\nDatei: {value0}", value0=os.path.basename(path)))
         except Exception as e:
-            QMessageBox.critical(self, "Fehler", f"Start fehlgeschlagen:\n{str(e)}")
+            _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("Start fehlgeschlagen:\n{value0}", value0=str(e)))
     
     def compile_to_exe(self):
         """öffnet Kompilator als externes Tool"""
@@ -7327,23 +7482,15 @@ class SearchWidgetHybrid(QWidget):
         
         # Prfe ob Tool existiert
         if not os.path.exists(compiler_path):
-            QMessageBox.warning(
-                self,
-                "Tool nicht gefunden",
-                "Kompilator.py wurde nicht gefunden.\n\nLegen Sie es neben die Hauptdatei."
-            )
+            _ui_message_box('warning', self, _ui_text("Tool nicht gefunden"), _ui_text("Kompilator.py wurde nicht gefunden.\n\nLegen Sie es neben die Hauptdatei."))
             return
         
         try:
             # Starte als separater Prozess
             subprocess.Popen([sys.executable, compiler_path])
-            QMessageBox.information(
-                self,
-                "Kompilator gestartet",
-                f"Sie knnen nun die Datei auswählen:\n{os.path.basename(path)}"
-            )
+            _ui_message_box('information', self, _ui_text("Kompilator gestartet"), _ui_text("Sie können nun die Datei auswählen:\n{value0}", value0=os.path.basename(path)))
         except Exception as e:
-            QMessageBox.critical(self, "Fehler", f"Start fehlgeschlagen:\n{str(e)}")
+            _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("Start fehlgeschlagen:\n{value0}", value0=str(e)))
     
     def open_sqlite_viewer(self):
         """öffnet SQLite Viewer für Datenbank"""
@@ -7360,23 +7507,15 @@ class SearchWidgetHybrid(QWidget):
         
         # Prfe ob Tool existiert
         if not os.path.exists(viewer_path):
-            QMessageBox.warning(
-                self,
-                "Tool nicht gefunden",
-                "SQLiteViewer.py wurde nicht gefunden.\n\nLegen Sie es neben die Hauptdatei."
-            )
+            _ui_message_box('warning', self, _ui_text("Tool nicht gefunden"), _ui_text("SQLiteViewer.py wurde nicht gefunden.\n\nLegen Sie es neben die Hauptdatei."))
             return
         
         try:
             # Starte als separater Prozess
             subprocess.Popen([sys.executable, viewer_path, path])
-            QMessageBox.information(
-                self,
-                "SQLite Viewer gestartet",
-                f"Datenbank geöffnet:\n{os.path.basename(path)}"
-            )
+            _ui_message_box('information', self, _ui_text("SQLite Viewer gestartet"), _ui_text("Datenbank geöffnet:\n{value0}", value0=os.path.basename(path)))
         except Exception as e:
-            QMessageBox.critical(self, "Fehler", f"Start fehlgeschlagen:\n{str(e)}")
+            _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("Start fehlgeschlagen:\n{value0}", value0=str(e)))
 
     def open_in_pythonbox(self):
         """öffnet .py-Datei in PythonBox (NEU V13!)"""
@@ -7406,13 +7545,7 @@ class SearchWidgetHybrid(QWidget):
                     break
         
         if not pythonbox_path or not os.path.exists(pythonbox_path):
-            reply = QMessageBox.question(
-                self,
-                "PythonBox nicht gefunden",
-                "PythonBox.py wurde nicht gefunden.\n\n"
-                "Möchten Sie den Pfad jetzt in den Einstellungen festlegen?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-            )
+            reply = _ui_message_box('question', self, _ui_text("PythonBox nicht gefunden"), _ui_text("PythonBox.py wurde nicht gefunden.\n\nMöchten Sie den Pfad jetzt in den Einstellungen festlegen?"), QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
             
             if reply == QMessageBox.StandardButton.Yes:
                 # ffne Einstellungen
@@ -7426,13 +7559,9 @@ class SearchWidgetHybrid(QWidget):
         try:
             # Starte PythonBox mit der Datei
             subprocess.Popen([sys.executable, pythonbox_path, path])
-            QMessageBox.information(
-                self,
-                "PythonBox gestartet",
-                f"PythonBox wurde geöffnet mit:\n{os.path.basename(path)}"
-            )
+            _ui_message_box('information', self, _ui_text("PythonBox gestartet"), _ui_text("PythonBox wurde geöffnet mit:\n{value0}", value0=os.path.basename(path)))
         except Exception as e:
-            QMessageBox.critical(self, "Fehler", f"Start fehlgeschlagen:\n{str(e)}")
+            _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("Start fehlgeschlagen:\n{value0}", value0=str(e)))
     
     # ========================================================================
     # NEUE DOKUMENTTYPEN (PHASE 8)
@@ -7452,9 +7581,9 @@ class SearchWidgetHybrid(QWidget):
             # Speicherpfad wählen
             save_path, _ = QFileDialog.getSaveFileName(
                 self,
-                "Materialverweis speichern",
+                _ui_text("Materialverweis speichern"),
                 filename,
-                "Material-Dateien (*.material.txt);;Alle Dateien (*)"
+                _ui_text("Material-Dateien (*.material.txt);;Alle Dateien (*)")
             )
             
             if not save_path:
@@ -7483,17 +7612,13 @@ Beschreibung:
                 # In Datenbank indexieren
                 # TODO: Spezielle Indexierung für Materialverweise
                 
-                QMessageBox.information(
-                    self,
-                    "Erfolg",
-                    f" Materialverweis gespeichert:\n{os.path.basename(save_path)}"
-                )
+                _ui_message_box('information', self, _ui_text("Erfolg"), _ui_text(" Materialverweis gespeichert:\n{value0}", value0=os.path.basename(save_path)))
                 
                 # Refresh
                 self.perform_search()
                 
             except Exception as e:
-                QMessageBox.critical(self, "Fehler", f"Speichern fehlgeschlagen:\n{str(e)}")
+                _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("Speichern fehlgeschlagen:\n{value0}", value0=str(e)))
     
     def create_prompt_file(self):
         """Erstellt neue Prompt-Datei oder neue Version"""
@@ -7509,9 +7634,9 @@ Beschreibung:
             # Speicherpfad wählen
             save_path, _ = QFileDialog.getSaveFileName(
                 self,
-                "Prompt-Datei speichern",
+                _ui_text("Prompt-Datei speichern"),
                 filename,
-                "Prompt-Dateien (*.prompt);;Alle Dateien (*)"
+                _ui_text("Prompt-Dateien (*.prompt);;Alle Dateien (*)")
             )
             
             if not save_path:
@@ -7538,17 +7663,13 @@ Beschreibung:
                 with open(save_path, 'w', encoding='utf-8') as f:
                     json.dump(versions, f, indent=2, ensure_ascii=False)
                 
-                QMessageBox.information(
-                    self,
-                    "Erfolg",
-                    f" Prompt-Datei gespeichert:\n{os.path.basename(save_path)}\n\nVersion: {data['version']}"
-                )
+                _ui_message_box('information', self, _ui_text("Erfolg"), _ui_text(" Prompt-Datei gespeichert:\n{value0}\n\nVersion: {value1}", value0=os.path.basename(save_path), value1=data['version']))
                 
                 # Refresh
                 self.perform_search()
                 
             except Exception as e:
-                QMessageBox.critical(self, "Fehler", f"Speichern fehlgeschlagen:\n{str(e)}")
+                _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("Speichern fehlgeschlagen:\n{value0}", value0=str(e)))
     
     def create_internet_resource(self):
         """Erstellt neue Internetressource"""
@@ -7564,9 +7685,9 @@ Beschreibung:
             # Speicherpfad wählen
             save_path, _ = QFileDialog.getSaveFileName(
                 self,
-                "Internetressource speichern",
+                _ui_text("Internetressource speichern"),
                 filename,
-                "URL-Verknüpfungen (*.url);;Alle Dateien (*)"
+                _ui_text("URL-Verknüpfungen (*.url);;Alle Dateien (*)")
             )
             
             if not save_path:
@@ -7589,17 +7710,13 @@ Erstellt={datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                 with open(save_path, 'w', encoding='utf-8') as f:
                     f.write(content)
                 
-                QMessageBox.information(
-                    self,
-                    "Erfolg",
-                    f" Internetressource gespeichert:\n{os.path.basename(save_path)}"
-                )
+                _ui_message_box('information', self, _ui_text("Erfolg"), _ui_text(" Internetressource gespeichert:\n{value0}", value0=os.path.basename(save_path)))
                 
                 # Refresh
                 self.perform_search()
                 
             except Exception as e:
-                QMessageBox.critical(self, "Fehler", f"Speichern fehlgeschlagen:\n{str(e)}")
+                _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("Speichern fehlgeschlagen:\n{value0}", value0=str(e)))
     
     def create_literature_reference(self):
         """Erstellt neuen Literaturverweis"""
@@ -7615,9 +7732,9 @@ Erstellt={datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
             # Speicherpfad wählen
             save_path, _ = QFileDialog.getSaveFileName(
                 self,
-                "Literaturverweis speichern",
+                _ui_text("Literaturverweis speichern"),
                 filename,
-                "Text-Dateien (*.txt);;Alle Dateien (*)"
+                _ui_text("Text-Dateien (*.txt);;Alle Dateien (*)")
             )
             
             if not save_path:
@@ -7649,26 +7766,22 @@ Beschreibung/Notizen:
                 with open(save_path, 'w', encoding='utf-8') as f:
                     f.write(content)
                 
-                QMessageBox.information(
-                    self,
-                    "Erfolg",
-                    f" Literaturverweis gespeichert:\n{os.path.basename(save_path)}"
-                )
+                _ui_message_box('information', self, _ui_text("Erfolg"), _ui_text(" Literaturverweis gespeichert:\n{value0}", value0=os.path.basename(save_path)))
                 
                 # Refresh
                 self.perform_search()
                 
             except Exception as e:
-                QMessageBox.critical(self, "Fehler", f"Speichern fehlgeschlagen:\n{str(e)}")
+                _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("Speichern fehlgeschlagen:\n{value0}", value0=str(e)))
     
     def import_browser_favorites(self):
         """Importiert Browser-Favoriten als Internetressourcen"""
         # HTML-Datei auswählen
         html_path, _ = QFileDialog.getOpenFileName(
             self,
-            "Browser-Favoriten importieren",
+            _ui_text("Browser-Favoriten importieren"),
             "",
-            "HTML-Dateien (*.html *.htm);;Alle Dateien (*)"
+            _ui_text("HTML-Dateien (*.html *.htm);;Alle Dateien (*)")
         )
         
         if not html_path:
@@ -7679,17 +7792,13 @@ Beschreibung/Notizen:
             bookmarks = parse_browser_bookmarks(html_path)
             
             if not bookmarks:
-                QMessageBox.warning(
-                    self,
-                    "Keine Favoriten",
-                    "Keine Favoriten in der Datei gefunden.\n\nStellen Sie sicher, dass es eine Browser-Export-Datei ist."
-                )
+                _ui_message_box('warning', self, _ui_text("Keine Favoriten"), _ui_text("Keine Favoriten in der Datei gefunden.\n\nStellen Sie sicher, dass es eine Browser-Export-Datei ist."))
                 return
             
             # Zielordner auswählen
             output_dir = QFileDialog.getExistingDirectory(
                 self,
-                "Zielordner für Internetressourcen auswählen"
+                _ui_text("Zielordner für Internetressourcen auswählen")
             )
             
             if not output_dir:
@@ -7697,8 +7806,8 @@ Beschreibung/Notizen:
             
             # Progress Dialog
             progress = QMessageBox(self)
-            progress.setWindowTitle("Import läuft...")
-            progress.setText(f"Importiere {len(bookmarks)} Favoriten...")
+            _ui_set(progress, 'setWindowTitle', "Import läuft...")
+            _ui_set(progress, 'setText', "Importiere {value0} Favoriten...", value0=len(bookmarks))
             progress.setStandardButtons(QMessageBox.StandardButton.NoButton)
             progress.show()
             QApplication.processEvents()
@@ -7742,18 +7851,13 @@ Quelle=Browser-Favoriten
             
             progress.close()
             
-            QMessageBox.information(
-                self,
-                "Import abgeschlossen",
-                f" {success_count} von {len(bookmarks)} Favoriten importiert!\n\n"
-                f"Ordner: {output_dir}"
-            )
+            _ui_message_box('information', self, _ui_text("Import abgeschlossen"), _ui_text(" {value0} von {value1} Favoriten importiert!\n\nOrdner: {value2}", value0=success_count, value1=len(bookmarks), value2=output_dir))
             
             # Refresh
             self.perform_search()
         
         except Exception as e:
-            QMessageBox.critical(self, "Fehler", f"Import fehlgeschlagen:\n{str(e)}")
+            _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("Import fehlgeschlagen:\n{value0}", value0=str(e)))
 
 
 # ============================================================================
@@ -7792,7 +7896,7 @@ Quelle=Browser-Favoriten
         target_file = target_result['path']
         
         if target_file in source_files:
-            QMessageBox.warning(self, "Fehler", "Kann Datei nicht auf sich selbst droppen")
+            _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Kann Datei nicht auf sich selbst droppen"))
             event.ignore()
             return
         
@@ -7826,11 +7930,7 @@ Quelle=Browser-Favoriten
         output_file = f"{target_base}_{pool_count}_pooled{output_ext}"
         
         if os.path.exists(output_file):
-            reply = QMessageBox.question(
-                self, "Datei existiert",
-                f"Datei existiert bereits:\n{os.path.basename(output_file)}\n\nberschreiben?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-            )
+            reply = _ui_message_box('question', self, _ui_text("Datei existiert"), _ui_text("Datei existiert bereits:\n{value0}\n\nÜberschreiben?", value0=os.path.basename(output_file)), QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
             if reply == QMessageBox.StandardButton.No:
                 return
         
@@ -7854,17 +7954,14 @@ Quelle=Browser-Favoriten
             elif output_ext in ['.mp4', '.mkv', '.avi', '.mov', '.wmv']:
                 self._pool_video(all_files, output_file)
             else:
-                QMessageBox.warning(self, "Format nicht unterstützt",
-                    f"Pooling für Format '{output_ext}' noch nicht implementiert")
+                _ui_message_box('warning', self, _ui_text("Format nicht unterstützt"), _ui_text("Pooling für Format '{value0}' noch nicht implementiert", value0=output_ext))
                 return
             
-            QMessageBox.information(self, "Pooling erfolgreich",
-                f" Datei erstellt:\n{os.path.basename(output_file)}")
+            _ui_message_box('information', self, _ui_text("Pooling erfolgreich"), _ui_text(" Datei erstellt:\n{value0}", value0=os.path.basename(output_file)))
             self.perform_search()
         
         except Exception as e:
-            QMessageBox.critical(self, "Pooling fehlgeschlagen",
-                f"Fehler beim Poolen:\n\n{str(e)}")
+            _ui_message_box('critical', self, _ui_text("Pooling fehlgeschlagen"), _ui_text("Fehler beim Poolen:\n\n{value0}", value0=str(e)))
     
     def _pool_text(self, files, output_file):
         """Kombiniert Textdateien"""
@@ -8052,12 +8149,10 @@ Quelle=Browser-Favoriten
                 success_count += 1
             
             except Exception as e:
-                QMessageBox.warning(self, "Fehler", 
-                    f"Konvertierung fehlgeschlagen für {os.path.basename(filepath)}:\n{e}")
+                _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Konvertierung fehlgeschlagen für {value0}:\n{value1}", value0=os.path.basename(filepath), value1=e))
         
         if success_count > 0:
-            QMessageBox.information(self, "Erfolgreich", 
-                f"{success_count} Datei(en) konvertiert")
+            _ui_message_box('information', self, _ui_text("Erfolgreich"), _ui_text("{value0} Datei(en) konvertiert", value0=success_count))
             self.perform_search()
     
     def _read_text_content(self, filepath, ext):
@@ -8162,12 +8257,10 @@ Quelle=Browser-Favoriten
                 success_count += 1
             
             except Exception as e:
-                QMessageBox.warning(self, "Fehler",
-                    f"Konvertierung fehlgeschlagen für {os.path.basename(filepath)}:\n{e}")
+                _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Konvertierung fehlgeschlagen für {value0}:\n{value1}", value0=os.path.basename(filepath), value1=e))
         
         if success_count > 0:
-            QMessageBox.information(self, "Erfolgreich",
-                f"{success_count} Bild(er) konvertiert")
+            _ui_message_box('information', self, _ui_text("Erfolgreich"), _ui_text("{value0} Bild(er) konvertiert", value0=success_count))
             self.perform_search()
     
     def convert_ppt_to_pdf(self):
@@ -8198,13 +8291,11 @@ Quelle=Browser-Favoriten
                     filepath
                 ], check=True, timeout=120)
                 
-                QMessageBox.information(self, "Erfolgreich",
-                    f"PDF erstellt:\n{os.path.basename(output_file)}")
+                _ui_message_box('information', self, _ui_text("Erfolgreich"), _ui_text("PDF erstellt:\n{value0}", value0=os.path.basename(output_file)))
                 self.perform_search()
             
             except Exception as e:
-                QMessageBox.warning(self, "Fehler",
-                    f"Konvertierung fehlgeschlagen:\n{e}")
+                _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Konvertierung fehlgeschlagen:\n{value0}", value0=e))
     
     def remember_files(self):
         """Merkt ausgewählte Dateien"""
@@ -8220,18 +8311,16 @@ Quelle=Browser-Favoriten
                     self.remembered_files.append(filepath)
         
         self.update_remembered_count()
-        QMessageBox.information(self, "Gemerkt",
-            f"{len(self.remembered_files)} Datei(en) in Sammlung")
+        _ui_message_box('information', self, _ui_text("Gemerkt"), _ui_text("{value0} Datei(en) in Sammlung", value0=len(self.remembered_files)))
     
     def show_remembered_files(self):
         """Zeigt Dialog mit gemerkten Dateien"""
         if not self.remembered_files:
-            QMessageBox.information(self, "Sammlung leer",
-                "Keine Dateien gemerkt")
+            _ui_message_box('information', self, _ui_text("Sammlung leer"), _ui_text("Keine Dateien gemerkt"))
             return
         
         dialog = QDialog(self)
-        dialog.setWindowTitle(f"Gemerkte Dateien ({len(self.remembered_files)})")
+        _ui_set(dialog, 'setWindowTitle', "Gemerkte Dateien ({value0})", value0=len(self.remembered_files))
         dialog.resize(600, 400)
         
         layout = QVBoxLayout(dialog)
@@ -8243,16 +8332,16 @@ Quelle=Browser-Favoriten
         
         btn_layout = QHBoxLayout()
         
-        btn_copy = QPushButton(" Alle kopieren")
+        btn_copy = _ui_widget(QPushButton, " Alle kopieren", setter='setText')
         btn_copy.clicked.connect(lambda: self.copy_remembered_files() or dialog.accept())
         
-        btn_pool = QPushButton(" Zusammenführen")
+        btn_pool = _ui_widget(QPushButton, " Zusammenführen", setter='setText')
         btn_pool.clicked.connect(lambda: self.pool_remembered_files() or dialog.accept())
         
-        btn_clear = QPushButton("Leeren")
+        btn_clear = _ui_widget(QPushButton, "Leeren", setter='setText')
         btn_clear.clicked.connect(lambda: self.clear_remembered_files() or dialog.accept())
         
-        btn_close = QPushButton("Schließen")
+        btn_close = _ui_widget(QPushButton, "Schließen", setter='setText')
         btn_close.clicked.connect(dialog.accept)
         
         btn_layout.addWidget(btn_copy)
@@ -8268,7 +8357,7 @@ Quelle=Browser-Favoriten
         if not self.remembered_files:
             return
         
-        target_dir = QFileDialog.getExistingDirectory(self, "Zielordner wählen")
+        target_dir = QFileDialog.getExistingDirectory(self, _ui_text("Zielordner wählen"))
         if not target_dir:
             return
         
@@ -8280,14 +8369,12 @@ Quelle=Browser-Favoriten
             except Exception as e:
                 print(f"Fehler bei {filepath}: {e}")
         
-        QMessageBox.information(self, "Kopiert",
-            f"{success_count} Datei(en) nach\n{target_dir}")
+        _ui_message_box('information', self, _ui_text("Kopiert"), _ui_text("{value0} Datei(en) nach\n{value1}", value0=success_count, value1=target_dir))
     
     def pool_remembered_files(self):
         """Führt gemerkte Dateien zusammen"""
         if len(self.remembered_files) < 2:
-            QMessageBox.warning(self, "Zu wenige Dateien",
-                "Mindestens 2 Dateien zum Pooling nötig")
+            _ui_message_box('warning', self, _ui_text("Zu wenige Dateien"), _ui_text("Mindestens 2 Dateien zum Pooling nötig"))
             return
         
         # Nimm erste Datei als Target
@@ -8300,13 +8387,13 @@ Quelle=Browser-Favoriten
         """Leert Sammlung"""
         self.remembered_files = []
         self.update_remembered_count()
-        QMessageBox.information(self, "Geleert", "Sammlung wurde geleert")
+        _ui_message_box('information', self, _ui_text("Geleert"), _ui_text("Sammlung wurde geleert"))
     
     def update_remembered_count(self):
         """Aktualisiert Counter im Button"""
         if hasattr(self, 'btn_remembered'):
             count = len(self.remembered_files)
-            self.btn_remembered.setText(f" Gemerkte Dateien ({count})")
+            _ui_set(self.btn_remembered, 'setText', " Gemerkte Dateien ({value0})", value0=count)
 
 
 class ConnectionsWidget(QWidget):
@@ -8328,10 +8415,10 @@ class ConnectionsWidget(QWidget):
         # Toolbar
         toolbar = QHBoxLayout()
         
-        btn_new = QPushButton(" Neue Verbindung")
+        btn_new = _ui_widget(QPushButton, " Neue Verbindung", setter='setText')
         btn_new.clicked.connect(self.add_connection)
         
-        btn_refresh = QPushButton(" Aktualisieren")
+        btn_refresh = _ui_widget(QPushButton, " Aktualisieren", setter='setText')
         btn_refresh.clicked.connect(self.populate_list)
         
         toolbar.addWidget(btn_new)
@@ -8349,17 +8436,17 @@ class ConnectionsWidget(QWidget):
         # Controls
         ctrl_layout = QHBoxLayout()
         
-        self.btn_index = QPushButton(" Indizieren")
+        self.btn_index = _ui_widget(QPushButton, " Indizieren", setter='setText')
         self.btn_index.clicked.connect(self.start_indexing)
         
-        self.btn_export = QPushButton(" Dateiliste exportieren")
+        self.btn_export = _ui_widget(QPushButton, " Dateiliste exportieren", setter='setText')
         self.btn_export.clicked.connect(self.export_file_list)
         
-        self.btn_pause = QPushButton(" Pause")
+        self.btn_pause = _ui_widget(QPushButton, " Pause", setter='setText')
         self.btn_pause.setEnabled(False)
         self.btn_pause.clicked.connect(self.toggle_pause)
         
-        self.btn_stop = QPushButton(" Stop")
+        self.btn_stop = _ui_widget(QPushButton, " Stop", setter='setText')
         self.btn_stop.setEnabled(False)
         self.btn_stop.clicked.connect(self.stop_worker)
         
@@ -8371,12 +8458,12 @@ class ConnectionsWidget(QWidget):
         layout.addLayout(ctrl_layout)
         
         # Status
-        self.lbl_status = QLabel("Bereit")
+        self.lbl_status = _ui_widget(QLabel, "Bereit", setter='setText')
         self.progress = QProgressBar()
         
         layout.addWidget(self.lbl_status)
         # Status für enabled Verbindungen
-        self.status_label = QLabel("Bereit")
+        self.status_label = _ui_widget(QLabel, "Bereit", setter='setText')
         self.status_label.setStyleSheet("color: #888; font-size: 11px; padding: 5px;")
         layout.addWidget(self.status_label)
         
@@ -8409,7 +8496,7 @@ class ConnectionsWidget(QWidget):
         
         # Update Status-Label
         if hasattr(self, 'status_label'):
-            self.status_label.setText(f"{enabled_count}/{total_count} Verbindungen aktiv")
+            _ui_set(self.status_label, 'setText', "{value0}/{value1} Verbindungen aktiv", value0=enabled_count, value1=total_count)
     
     def add_connection(self):
         """Neue Verbindung erstellen"""
@@ -8433,17 +8520,19 @@ class ConnectionsWidget(QWidget):
         auto_update = conn.get("auto_update", False)
         
         # Toggle Enabled
-        act_toggle = menu.addAction(" Deaktivieren" if enabled else " Aktivieren")
+        act_toggle = menu.addAction(_ui_text(" Deaktivieren" if enabled else " Aktivieren"))
         
         # Toggle Auto-Update
-        act_auto = menu.addAction(" Auto-Update: AUS" if auto_update else " Auto-Update: EIN")
+        act_auto = menu.addAction(
+            _ui_text(" Auto-Update: AUS" if auto_update else " Auto-Update: EIN")
+        )
         
         menu.addSeparator()
         
-        act_edit = menu.addAction(" Bearbeiten")
-        act_delete = menu.addAction("Löschen")
+        act_edit = menu.addAction(_ui_text(" Bearbeiten"))
+        act_delete = menu.addAction(_ui_text("Löschen"))
         menu.addSeparator()
-        act_open_db = menu.addAction("Datenbank öffnen")
+        act_open_db = menu.addAction(_ui_text("Datenbank öffnen"))
         
         action = menu.exec(self.list_widget.viewport().mapToGlobal(pos))
         conn = item.data(Qt.ItemDataRole.UserRole)
@@ -8453,8 +8542,8 @@ class ConnectionsWidget(QWidget):
             new_enabled = not enabled
             self.cfg.toggle_connection(conn["id"], new_enabled)
             self.populate_list()
-            status = "aktiviert" if new_enabled else "deaktiviert"
-            self.lbl_status.setText(f"Verbindung '{conn['name']}' {status}")
+            status = _ui_text("aktiviert" if new_enabled else "deaktiviert")
+            _ui_set(self.lbl_status, 'setText', "Verbindung '{value0}' {value1}", value0=conn['name'], value1=status)
             return
         
         # Handle Toggle Auto-Update
@@ -8462,17 +8551,12 @@ class ConnectionsWidget(QWidget):
             new_auto = not auto_update
             self.cfg.toggle_auto_update(conn["id"], new_auto)
             self.populate_list()
-            status = "aktiviert" if new_auto else "deaktiviert"
-            self.lbl_status.setText(f"Auto-Update für '{conn['name']}' {status}")
+            status = _ui_text("aktiviert" if new_auto else "deaktiviert")
+            _ui_set(self.lbl_status, 'setText', "Auto-Update für '{value0}' {value1}", value0=conn['name'], value1=status)
             return
         
         if action == act_delete:
-            reply = QMessageBox.question(
-                self,
-                "Verbindung löschen",
-                f"Wirklich '{conn['name']}' löschen?\n\nDie Datenbank-Datei bleibt erhalten.",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-            )
+            reply = _ui_message_box('question', self, _ui_text("Verbindung löschen"), _ui_text("Wirklich '{value0}' löschen?\n\nDie Datenbank-Datei bleibt erhalten.", value0=conn['name']), QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
             if reply == QMessageBox.StandardButton.Yes:
                 self.cfg.remove_connection(conn["id"])
                 self.populate_list()
@@ -8496,26 +8580,22 @@ class ConnectionsWidget(QWidget):
                     except (OSError, subprocess.SubprocessError):
                         pass
                 else:
-                    QMessageBox.information(
-                        self,
-                        "DB-Pfad",
-                        f"Datenbank:\n{db_path}\n\n(SQLiteViewer nicht gefunden)"
-                    )
+                    _ui_message_box('information', self, _ui_text("DB-Pfad"), _ui_text("Datenbank:\n{value0}\n\n(SQLiteViewer nicht gefunden)", value0=db_path))
             else:
-                QMessageBox.warning(self, "Nicht gefunden", "Datenbank existiert noch nicht.")
+                _ui_message_box('warning', self, _ui_text("Nicht gefunden"), _ui_text("Datenbank existiert noch nicht."))
     
     def start_indexing(self):
         """Startet Indizierung der ausgewählten Verbindung"""
         item = self.list_widget.currentItem()
         if not item:
-            QMessageBox.warning(self, "Fehler", "Bitte erst eine Verbindung auswählen.")
+            _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Bitte erst eine Verbindung auswählen."))
             return
         
         conn = item.data(Qt.ItemDataRole.UserRole)
         
         # Worker starten
         self.worker = SyncWorker(conn, mode="index")
-        self.worker.signals.status.connect(self.lbl_status.setText)
+        self.worker.signals.status.connect(self._show_worker_status)
         self.worker.signals.progress.connect(self.on_progress)
         self.worker.signals.finished.connect(self.on_worker_finished)
         
@@ -8530,46 +8610,45 @@ class ConnectionsWidget(QWidget):
         if self.worker:
             self.worker.is_paused = not self.worker.is_paused
             if self.worker.is_paused:
-                self.btn_pause.setText("Fortsetzen")
+                _ui_set(self.btn_pause, 'setText', "Fortsetzen")
             else:
-                self.btn_pause.setText(" Pause")
+                _ui_set(self.btn_pause, 'setText', " Pause")
     
     def stop_worker(self):
         """Stoppt Worker"""
         if self.worker:
             self.worker.is_killed = True
-            self.lbl_status.setText("Wird gestoppt...")
+            _ui_set(self.lbl_status, 'setText', "Wird gestoppt...")
     
+    def _show_worker_status(self, message):
+        self.lbl_status.setText(_render_ui_message(message))
+
     def on_progress(self, value, text):
         """Progress Update"""
         self.progress.setValue(value)
         if text:
-            self.lbl_status.setText(text)
+            self.lbl_status.setText(_render_ui_message(text))
     
     def on_worker_finished(self):
         """Worker fertig"""
         self.btn_index.setEnabled(True)
         self.btn_pause.setEnabled(False)
         self.btn_stop.setEnabled(False)
-        self.btn_pause.setText(" Pause")
+        _ui_set(self.btn_pause, 'setText', " Pause")
         self.progress.setValue(100)
     
     def export_file_list(self):
             """Exportiert Dateiliste als PDF"""
             item = self.list_widget.currentItem()
             if not item:
-                QMessageBox.warning(self, "Fehler", "Bitte erst eine Verbindung auswählen.")
+                _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Bitte erst eine Verbindung auswählen."))
                 return
             
             conn = item.data(Qt.ItemDataRole.UserRole)
             db_path = conn.get("db_path", "")
             
             if not os.path.exists(db_path):
-                QMessageBox.warning(
-                    self,
-                    "Keine Datenbank",
-                    "Datenbank existiert noch nicht.\nBitte erst indizieren."
-                )
+                _ui_message_box('warning', self, _ui_text("Keine Datenbank"), _ui_text("Datenbank existiert noch nicht.\nBitte erst indizieren."))
                 return
             
             # PDF-Pfad wählen
@@ -8578,9 +8657,9 @@ class ConnectionsWidget(QWidget):
             
             pdf_path, _ = QFileDialog.getSaveFileName(
                 self,
-                "Dateiliste exportieren",
+                _ui_text("Dateiliste exportieren"),
                 safe_name,
-                "PDF-Dateien (*.pdf)"
+                _ui_text("PDF-Dateien (*.pdf)")
             )
             
             if not pdf_path:
@@ -8588,11 +8667,7 @@ class ConnectionsWidget(QWidget):
             
             try:
                 if not HAS_REPORTLAB:
-                    QMessageBox.warning(
-                        self,
-                        "Bibliothek fehlt",
-                        "reportlab ist nicht installiert.\n\nInstalliere mit: pip install reportlab"
-                    )
+                    _ui_message_box('warning', self, _ui_text("Bibliothek fehlt"), _ui_text("reportlab ist nicht installiert.\n\nInstalliere mit: pip install reportlab"))
                     return
                 
                 # Daten aus DB laden
@@ -8640,16 +8715,12 @@ class ConnectionsWidget(QWidget):
                 
                 doc.build(story)
                 
-                QMessageBox.information(
-                    self,
-                    "Export erfolgreich",
-                    f"✅ Dateiliste exportiert:\n{pdf_path}\n\n{len(rows)} Dateien"
-                )
+                _ui_message_box('information', self, _ui_text("Export erfolgreich"), _ui_text("✅ Dateiliste exportiert:\n{value0}\n\n{value1} Dateien", value0=pdf_path, value1=len(rows)))
             
             except Exception as e:
                 import traceback
                 traceback.print_exc()
-                QMessageBox.critical(self, "Fehler", f"Export fehlgeschlagen:\n{str(e)}")
+                _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("Export fehlgeschlagen:\n{value0}", value0=str(e)))
 
 
 # ============================================================================
@@ -8800,27 +8871,27 @@ class AutoSyncWidget(QWidget):
         layout = QVBoxLayout(self)
         
         # Status-Gruppe
-        status_group = QGroupBox("Auto-Sync Status")
+        status_group = _ui_widget(QGroupBox, "Auto-Sync Status", setter='setTitle')
         status_layout = QVBoxLayout(status_group)
         
         # Watchdog-Prüfung
         if HAS_WATCHDOG:
-            self.status_label = QLabel("✅ Watchdog verfügbar - Bereit")
+            self.status_label = _ui_widget(QLabel, "✅ Watchdog verfügbar - Bereit", setter='setText')
         else:
-            self.status_label = QLabel("❌ watchdog nicht installiert!\nInstallation: pip install watchdog")
+            self.status_label = _ui_widget(QLabel, "❌ watchdog nicht installiert!\nInstallation: pip install watchdog", setter='setText')
         status_layout.addWidget(self.status_label)
         
         layout.addWidget(status_group)
         
         # Ordner-Konfiguration
-        folder_group = QGroupBox("Ordner-Konfiguration")
+        folder_group = _ui_widget(QGroupBox, "Ordner-Konfiguration", setter='setTitle')
         folder_layout = QFormLayout(folder_group)
         
         # Quellordner
         source_row = QHBoxLayout()
         self.source_edit = QLineEdit()
-        self.source_edit.setPlaceholderText("Quellordner auswählen...")
-        source_btn = QPushButton("📁")
+        _ui_set(self.source_edit, 'setPlaceholderText', "Quellordner auswählen...")
+        source_btn = _ui_widget(QPushButton, "📁", setter='setText')
         source_btn.setFixedWidth(40)
         source_btn.clicked.connect(self.select_source)
         configure_compact_picker_button(
@@ -8831,13 +8902,13 @@ class AutoSyncWidget(QWidget):
         )
         source_row.addWidget(self.source_edit)
         source_row.addWidget(source_btn)
-        folder_layout.addRow("Quelle:", source_row)
+        folder_layout.addRow(_ui_text("Quelle:"), source_row)
         
         # Zielordner
         target_row = QHBoxLayout()
         self.target_edit = QLineEdit()
-        self.target_edit.setPlaceholderText("Zielordner auswählen...")
-        target_btn = QPushButton("📁")
+        _ui_set(self.target_edit, 'setPlaceholderText', "Zielordner auswählen...")
+        target_btn = _ui_widget(QPushButton, "📁", setter='setText')
         target_btn.setFixedWidth(40)
         target_btn.clicked.connect(self.select_target)
         configure_compact_picker_button(
@@ -8848,19 +8919,19 @@ class AutoSyncWidget(QWidget):
         )
         target_row.addWidget(self.target_edit)
         target_row.addWidget(target_btn)
-        folder_layout.addRow("Ziel:", target_row)
+        folder_layout.addRow(_ui_text("Ziel:"), target_row)
         
         # Extensions
         self.ext_edit = QLineEdit(".pdf, .docx, .xlsx, .txt, .jpg, .png")
-        folder_layout.addRow("Extensions:", self.ext_edit)
+        folder_layout.addRow(_ui_text("Extensions:"), self.ext_edit)
         
         layout.addWidget(folder_group)
         
         # Buttons
         btn_layout = QHBoxLayout()
-        self.start_btn = QPushButton("▶️ Starten")
+        self.start_btn = _ui_widget(QPushButton, "▶️ Starten", setter='setText')
         self.start_btn.clicked.connect(self.start_sync)
-        self.stop_btn = QPushButton("⏹️ Stoppen")
+        self.stop_btn = _ui_widget(QPushButton, "⏹️ Stoppen", setter='setText')
         self.stop_btn.clicked.connect(self.stop_sync)
         self.stop_btn.setEnabled(False)
         btn_layout.addWidget(self.start_btn)
@@ -8868,7 +8939,7 @@ class AutoSyncWidget(QWidget):
         layout.addLayout(btn_layout)
         
         # Log
-        log_group = QGroupBox("Aktivitäts-Log")
+        log_group = _ui_widget(QGroupBox, "Aktivitäts-Log", setter='setTitle')
         log_layout = QVBoxLayout(log_group)
         self.log_text = QTextEdit()
         self.log_text.setReadOnly(True)
@@ -8877,21 +8948,21 @@ class AutoSyncWidget(QWidget):
         layout.addWidget(log_group)
         
         # Statistiken
-        stats_group = QGroupBox("Statistiken")
+        stats_group = _ui_widget(QGroupBox, "Statistiken", setter='setTitle')
         stats_layout = QHBoxLayout(stats_group)
-        self.stats_label = QLabel("Synchronisiert: 0 | Fehler: 0")
+        self.stats_label = _ui_widget(QLabel, "Synchronisiert: 0 | Fehler: 0", setter='setText')
         stats_layout.addWidget(self.stats_label)
         layout.addWidget(stats_group)
         
         layout.addStretch()
     
     def select_source(self):
-        folder = QFileDialog.getExistingDirectory(self, "Quellordner wählen")
+        folder = QFileDialog.getExistingDirectory(self, _ui_text("Quellordner wählen"))
         if folder:
             self.source_edit.setText(folder)
     
     def select_target(self):
-        folder = QFileDialog.getExistingDirectory(self, "Zielordner wählen")
+        folder = QFileDialog.getExistingDirectory(self, _ui_text("Zielordner wählen"))
         if folder:
             self.target_edit.setText(folder)
     
@@ -8900,7 +8971,7 @@ class AutoSyncWidget(QWidget):
         target = self.target_edit.text().strip()
         
         if not source or not target:
-            QMessageBox.warning(self, "Fehler", "Bitte Quell- und Zielordner angeben!")
+            _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Bitte Quell- und Zielordner angeben!"))
             return
         
         ext_text = self.ext_edit.text().strip()
@@ -8909,14 +8980,14 @@ class AutoSyncWidget(QWidget):
         if self.manager.start_watch(source, target, extensions):
             self.start_btn.setEnabled(False)
             self.stop_btn.setEnabled(True)
-            self.status_label.setText(f"🟢 Aktiv: Überwache {source}")
+            _ui_set(self.status_label, 'setText', "🟢 Aktiv: Überwache {value0}", value0=source)
             self.save_config()
     
     def stop_sync(self):
         self.manager.stop_watch()
         self.start_btn.setEnabled(True)
         self.stop_btn.setEnabled(False)
-        self.status_label.setText("⏹️ Gestoppt")
+        _ui_set(self.status_label, 'setText', "⏹️ Gestoppt")
         self.update_stats()
     
     def log_message(self, message):
@@ -8926,7 +8997,7 @@ class AutoSyncWidget(QWidget):
     
     def update_stats(self):
         stats = self.manager.get_stats()
-        self.stats_label.setText(f"Synchronisiert: {stats['synced']} | Fehler: {stats['errors']}")
+        _ui_set(self.stats_label, 'setText', "Synchronisiert: {value0} | Fehler: {value1}", value0=stats['synced'], value1=stats['errors'])
     
     def save_config(self):
         """Speichert Auto-Sync Konfiguration"""
@@ -8956,7 +9027,7 @@ class UnifiedMainWindow(QMainWindow):
     def __init__(self, settings=None):
         super().__init__()
         
-        self.setWindowTitle(f"ProFiler Suite {APP_VERSION} - Auto-Sync Watchdog")
+        _ui_set(self, 'setWindowTitle', "ProFiler Suite {value0} - Auto-Sync Watchdog", value0=APP_VERSION)
         self.setWindowIcon(load_app_icon())
         self.resize(1400, 900)
         
@@ -8964,7 +9035,14 @@ class UnifiedMainWindow(QMainWindow):
         self.search_config = SearchConfigManager()
         self.sync_config = SyncConfigManager(SYNC_CONFIG_PATH)
         self.settings = settings if settings is not None else SettingsManager()
-        
+        saved_language = self.settings.get("ui_language", self.settings.get("language", "de"))
+        self.ui_translator = TranslationSystem(saved_language) if HAS_TRANSLATOR else None
+        if self.ui_translator is not None:
+            app = QApplication.instance()
+            if app is not None:
+                _set_application_translator(app, self.ui_translator)
+        self._status_message = ("Bereit", {}, 0)
+
         # Auto-Cleanup
         #if self.settings.get("auto_cleanup_enabled", True):
             #self.perform_auto_cleanup()
@@ -8973,6 +9051,7 @@ class UnifiedMainWindow(QMainWindow):
         self.init_ui()
         self.init_tray()
         self.apply_dark_theme()
+        self.retranslate_ui()
     
     def init_ui(self):
         """Initialisiert UI"""
@@ -8982,58 +9061,74 @@ class UnifiedMainWindow(QMainWindow):
         
         # Tabs
         self.tabs = QTabWidget()
-        self.tabs.setAccessibleName("Hauptbereiche")
-        self.tabs.setAccessibleDescription("Hauptnavigation zwischen Suche & Explorer, Verbindungen & Themen sowie Auto-Sync")
+        self.tabs.setAccessibleName(_ui_text("Hauptbereiche"))
+        self.tabs.setAccessibleDescription(_ui_text("Hauptnavigation zwischen Suche & Explorer, Verbindungen & Themen sowie Auto-Sync"))
         
         # Tab 1: Search
         self.search_widget = SearchWidgetHybrid(self.search_config, self.settings)
-        self.tabs.addTab(self.search_widget, "Suche & Explorer")
+        self.tabs.addTab(self.search_widget, _ui_text("Suche & Explorer"))
         
         # Tab 2: Verbindungen/Themen
         self.connections_widget = ConnectionsWidget(self)
-        self.tabs.addTab(self.connections_widget, "Verbindungen & Themen")
+        self.tabs.addTab(self.connections_widget, _ui_text("Verbindungen & Themen"))
         
         # Tab 3: Auto-Sync (NEU V14.3)
         self.autosync_widget = AutoSyncWidget(self.settings, self)
-        self.tabs.addTab(self.autosync_widget, "🔄 Auto-Sync")
+        self.tabs.addTab(self.autosync_widget, "🔄 " + _ui_text("Auto-Sync"))
         
         layout.addWidget(self.tabs)
         
         # Statusbar
-        self.statusBar().showMessage("Bereit")
+        self._show_status("Bereit")
         
-        # Menu mit Mnemonics und Shortcuts (WCAG 2.1 AA / BITV 2.0)
+        # Menu with mnemonics and keyboard shortcuts.
         menubar = self.menuBar()
         
-        file_menu = menubar.addMenu("&Datei")
-        file_menu.addAction("Arbeitsstand exportieren...", self.export_workspace_snapshot)
-        file_menu.addAction("Arbeitsstand importieren...", self.import_workspace_snapshot)
-        file_menu.addAction("🌐 Browser-Favoriten importieren...", self.import_browser_favorites)
-        file_menu.addSeparator()
+        self.file_menu = menubar.addMenu(_ui_text("&Datei"))
+        self.action_export_workspace = self.file_menu.addAction(
+            _ui_text("Arbeitsstand exportieren..."), self.export_workspace_snapshot
+        )
+        self.action_import_workspace = self.file_menu.addAction(
+            _ui_text("Arbeitsstand importieren..."), self.import_workspace_snapshot
+        )
+        self.action_import_browser_favorites = self.file_menu.addAction(
+            "🌐 " + _ui_text("Browser-Favoriten importieren..."), self.import_browser_favorites
+        )
+        self.file_menu.addSeparator()
         
-        self.act_settings = file_menu.addAction("⚙️ Einstellungen", self.show_settings)
+        self.act_settings = self.file_menu.addAction("⚙️ " + _ui_text("Einstellungen"), self.show_settings)
         self.act_settings.setShortcut(QKeySequence("Ctrl+,"))
-        self.act_settings.setStatusTip("Programmeinstellungen öffnen (Ctrl+,)")
+        _ui_set(self.act_settings, 'setStatusTip', "Programmeinstellungen öffnen (Ctrl+,)")
 
-        file_menu.addSeparator()
-        self.act_close = file_menu.addAction("❌ Beenden", self.close)
+        self.file_menu.addSeparator()
+        self.act_close = self.file_menu.addAction("❌ " + _ui_text("Beenden"), self.close)
         self.act_close.setShortcut(QKeySequence("Ctrl+Q"))
-        self.act_close.setStatusTip("Anwendung beenden (Ctrl+Q)")
+        _ui_set(self.act_close, 'setStatusTip', "Anwendung beenden (Ctrl+Q)")
         
-        tools_menu = menubar.addMenu("&Tools")
-        tools_menu.addAction("🚦 Datenschutzampel starten...", self.start_datenschutzampel)
-        tools_menu.addAction("FormConstructor öffnen...", self.launch_form_constructor)
-        tools_menu.addAction("ProSync öffnen...", self.launch_prosync)
-        tools_menu.addAction("🔒 Anonymisierungs-Einstellungen...", self.show_anonymization_settings)
+        self.tools_menu = menubar.addMenu(_ui_text("&Tools"))
+        self.action_start_privacy_light = self.tools_menu.addAction(
+            "🚦 " + _ui_text("Datenschutzampel starten..."), self.start_datenschutzampel
+        )
+        self.action_open_form_constructor = self.tools_menu.addAction(
+            _ui_text("FormConstructor öffnen..."), self.launch_form_constructor
+        )
+        self.action_open_prosync = self.tools_menu.addAction(
+            _ui_text("ProSync öffnen..."), self.launch_prosync
+        )
+        self.action_anonymization_settings = self.tools_menu.addAction(
+            "🔒 " + _ui_text("Anonymisierungs-Einstellungen..."), self.show_anonymization_settings
+        )
 
-        help_menu = menubar.addMenu("&Hilfe")
-        self.act_shortcuts = help_menu.addAction("⌨️ Tastaturkürzel & Barrierefreiheit", self.show_shortcuts_dialog)
+        self.help_menu = menubar.addMenu(_ui_text("&Hilfe"))
+        self.act_shortcuts = self.help_menu.addAction(
+            "⌨️ " + _ui_text("Tastaturkürzel & Navigation"), self.show_shortcuts_dialog
+        )
         self.act_shortcuts.setShortcut(QKeySequence("F1"))
-        self.act_shortcuts.setStatusTip("Tastaturkürzel und Barrierefreiheits-Übersicht anzeigen (F1)")
-        help_menu.addSeparator()
-        help_menu.addAction("Über", self.show_about)
+        _ui_set(self.act_shortcuts, 'setStatusTip', "Übersicht zu Tastaturkürzeln und Navigation anzeigen (F1)")
+        self.help_menu.addSeparator()
+        self.action_about = self.help_menu.addAction(_ui_text("Über"), self.show_about)
 
-        # Globale Tastaturkürzel (WCAG 2.1.1 Tastaturbedienbarkeit)
+        # Global keyboard shortcuts.
         self.shortcut_find = QShortcut(QKeySequence("Ctrl+F"), self)
         self.shortcut_find.activated.connect(self.focus_search)
 
@@ -9049,6 +9144,72 @@ class UnifiedMainWindow(QMainWindow):
         self.shortcut_tab3 = QShortcut(QKeySequence("Ctrl+3"), self)
         self.shortcut_tab3.activated.connect(lambda: self.tabs.setCurrentIndex(2))
 
+    def _show_status(self, key, timeout=0, **format_values):
+        deadline = time.monotonic() + (timeout / 1000.0) if timeout > 0 else None
+        self._status_message = (key, format_values, deadline)
+        self.statusBar().showMessage(_ui_text(key, **format_values), timeout)
+
+    def retranslate_ui(self):
+        """Refresh persistent top-level text without rebuilding application state."""
+        self.setWindowTitle(
+            _ui_text("ProFiler Suite {version} - Auto-Sync Watchdog", version=APP_VERSION)
+        )
+        self.tabs.setTabText(0, _ui_text("Suche & Explorer"))
+        self.tabs.setTabText(1, _ui_text("Verbindungen & Themen"))
+        self.tabs.setTabText(2, "🔄 " + _ui_text("Auto-Sync"))
+        self.tabs.setAccessibleName(_ui_text("Hauptbereiche"))
+        self.tabs.setAccessibleDescription(
+            _ui_text("Hauptnavigation zwischen Suche & Explorer, Verbindungen & Themen sowie Auto-Sync")
+        )
+        self.file_menu.setTitle(_ui_text("&Datei"))
+        self.action_export_workspace.setText(_ui_text("Arbeitsstand exportieren..."))
+        self.action_import_workspace.setText(_ui_text("Arbeitsstand importieren..."))
+        self.action_import_browser_favorites.setText(
+            "🌐 " + _ui_text("Browser-Favoriten importieren...")
+        )
+        self.act_settings.setText("⚙️ " + _ui_text("Einstellungen"))
+        self.act_settings.setStatusTip(_ui_text("Programmeinstellungen öffnen (Ctrl+,)"))
+        self.act_close.setText("❌ " + _ui_text("Beenden"))
+        self.act_close.setStatusTip(_ui_text("Anwendung beenden (Ctrl+Q)"))
+        self.tools_menu.setTitle(_ui_text("&Tools"))
+        self.action_start_privacy_light.setText(
+            "🚦 " + _ui_text("Datenschutzampel starten...")
+        )
+        self.action_open_form_constructor.setText(_ui_text("FormConstructor öffnen..."))
+        self.action_open_prosync.setText(_ui_text("ProSync öffnen..."))
+        self.action_anonymization_settings.setText(
+            "🔒 " + _ui_text("Anonymisierungs-Einstellungen...")
+        )
+        self.help_menu.setTitle(_ui_text("&Hilfe"))
+        self.act_shortcuts.setText("⌨️ " + _ui_text("Tastaturkürzel & Navigation"))
+        self.act_shortcuts.setStatusTip(
+            _ui_text("Übersicht zu Tastaturkürzeln und Navigation anzeigen (F1)")
+        )
+        self.action_about.setText(_ui_text("Über"))
+        key, values, deadline = self._status_message
+        if deadline is not None:
+            remaining_ms = int((deadline - time.monotonic()) * 1000)
+            if remaining_ms <= 0:
+                self._status_message = ("", {}, None)
+                self.statusBar().clearMessage()
+            else:
+                self.statusBar().showMessage(_ui_text(key, **values), remaining_ms)
+        else:
+            self.statusBar().showMessage(_ui_text(key, **values), 0)
+        if HAS_TRANSLATOR:
+            app = QApplication.instance()
+            if app is not None:
+                _retranslate_registered_ui(app)
+        if hasattr(self, "search_widget"):
+            self.search_widget.retranslate_result_headers()
+
+    def apply_ui_language(self):
+        """Apply the persisted language choice after Settings has been accepted."""
+        selected = self.settings.get("ui_language", self.settings.get("language", "de"))
+        if self.ui_translator is not None:
+            self.ui_translator.set_language(selected)
+        self.retranslate_ui()
+
     def focus_search(self):
         """Wechselt zum Tab Suche & Explorer und fokussiert das Suchfeld (Ctrl+F)."""
         if hasattr(self, "tabs"):
@@ -9060,7 +9221,7 @@ class UnifiedMainWindow(QMainWindow):
         """Aktualisiert die aktuelle Ansicht bzw. Suche (F5)."""
         if hasattr(self, "search_widget") and hasattr(self.search_widget, "perform_search"):
             self.search_widget.perform_search()
-        self.statusBar().showMessage("Ansicht aktualisiert", 3000)
+        self._show_status("Ansicht aktualisiert", 3000)
 
     def show_shortcuts_dialog(self):
         """Öffnet den barrierefreien Tastaturkürzel- und Hilfe-Dialog (F1)."""
@@ -9079,8 +9240,8 @@ class UnifiedMainWindow(QMainWindow):
         self.tray_icon.setIcon(_icon if not _icon.isNull() else self.style().standardIcon(QStyle.StandardPixmap.SP_FileIcon))
         
         tray_menu = QMenu(self)
-        tray_menu.addAction("Anzeigen", self.show)
-        tray_menu.addAction("❌ Beenden", QApplication.quit)
+        self.tray_show_action = _ui_add_action(tray_menu, "Anzeigen", self.show)
+        self.tray_exit_action = _ui_add_action(tray_menu, "❌ Beenden", QApplication.quit)
         
         self.tray_icon.setContextMenu(tray_menu)
         self.tray_icon.activated.connect(self.on_tray_activated)
@@ -9098,7 +9259,7 @@ class UnifiedMainWindow(QMainWindow):
         self.hide()
         self.tray_icon.showMessage(
             "ProFiler Suite",
-            "Läuft im Hintergrund. Doppelklick zum Öffnen.",
+            _ui_text("Läuft im Hintergrund. Doppelklick zum Öffnen."),
             QSystemTrayIcon.MessageIcon.Information,
             2000
         )
@@ -9112,9 +9273,9 @@ class UnifiedMainWindow(QMainWindow):
         default_name = f"profiler-workspace-v1-{datetime.now().strftime('%Y%m%d-%H%M%S')}.json"
         output_path, _ = QFileDialog.getSaveFileName(
             self,
-            "Arbeitsstand exportieren",
+            _ui_text("Arbeitsstand exportieren"),
             default_name,
-            "JSON-Dateien (*.json)",
+            _ui_text("JSON-Dateien (*.json)"),
         )
         if not output_path:
             return
@@ -9126,24 +9287,18 @@ class UnifiedMainWindow(QMainWindow):
                 self.settings,
                 self.connections_widget.cfg,
             )
-            self.statusBar().showMessage("Arbeitsstand exportiert", 5000)
-            QMessageBox.information(
-                self,
-                "Export erfolgreich",
-                "Arbeitsstand exportiert.\n\n"
-                f"Datei: {output_path}\n"
-                f"Indizes: {len(payload.get('indexes', []))}",
-            )
+            self._show_status("Arbeitsstand exportiert", 5000)
+            _ui_message_box('information', self, _ui_text("Export erfolgreich"), _ui_text("Arbeitsstand exportiert.\n\nDatei: {value0}\nIndizes: {value1}", value0=output_path, value1=len(payload.get('indexes', []))))
         except (OSError, ValueError, sqlite3.Error) as exc:
-            QMessageBox.critical(self, "Fehler", f"Export fehlgeschlagen:\n{exc}")
+            _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("Export fehlgeschlagen:\n{value0}", value0=exc))
 
     def import_workspace_snapshot(self):
         """Importiert einen redigierten Workspace-Snapshot und übernimmt sichere Einstellungen."""
         input_path, _ = QFileDialog.getOpenFileName(
             self,
-            "Arbeitsstand importieren",
+            _ui_text("Arbeitsstand importieren"),
             "",
-            "JSON-Dateien (*.json)",
+            _ui_text("JSON-Dateien (*.json)"),
         )
         if not input_path:
             return
@@ -9151,25 +9306,25 @@ class UnifiedMainWindow(QMainWindow):
         try:
             result = import_redacted_workspace(input_path, self.settings)
             applied = ", ".join(result["applied_settings"]) if result["applied_settings"] else "keine"
-            self.statusBar().showMessage("Arbeitsstand importiert", 5000)
-            QMessageBox.information(
-                self,
-                "Import erfolgreich",
-                "Arbeitsstand importiert.\n\n"
-                f"Workspace: {result['workspace_name']}\n"
-                f"Indizes im Snapshot: {result['indexes_count']}\n"
-                f"Übernommene Einstellungen: {applied}\n"
-                "Lokale Datenbankpfade wurden bewusst nicht übernommen.",
-            )
+            self._show_status("Arbeitsstand importiert", 5000)
+            _ui_message_box('information', self, _ui_text("Import erfolgreich"), _ui_text("Arbeitsstand importiert.\n\nWorkspace: {value0}\nIndizes im Snapshot: {value1}\nÜbernommene Einstellungen: {value2}\nLokale Datenbankpfade wurden bewusst nicht übernommen.", value0=result['workspace_name'], value1=result['indexes_count'], value2=applied))
         except WorkspaceFormatError as exc:
-            QMessageBox.warning(self, "Ungültiger Export", str(exc))
+            _ui_message_box(
+                "warning",
+                self,
+                _ui_text("Ungültiger Export"),
+                _ui_text("Ungültiger Export:\n{value0}", value0=str(exc)),
+            )
         except OSError as exc:
-            QMessageBox.critical(self, "Fehler", f"Import fehlgeschlagen:\n{exc}")
+            _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("Import fehlgeschlagen:\n{value0}", value0=exc))
 
     def show_settings(self):
         """Zeigt Einstellungen"""
         dialog = SettingsDialog(self.settings, self)
-        dialog.exec()
+        result = dialog.exec()
+        if result == QDialog.DialogCode.Accepted:
+            self.apply_ui_language()
+        return dialog
     
     def show_anonymization_settings(self):
         """Zeigt Anonymisierungs-Einstellungen"""
@@ -9178,18 +9333,7 @@ class UnifiedMainWindow(QMainWindow):
     
     def show_about(self):
         """Über-Dialog"""
-        QMessageBox.about(
-            self,
-            f"ProFiler Suite {APP_VERSION}",
-            f"ProFiler Suite {APP_VERSION}\n\n"
-            "Features:\n"
-            "• PDF-Verschlüsselung/Entschlüsselung\n"
-            "• PDF-Auszüge erstellen\n"
-            "• OCR-Texterkennung\n"
-            "• Text aus PDF entfernen\n"
-            "• Masterpasswort-Management\n\n"
-            "© 2024"
-        )
+        _ui_message_box('about', self, _ui_text("ProFiler Suite {value0}", value0=APP_VERSION), _ui_text("ProFiler Suite {value0}\n\nFeatures:\n• PDF-Verschlüsselung/Entschlüsselung\n• PDF-Auszüge erstellen\n• OCR-Texterkennung\n• Text aus PDF entfernen\n• Masterpasswort-Management\n\n© 2024", value0=APP_VERSION))
         
     def launch_form_constructor(self):
         """Startet FormConstructor (NEU V13!)"""
@@ -9210,13 +9354,7 @@ class UnifiedMainWindow(QMainWindow):
                     break
         
         if not fc_path or not os.path.exists(fc_path):
-            reply = QMessageBox.question(
-                self,
-                "FormConstructor nicht gefunden",
-                "FormConstructor_V1_5.py wurde nicht gefunden.\n\n"
-                "Möchten Sie den Pfad jetzt in den Einstellungen festlegen?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-            )
+            reply = _ui_message_box('question', self, _ui_text("FormConstructor nicht gefunden"), _ui_text("FormConstructor_V1_5.py wurde nicht gefunden.\n\nMöchten Sie den Pfad jetzt in den Einstellungen festlegen?"), QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
             
             if reply == QMessageBox.StandardButton.Yes:
                 self.show_settings()
@@ -9224,13 +9362,9 @@ class UnifiedMainWindow(QMainWindow):
         
         try:
             subprocess.Popen([sys.executable, fc_path])
-            QMessageBox.information(
-                self,
-                "FormConstructor gestartet",
-                "FormConstructor wurde erfolgreich geöffnet!"
-            )
+            _ui_message_box('information', self, _ui_text("FormConstructor gestartet"), _ui_text("FormConstructor wurde erfolgreich geöffnet!"))
         except Exception as e:
-            QMessageBox.critical(self, "Fehler", f"Start fehlgeschlagen:\n{str(e)}")
+            _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("Start fehlgeschlagen:\n{value0}", value0=str(e)))
 
     def _launch_tool_process(self, tool_path):
         """Startet eine externe Python-, Batch- oder EXE-Datei."""
@@ -9249,11 +9383,31 @@ class UnifiedMainWindow(QMainWindow):
             self.settings.get("prosync_path", ""),
         )
         if outcome.result == _LaunchResult.NOT_FOUND:
-            QMessageBox.warning(self, "ProSync nicht gefunden", outcome.message)
+            _ui_message_box(
+                "warning",
+                self,
+                _ui_text("ProSync nicht gefunden"),
+                _ui_text(
+                    "ProSync konnte nicht automatisch gefunden werden.\n\nBitte lege den Pfad in profiler_settings.json unter 'prosync_path' fest\noder platziere ProSync neben ProFiler im gemeinsamen Software-Baum."
+                ),
+            )
         elif outcome.result == _LaunchResult.SUCCESS:
-            QMessageBox.information(self, "ProSync gestartet", outcome.message)
+            _ui_message_box(
+                "information",
+                self,
+                _ui_text("ProSync gestartet"),
+                _ui_text(
+                    "ProSync wurde als optionale Companion-App gestartet.\n\nProFiler bleibt geöffnet, beide Werkzeuge laufen unabhängig."
+                ),
+            )
         else:
-            QMessageBox.critical(self, "Fehler", outcome.message)
+            details = outcome.message.partition("\n")[2] or outcome.message
+            _ui_message_box(
+                "critical",
+                self,
+                _ui_text("Fehler"),
+                _ui_text("Konnte ProSync nicht starten:\n{value0}", value0=details),
+            )
 
     def start_datenschutzampel(self):
         """Startet die Datenschutzampel als separate Anwendung"""
@@ -9272,26 +9426,11 @@ class UnifiedMainWindow(QMainWindow):
         if os.path.exists(ampel_path):
             try:
                 subprocess.Popen([sys.executable, ampel_path])
-                QMessageBox.information(
-                    self,
-                    "Datenschutzampel gestartet",
-                    "🚦 Die Datenschutzampel wurde als separate Anwendung gestartet.\n\n"
-                    "Sie läuft jetzt im System-Tray parallel zu ProFiler."
-                )
+                _ui_message_box('information', self, _ui_text("Datenschutzampel gestartet"), _ui_text("🚦 Die Datenschutzampel wurde als separate Anwendung gestartet.\n\nSie läuft jetzt im System-Tray parallel zu ProFiler."))
             except Exception as e:
-                QMessageBox.critical(
-                    self,
-                    "Fehler",
-                    f"Konnte Datenschutzampel nicht starten:\n{str(e)}"
-                )
+                _ui_message_box('critical', self, _ui_text("Fehler"), _ui_text("Konnte Datenschutzampel nicht starten:\n{value0}", value0=str(e)))
         else:
-            QMessageBox.warning(
-                self,
-                "Nicht gefunden",
-                "ProFiler_Datenschutzampel.py wurde nicht gefunden.\n\n"
-                f"Gesucht in:\n{ampel_path}\n\n"
-                "Bitte stelle sicher, dass die Datei existiert."
-            )
+            _ui_message_box('warning', self, _ui_text("Nicht gefunden"), _ui_text("ProFiler_Datenschutzampel.py wurde nicht gefunden.\n\nGesucht in:\n{value0}\n\nBitte stelle sicher, dass die Datei existiert.", value0=ampel_path))
     
 
     def perform_auto_cleanup(self):
@@ -9314,7 +9453,13 @@ class UnifiedMainWindow(QMainWindow):
             total_deleted += deleted
         
         if total_deleted > 0:
-            self.statusBar().showMessage(f"✅ Auto-Cleanup: {total_deleted} alte Dateien entfernt", 5000)
+            self.statusBar().showMessage(
+                _ui_text(
+                    "✅ Auto-Cleanup: {value0} alte Dateien entfernt",
+                    value0=total_deleted,
+                ),
+                5000,
+            )
     
     def apply_dark_theme(self):
         """Dark Theme"""
@@ -9351,26 +9496,32 @@ def main():
     warnings = []
     
     if not HAS_PDF:
-        warnings.append("⚠️ pypdf nicht installiert - PDF-Features deaktiviert")
+        warnings.append(_ui_text("⚠️ pypdf nicht installiert - PDF-Features deaktiviert"))
     
     if not HAS_OCR:
-        warnings.append("⚠️ pytesseract nicht installiert - OCR deaktiviert")
+        warnings.append(_ui_text("⚠️ pytesseract nicht installiert - OCR deaktiviert"))
     
     if not HAS_PDF2IMAGE:
-        warnings.append("⚠️ pdf2image nicht installiert - Text-Removal deaktiviert")
+        warnings.append(_ui_text("⚠️ pdf2image nicht installiert - Text-Removal deaktiviert"))
 
     if getattr(sys, "frozen", False) and not OCR_RUNTIME.ready:
-        warnings.append("⚠️ Gebündelte Tesseract-/Poppler-Runtime fehlt - OCR/PDF-Rendering deaktiviert")
+        warnings.append(
+            _ui_text("⚠️ Gebündelte Tesseract-/Poppler-Runtime fehlt - OCR/PDF-Rendering deaktiviert")
+        )
     
     if not HAS_DOCX:
-        warnings.append("⚠️ python-docx nicht installiert - Word-Features deaktiviert")
+        warnings.append(_ui_text("⚠️ python-docx nicht installiert - Word-Features deaktiviert"))
     
     if warnings:
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Icon.Warning)
-        msg.setWindowTitle("Fehlende Abhängigkeiten")
-        msg.setText("Einige Features sind nicht verfügbar:\n\n" + "\n".join(warnings))
-        msg.setInformativeText("Installation:\npip install pypdf pytesseract pdf2image python-docx Pillow")
+        _ui_set(msg, 'setWindowTitle', "Fehlende Abhängigkeiten")
+        msg.setText(_ui_text("Einige Features sind nicht verfügbar:\n\n") + "\n".join(warnings))
+        _ui_set(
+            msg,
+            "setInformativeText",
+            "Installation:\npip install pypdf pytesseract pdf2image python-docx Pillow",
+        )
         msg.exec()
     
     window = UnifiedMainWindow()

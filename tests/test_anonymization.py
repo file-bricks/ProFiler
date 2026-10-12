@@ -182,12 +182,12 @@ def test_anonymization_dialog_clear_list_with_confirmation():
     assert dialog.blacklist_widget.count() == 2
 
     # Reject confirmation
-    with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.No):
+    with patch.object(QMessageBox, "exec", return_value=int(QMessageBox.StandardButton.No)):
         dialog.clear_list("blacklist")
     assert dialog.blacklist_widget.count() == 2
 
     # Accept confirmation
-    with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):
+    with patch.object(QMessageBox, "exec", return_value=int(QMessageBox.StandardButton.Yes)):
         dialog.clear_list("blacklist")
     assert dialog.blacklist_widget.count() == 0
     assert dialog.blacklist == []
@@ -208,7 +208,7 @@ def test_anonymization_dialog_import_and_export_txt():
         # Import
         with (
             patch("PySide6.QtWidgets.QFileDialog.getOpenFileName", return_value=(str(import_path), "Text")),
-            patch.object(QMessageBox, "information"),
+            patch.object(QMessageBox, "exec", return_value=int(QMessageBox.StandardButton.Ok)),
         ):
             dialog.import_list("blacklist")
 
@@ -219,7 +219,7 @@ def test_anonymization_dialog_import_and_export_txt():
         export_path = Path(tmpdir) / "exported_terms.txt"
         with (
             patch("PySide6.QtWidgets.QFileDialog.getSaveFileName", return_value=(str(export_path), "Text")),
-            patch.object(QMessageBox, "information"),
+            patch.object(QMessageBox, "exec", return_value=int(QMessageBox.StandardButton.Ok)),
         ):
             dialog.export_list("blacklist")
 

@@ -147,17 +147,14 @@ def test_store_documents_reference_local_data_and_license_notes() -> None:
     support = (PROJECT_ROOT / "SUPPORT.md").read_text(encoding="utf-8")
     prep = (PROJECT_ROOT / "WINDOWS_STORE_PREP.md").read_text(encoding="utf-8")
 
-    assert "LOCALAPPDATA" in listing
-    assert "PyMuPDF" in listing
     assert "Tesseract" in listing
-    assert "AGPL-3.0" in listing
-    assert "https://github.com/file-bricks/ProFiler/blob/master/PRIVACY_POLICY.md" in listing
-    assert "https://github.com/file-bricks/ProFiler/blob/master/SUPPORT.md" in listing
-    assert "PyMuPDF" in privacy
-    assert "Tesseract" in privacy
+    assert "THIRD_PARTY_LICENSES.md" in listing
+    assert "PRIVACY_POLICY.md" in listing
+    assert "SUPPORT.md" in listing
     assert "https://github.com/file-bricks/ProFiler/issues" in support
-    assert "LOCALAPPDATA\\ProFilerSuite" in prep
-    assert "THIRD_PARTY_LICENSES.txt" in prep
+    assert "build_exe.bat" in prep
+    assert "AppxManifest.xml" in prep
+    assert "wack_preflight_20261001.xml" in prep
 
 
 def test_existing_main_screenshot_is_present() -> None:

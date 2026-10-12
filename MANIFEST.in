@@ -1,0 +1,16 @@
+include README.md README_de.md llms.txt
+include CHANGELOG.md CONTRIBUTING.md CODE_OF_CONDUCT.md EXPORTFORMAT.md
+include MODULE_STRATEGY.md PLATFORM_SUPPORT.md PORTIERUNGSPLAN.md SUPPORT.md
+include PRIVACY_POLICY.md SECURITY.md STORE_LISTING.md WINDOWS_STORE_PREP.md
+include THIRD_PARTY_LICENSES.md THIRD_PARTY_LICENSES.txt LICENSE NOTICE
+include START.bat build_exe.bat
+include requirements.txt requirements-build.txt requirements-lock.txt
+include profiler_config.example.json profiler_settings.example.json search_config.example.json
+include store_package.json
+include assets/banner.svg
+include .github/workflows/source-platform-smoke.yml
+recursive-include scripts *.py
+recursive-include screenshots *.png
+recursive-include README/screenshots *.png
+recursive-include tests *.py
+global-exclude .ui_translations_*.json *.db *.sqlite *.sqlite3 *.pyc LOCK*.txt *~

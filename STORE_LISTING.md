@@ -1,87 +1,97 @@
-# Store Listing - ProFiler Suite
+# Store Listing Draft - ProFiler Suite
+
+**Status:** draft only; no Store submission or publication is claimed. The source version remains frozen at `15.0.2`.
 
 ## Deutsch
 
 ### Kurzbeschreibung
-Lokale Dokumentverwaltung mit Volltextsuche, OCR, PDF-Werkzeugen und Datenschutzprüfung.
+
+Lokale Dokumentverwaltung mit Suche, OCR, PDF-Werkzeugen und einer regelbasierten Prüfung möglicher sensibler Begriffe.
 
 ### Beschreibung
-ProFiler Suite ist eine lokale Windows-Desktop-App für private und berufliche
-Dokumentbestände. Die Anwendung kombiniert Dateisuche, OCR, PDF-Workflows,
-Duplikaterkennung und Datenschutzprüfung in einer einheitlichen Oberfläche, ohne
-Cloud-Pflicht oder Zwangs-Uploads.
 
-**Wichtige Funktionen**
+ProFiler Suite ist eine Windows-orientierte Desktopanwendung für lokale Datei- und Dokumentabläufe. Sie kombiniert Dateisuche, OCR, PDF-Werkzeuge, Duplikaterkennung und Hinweise auf möglicherweise sensible Begriffe.
 
-- Lokale Volltextsuche über PDFs, Office-Dokumente, Bilder, Tabellen und Textdateien
-- Tesseract OCR für Scans und Bilddokumente
-- PDF-Werkzeuge für Entschlüsselung, Schwärzung, Seitenextraktion und Export
-- Datenschutzampel für sensible Begriffe und DSGVO-Prüfung vor Weitergabe
-- Redigierter Workspace-Export für sichere Reviews und Cross-Platform-Smokes
-- Direkter Start benachbarter Desktop-Tools wie ProSync und SQLiteViewer
+**Funktionen**
 
-**Windows-Store-Hinweise**
+- Suche in ausgewählten lokalen Ordnern und Dokumenten
+- OCR über Tesseract, sofern das Programm auf dem Host verfügbar ist
+- PDF-Werkzeuge für Extraktion, Verschlüsselung, Entschlüsselung und Schwärzung
+- Regelbasierte Hinweise auf ausgewählte sensible Begriffe
+- Schema-gefilterter Workspace-Austausch; Exporte vor einer Weitergabe prüfen
+- Optionale Startmöglichkeiten für separate Desktop-Werkzeuge
 
-- App-Daten liegen standardmäßig unter `%LOCALAPPDATA%\ProFilerSuite`
-- Die App nutzt `runFullTrust` für den Zugriff auf lokale Verzeichnisse und OCR-Werkzeuge
-- PyMuPDF und Tesseract werden transparent offengelegt; Lizenzhinweise bleiben in `THIRD_PARTY_LICENSES.txt` und der Datenschutzdokumentation einsehbar
-- ProFiler Suite bleibt ein quelloffenes AGPL-3.0-Projekt; der Store-Kanal dient als bequemer Distributions- und Update-Pfad
+**Hinweis zum Store-Kanal**
+
+- Die vorhandenen Store-Dateien sind Entwürfe und Staging-Material.
+- Das Manifest deklariert derzeit `runFullTrust`; daraus folgt keine Store-Freigabe.
+- Ein signiertes MSIX, ein aktueller WACK-Lauf auf diesem Paket und eine Partner-Center-Einreichung sind nicht belegt.
+- Der in `build_exe.bat` verlangte Tesseract-/Poppler-Bundle fehlt im geprüften Quellstand; der native Paketbuild ist blockiert.
+- Abhängigkeitshinweise stehen in `THIRD_PARTY_LICENSES.md` und `THIRD_PARTY_LICENSES.txt`; sie sind keine vollständige Lizenz- oder Kompatibilitätsprüfung.
 
 ### Datenschutz
-https://github.com/file-bricks/ProFiler/blob/master/PRIVACY_POLICY.md
+
+Siehe [PRIVACY_POLICY.md](PRIVACY_POLICY.md).
 
 ### Support
-https://github.com/file-bricks/ProFiler/blob/master/SUPPORT.md
+
+Siehe [SUPPORT.md](SUPPORT.md).
 
 ### Schlüsselwörter
-Dokumentverwaltung, OCR, PDF-Werkzeuge, Datenschutz, Volltextsuche, Offline, Dateimanager
+
+Dokumentverwaltung, OCR, PDF-Werkzeuge, Datenschutzprüfung, Volltextsuche, Offline, Dateimanager
 
 ### Screenshot-Referenzen
-- `screenshots/store/shot-1-library-overview.png`: Übersicht der Dokumentenverwaltung und Dateibaum
-- `screenshots/store/shot-2-search-ocr.png`: OCR-Extraktion und Deep Search
-- `screenshots/store/shot-3-privacy-traffic-light.png`: Datenschutzampel für sensible Begriffe
-- `screenshots/store/shot-4-pdf-tools.png`: PDF-Werkzeuge, Schwärzung und Export
+
+- `screenshots/store/shot-1-library-overview.png`: Dateibaum und Dokumentübersicht
+- `screenshots/store/shot-2-search-ocr.png`: Suche und OCR
+- `screenshots/store/shot-3-privacy-traffic-light.png`: Hinweise der regelbasierten Datenschutzampel
+- `screenshots/store/shot-4-pdf-tools.png`: PDF-Werkzeuge und Schwärzung
 
 ---
 
 ## English
 
-### Short Description
-Local document manager with full-text search, OCR, PDF tools, and privacy inspection.
+### Short description
+
+Local document management with search, OCR, PDF tools, and rule-based sensitive-term review.
 
 ### Description
-ProFiler Suite is a local-first Windows desktop application for personal and
-professional document collections. It combines file search, OCR, PDF workflows,
-duplicate detection, and privacy inspection into a single interface without
-requiring a cloud account or forced uploads.
 
-**Key capabilities**
+ProFiler Suite is a Windows-oriented desktop application for local file and document workflows. It combines file search, OCR, PDF utilities, duplicate detection, and indicators for selected potentially sensitive terms.
 
-- Local full-text search across PDFs, Office files, images, spreadsheets, and text files
-- Tesseract OCR for scans and image-based documents
-- PDF utilities for decryption, redaction, page extraction, and export
-- Privacy traffic light for sensitive term inspection and GDPR compliance
-- Redacted workspace export for secure collaboration and cross-platform verification
-- Optional launcher integration for companion tools like ProSync and SQLiteViewer
+**Features**
 
-**Windows Store note**
+- Search selected local folders and documents
+- OCR through Tesseract when available on the host
+- PDF utilities for extraction, encryption, decryption, and redaction
+- Rule-based indicators for selected sensitive terms
+- Schema-filtered workspace exchange; inspect exports before sharing
+- Optional launchers for separate desktop tools
 
-- Application data is stored locally under `%LOCALAPPDATA%\ProFilerSuite`
-- The application uses `runFullTrust` to operate directly on selected local directories and OCR runtimes
-- PyMuPDF and Tesseract dependencies are fully disclosed in `THIRD_PARTY_LICENSES.txt` and privacy documentation
-- ProFiler Suite remains open-source under AGPL-3.0; the Store package serves as a streamlined distribution channel
+**Store channel note**
 
-### Privacy Policy
-https://github.com/file-bricks/ProFiler/blob/master/PRIVACY_POLICY.md
+- Existing Store files are drafts and staging material.
+- The current manifest declares `runFullTrust`; this does not establish Store approval.
+- A signed MSIX, a current WACK run on that package, and a Partner Center submission are not evidenced.
+- The Tesseract/Poppler bundle required by `build_exe.bat` is absent from the reviewed source checkout, so the native package build is blocked.
+- Dependency notes are in `THIRD_PARTY_LICENSES.md` and `THIRD_PARTY_LICENSES.txt`; they are not a complete license or compatibility review.
+
+### Privacy
+
+See [PRIVACY_POLICY.md](PRIVACY_POLICY.md).
 
 ### Support
-https://github.com/file-bricks/ProFiler/blob/master/SUPPORT.md
+
+See [SUPPORT.md](SUPPORT.md).
 
 ### Keywords
+
 Document Manager, OCR, PDF Tools, Privacy Review, Full Text Search, Offline, File Organizer
 
-### Screenshot References
-- `screenshots/store/shot-1-library-overview.png`: Library overview, directory tree, and metadata panel
-- `screenshots/store/shot-2-search-ocr.png`: Deep search and Tesseract OCR text extraction
-- `screenshots/store/shot-3-privacy-traffic-light.png`: Privacy traffic light inspecting sensitive terms
-- `screenshots/store/shot-4-pdf-tools.png`: PDF utilities, redaction, and workspace export
+### Screenshot references
+
+- `screenshots/store/shot-1-library-overview.png`: directory tree and document overview
+- `screenshots/store/shot-2-search-ocr.png`: search and OCR
+- `screenshots/store/shot-3-privacy-traffic-light.png`: rule-based privacy review indicators
+- `screenshots/store/shot-4-pdf-tools.png`: PDF utilities and redaction

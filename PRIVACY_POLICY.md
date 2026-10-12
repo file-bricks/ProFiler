@@ -1,76 +1,32 @@
-# Privacy Policy - ProFiler Suite
+# Privacy Notes / Datenschutzhinweise
 
-Stand: 2026-06-12
+**Reviewed:** 2026-10-12
+**Scope:** ProFiler Suite source workflows; no Store or hosted service is currently claimed.
 
 ## Deutsch
 
-ProFiler Suite arbeitet lokal auf dem Gerät des Nutzers. Die Anwendung lädt
-Dateien, Dokumentinhalte, OCR-Ergebnisse, SQLite-Indizes oder Workspace-Exporte
-nicht an einen eigenen ProFiler-Server hoch.
+ProFiler ist eine Desktopanwendung für lokale Datei- und Dokumentabläufe. Die Anwendung verarbeitet ausgewählte Ordner, Dateinamen, Metadaten und Inhalte für Suche, Vorschau, OCR, PDF-Werkzeuge und Duplikaterkennung. Suchindizes und Einstellungen werden lokal gespeichert; unter Windows nutzt die Anwendung standardmäßig den lokalen Anwendungsdatenordner, unter anderen Plattformen das Benutzerprofil. Ein Legacy-Lesepfad kann zusätzlich berücksichtigt werden.
 
-### Lokal verarbeitete Daten
+Die optionale Datenschutzampel kann bei gestarteter Nutzung Text aus der Zwischenablage prüfen. Die Historie wird in dieser Komponente im Arbeitsspeicher gehalten; eine vom Nutzer ausgelöste Konfigurationsspeicherung betrifft Listen und Optionen. Aktivieren Sie keine Zwischenablage- oder Dateiabläufe, wenn die dort enthaltenen Daten nicht geprüft werden sollen.
 
-- lokale Ordner, Dateinamen, Metadaten und Vorschaudaten
-- SQLite-Indizes für Suche, Versionen und Duplikaterkennung
-- OCR-Ergebnisse über Tesseract
-- PDF-Arbeitsstände und Redaktionsläufe, optional mit PyMuPDF
-- UI- und Tool-Einstellungen unter `%LOCALAPPDATA%\ProFilerSuite`
-- redigierte Workspace-Exporte wie `profiler-workspace-v1.json`
+Die Quellcodepfade für die beiden PDF-Masterpasswort-Einstellungen schließen diese Werte beim Speichern der Programmeinstellungen aus; entsprechende Legacy-Schlüssel werden beim Laden entfernt. Das ist eine konkrete Implementierungseigenschaft und keine allgemeine Zusage zur Speicherung aller Geheimnisse durch Betriebssysteme oder externe Programme.
 
-PDF-Passwörter bleiben nur im Arbeitsspeicher der laufenden Sitzung. ProFiler
-schreibt sie nicht in `profiler_settings.json`; beim Laden werden entsprechende
-Schlüssel aus älteren Einstellungsdateien entfernt. Für einen späteren
-dauerhaften Passwortspeicher wäre ein Betriebssystem-Credential-Store nötig.
+In den für diese Pflege geprüften First-Party-Pfaden wurde kein automatischer Upload ausgewählter Dokumentinhalte an einen ProFiler-Server und keine Telemetrie gefunden. Der optionale Modulinstaller kann GitHub kontaktieren, wenn er ausdrücklich gestartet wird. ProFiler blockiert keinen ausgehenden Netzwerkverkehr und kontrolliert nicht das Verhalten externer Bibliotheken, OCR-/PDF-Programme oder vom Nutzer gestarteter Geschwisterwerkzeuge.
 
-### Keine Standard-Telemetrie
+Vor einer Weitergabe sollten Sie Suchtreffer, Datenschutzampel-Warnungen, Schwärzungen und Workspace-Exporte selbst prüfen. Diese Funktionen sind Hilfsmittel; sie garantieren keine vollständige Erkennung, Anonymisierung oder rechtliche Konformität.
 
-- keine Pflicht-Cloud
-- keine Werbe-IDs
-- keine eingebaute Nutzerverfolgung
-- kein automatischer Upload privater Dokumente
-
-### Externe Komponenten
-
-ProFiler kann lokale Drittkomponenten wie PyMuPDF, Tesseract, pdf2image,
-watchdog oder ReportLab verwenden. Diese Bibliotheken laufen im lokalen Prozess
-des Nutzers. Lizenzdetails stehen in `THIRD_PARTY_LICENSES.txt`.
-
-### Support
-
-Support-Kanäle und Hinweise zum anonymisierten Fehlerbericht stehen in
-`SUPPORT.md`.
-
----
+Details zur Sicherheitsmeldung stehen in [SECURITY.md](SECURITY.md), zu Abhängigkeiten in [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) und zu Support in [SUPPORT.md](SUPPORT.md).
 
 ## English
 
-ProFiler Suite processes user data locally on the user's device. The
-application does not upload files, document contents, OCR results, SQLite
-indexes, or workspace exports to a dedicated ProFiler service.
+ProFiler is a desktop application for local file and document workflows. It processes selected folders, filenames, metadata, and contents for search, previews, OCR, PDF utilities, and duplicate detection. Search indexes and settings are stored locally; Windows uses the local application-data directory by default, while other platforms use the user's profile. A legacy read path may also be considered.
 
-### Data processed locally
+When the optional privacy traffic-light tool is launched, it can inspect clipboard text. Its history is held in memory; a user-initiated configuration save stores lists and options. Do not enable clipboard or file workflows for data that should not be inspected.
 
-- local folders, filenames, metadata, and preview data
-- SQLite indexes for search, versions, and duplicate detection
-- OCR results through Tesseract
-- PDF workflows and redaction runs, optionally with PyMuPDF
-- UI and tool settings under `%LOCALAPPDATA%\ProFilerSuite`
-- redacted workspace exports such as `profiler-workspace-v1.json`
+The source paths for the two PDF master-password settings omit those values when application settings are saved and remove matching legacy keys when loaded. This describes a specific implementation behavior; it is not a general promise about operating-system storage or external programs.
 
-PDF passwords remain in memory for the current session only. ProFiler does not
-write them to `profiler_settings.json`, and removes matching keys from legacy
-settings when they are loaded. Persistent password storage would require an
-operating-system credential store.
+The first-party paths reviewed for this maintenance did not show automatic upload of selected document contents to a ProFiler server or telemetry. The optional module installer can contact GitHub when explicitly invoked. ProFiler does not block outbound network traffic or control third-party libraries, OCR/PDF programs, or separate tools launched by the user.
 
-### No default telemetry
+Before sharing, review search results, privacy-light warnings, redactions, and workspace exports yourself. These features are aids; they do not guarantee complete detection, anonymization, or legal compliance.
 
-- no mandatory cloud
-- no advertising identifiers
-- no built-in user tracking
-- no automatic upload of private documents
-
-### External components
-
-ProFiler may use local third-party components such as PyMuPDF, Tesseract,
-pdf2image, watchdog, and ReportLab. These libraries run locally on the user's
-machine. License details are documented in `THIRD_PARTY_LICENSES.txt`.
+See [SECURITY.md](SECURITY.md) for security reports, [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) for dependency notes, and [SUPPORT.md](SUPPORT.md) for support information.

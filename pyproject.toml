@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0.0", "wheel"]
+requires = ["setuptools>=77.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,7 +8,7 @@ version = "15.0.2"
 description = "Local-first desktop file and document manager with search, preview, and privacy inspection."
 readme = "README.md"
 requires-python = ">=3.10"
-license = {text = "AGPL-3.0"}
+license = "AGPL-3.0-only"
 license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_LICENSES.md", "THIRD_PARTY_LICENSES.txt"]
 authors = [
     {name = "file-bricks Contributors", email = "support@lukasgeiger.com"}
@@ -22,18 +22,15 @@ keywords = [
     "fulltext-search",
     "local-first",
     "ocr",
-    "offline-first",
     "open-bricks",
     "pdf",
     "pdf-redaction",
     "pdf-tools",
-    "privacy-first",
     "pyside6",
     "python",
     "search",
     "sqlite",
     "windows",
-    "zero-egress",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -41,7 +38,6 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "License :: OSI Approved :: GNU Affero General Public License v3",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
     "Operating System :: MacOS :: MacOS X",
@@ -86,8 +82,6 @@ Documentation = "https://github.com/file-bricks/ProFiler#readme"
 Contributing = "https://github.com/file-bricks/ProFiler/blob/master/CONTRIBUTING.md"
 Changelog = "https://github.com/file-bricks/ProFiler/blob/master/CHANGELOG.md"
 Security = "https://github.com/file-bricks/ProFiler/blob/master/SECURITY.md"
-"Level 1 SBOM" = "https://github.com/file-bricks/ProFiler/blob/master/THIRD_PARTY_LICENSES.md"
-"Level 1 SBOM (Text)" = "https://github.com/file-bricks/ProFiler/blob/master/THIRD_PARTY_LICENSES.txt"
 "Plain-Text License" = "https://github.com/file-bricks/ProFiler/blob/master/LICENSE"
 "Third-Party Licenses" = "https://github.com/file-bricks/ProFiler/blob/master/THIRD_PARTY_LICENSES.md"
 "Third-Party Licenses (Text)" = "https://github.com/file-bricks/ProFiler/blob/master/THIRD_PARTY_LICENSES.txt"
@@ -95,12 +89,37 @@ Security = "https://github.com/file-bricks/ProFiler/blob/master/SECURITY.md"
 "LLM Ready" = "https://github.com/file-bricks/ProFiler/blob/master/llms.txt"
 Notice = "https://github.com/file-bricks/ProFiler/blob/master/NOTICE"
 
+[tool.setuptools]
+packages = ["assets", "locales"]
+py-modules = [
+    "ProFiler_Datenschutzampel",
+    "Profiler_Suite_V15",
+    "SQLiteViewer",
+    "app_paths",
+    "github_installer",
+    "import_excel_to_profiler",
+    "indent_gui_checker",
+    "manage_translations",
+    "module_registry",
+    "ocr_runtime",
+    "sibling_launcher",
+    "source_platform_smoke",
+    "translator",
+    "version",
+    "workspace_exchange",
+]
+include-package-data = false
+
+[tool.setuptools.package-data]
+assets = ["app_icon.ico", "DesktopIcon.ico", "icon.ico", "icon.png", "profiler.ico"]
+locales = ["translations.json"]
+
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests", "."]
 python_files = ["test_*.py", "*_test.py"]
-addopts = "-ra -v --basetemp=.pytest_temp"
+addopts = "-ra -v -p no:cacheprovider"
 norecursedirs = [".pytest_temp", ".hypothesis", ".turbo", ".nyc_output", ".tox"]
 
 [tool.ruff]

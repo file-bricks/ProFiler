@@ -7,117 +7,75 @@
 <a id="english"></a>
 ## English
 
-Thank you for your interest in contributing to **ProFiler Suite** (`file-bricks/ProFiler`), a local-first desktop file and document manager with full-text indexing, Tesseract OCR, batch PDF tools, SHA-256 deduplication, and privacy compliance audits (Datenschutzampel) built with PySide6 and SQLite.
+Thank you for contributing to ProFiler Suite, a PySide6 desktop application for local file indexing, search, OCR, PDF workflows, and review of possible sensitive terms.
 
-### 1. Architectural Principles & 10 Governance Invariants
+### Development principles
 
-All contributions must strictly adhere to our core architectural invariants:
+- Keep core file processing and indexes local by default. The optional module installer contacts GitHub when explicitly invoked; the application is not a network-egress filter.
+- Treat privacy matching as a pattern-based aid, not a complete personal-data detector or a GDPR/compliance assessment.
+- Preserve the documented workspace schema and inspect exports for unintended data before sharing. Schema filtering is not a claim that every export is anonymous or risk-free.
+- Do not require administrator elevation for standard workflows. The application runs with the invoking user's permissions; do not describe this as process sandboxing.
+- Keep PDF password settings out of persisted settings. Regression tests cover the current behavior for the two master-password settings; do not add real credentials to tests, logs, or fixtures.
+- Keep version `15.0.2` frozen unless the maintainer changes the version-freeze instruction. Record unreleased maintenance changes under `## [Unreleased]` in `CHANGELOG.md`.
 
-1. **Local-First & Zero Egress (`INV-LOCAL-01`)**: 100% offline-ready operation. No remote telemetry, analytics, cloud tracking, or mandatory online registration. All data remains exclusively on-device in local SQLite databases.
-2. **Session-Only Secrets (`INV-SESSION-02`)**: PDF encryption passwords and temporary decryption credentials remain strictly in volatile process memory; zero persistence to disk, settings, or log files.
-3. **PII & Datenschutzampel Heuristic Gate (`INV-GATE-03`)**: Built-in regex and heuristic patterns identify sensitive personal data (IBANs, tax IDs, credentials) locally and warn before exports without network transmission.
-4. **Redacted Workspace Exchange (`INV-SCHEMA-04`)**: Exported workspace exchange archives adhere to JSON Schema v1, stripping host-specific absolute paths and machine identities.
-5. **Cloud-Placeholder Awareness (`INV-PLACEHOLDER-05`)**: File crawlers inspect Windows OneDrive reparse points and offline file attributes to prevent unintended bulk cloud hydration and disk saturation.
-6. **Unprivileged User Mode (`INV-UNPRIV-06`)**: Pure `RunAsInvoker` execution. The application and all CLI scripts run entirely in standard user space without requiring administrative elevation, root access, or UAC prompts.
-7. **Atomic SQLite Indexing (`INV-ATOMIC-07`)**: Database operations use SQLite Write-Ahead Logging (WAL) mode, ensuring crash-safe atomic transactions and reader-writer concurrency.
-8. **SHA-256 Deduplication (`INV-INTEGRITY-08`)**: Deterministic cryptographic chunked hashing identifies duplicate files without proprietary hashing schemes.
-9. **Offline OCR & Subprocess Sandbox (`INV-OFFLINE-09`)**: Tesseract OCR and Poppler utilities execute locally as sandboxed unprivileged subprocesses with explicit timeout limits.
-10. **Security Response SLA (`INV-SLA-10`)**: Binding 48-hour acknowledgment and 5-business-day triage commitment for reported vulnerabilities via `security@file-bricks.org`, `security@open-bricks.org`, and `security@ellmos.ai`.
+### Set up and test
 
-### 2. Plan D Local Development Workflow
-
-In accordance with our cross-system architecture (Plan D), the local git repository at `C:\_Local_DEV\repos\ProFiler` serves as the authoritative **Source of Truth**. Development, testing, and commits must take place exclusively in the canonical local clone. Cloud mirrors (e.g. OneDrive) serve solely as gitless read projections.
+Use a local Git checkout and a virtual environment. From the repository root:
 
 ```bash
-# Clone the canonical repository
-git clone https://github.com/file-bricks/ProFiler.git C:\_Local_DEV\repos\ProFiler
-cd C:\_Local_DEV\repos\ProFiler
-
-# Install runtime dependencies
-python -m pip install -r requirements.txt
-
-# Run full test suite with isolated basetemp
-pytest
-
-# Launch application
-python Profiler_Suite_V15.py
+python -m venv .venv
+python -m pip install -e ".[dev]"
+python -m pytest -ra -v
+ruff check .
+python -m compileall -q .
+git diff --check
 ```
 
-### 3. Version Freeze Discipline (`T-20260920-167562623`)
+The optional Excel workflows also need the `excel` extra. Some OCR/PDF workflows call host-installed Tesseract or Poppler tools; those external tools are not supplied by the Python test extra. Do not run tests against a user's real documents, settings, clipboard, keychain, or network services. Use disposable fixtures and temporary application-data paths.
 
-ProFiler Suite operates under strict version-freeze discipline. The version identifier (`15.0.2` in `version.py`, `pyproject.toml`, and manifests) must not be arbitrarily incremented. All improvements, bug fixes, and hygiene adjustments are documented under `## [Unreleased]` in `CHANGELOG.md`.
+Check the CI result for the exact commit before describing a change as passing. A local test result does not imply that all platforms or native package contents were tested.
 
-### 4. Quality Gates
+### Licensing and security reports
 
-Before submitting a pull request, verify all local quality gates:
-1. `pytest`: 100% green test execution across all contract, security, accessibility, and functional suites.
-2. `ruff check .`: Zero lint errors.
-3. `python -m compileall -q .`: Zero bytecode compilation errors.
-4. `git diff --check`: Zero whitespace or line-ending anomalies.
-5. `git diff -G"version = "`: Zero unauthorized version modifications.
+The project license is in [LICENSE](LICENSE). [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) lists declared dependencies and upstream references; it is not a complete transitive inventory or a legal compatibility opinion. Review the actual components and terms before redistributing a binary.
 
-### 5. Statutory Notice (§ 521 BGB) & Zero-Copyleft on User Data
-
-This software is provided free of charge under the GNU Affero General Public License v3.0 (AGPL-3.0-only). In accordance with German statutory law (**§ 521 BGB** — *Haftung des Schenkers*), liability for defects in quality and title is strictly limited to intentional misconduct (*Vorsatz*) and gross negligence (*grobe Fahrlässigkeit*).
-
-**Zero-Copyleft Guarantee:** Processing, indexing, OCR-annotating, or redacting files using ProFiler Suite does **not** subject user documents, databases, or exported archives to AGPL-3.0 or any open-source licensing obligation. All user data remains 100% private and proprietary.
+Report suspected security issues privately as described in [SECURITY.md](SECURITY.md). No response or fix deadline is promised. Do not put credentials, private documents, or personal records in public issues or pull requests.
 
 ---
 
 <a id="deutsch"></a>
 ## Deutsch
 
-Vielen Dank für dein Interesse an einer Mitwirkung bei der **ProFiler Suite** (`file-bricks/ProFiler`), einem lokalen Desktop-Dateimanager mit Volltext-Indexierung, Tesseract-OCR, Batch-PDF-Werkzeugen, SHA-256-Duplikaterkennung und DSGVO-Datenschutzprüfung (Datenschutzampel), entwickelt mit PySide6 und SQLite.
+Vielen Dank für Beiträge zur ProFiler Suite, einer PySide6-Desktopanwendung für lokale Dateiindizierung und -suche, OCR, PDF-Arbeitsabläufe und Hinweise auf mögliche sensible Begriffe.
 
-### 1. Architektur-Prinzipien & 10 Governance-Invarianten
+### Entwicklungsgrundsätze
 
-Alle Beiträge müssen unsere verbindlichen Kern-Invarianten strikt einhalten:
+- Die Kernabläufe zur Dateiverarbeitung und die Suchindizes bleiben standardmäßig lokal. Der optionale Modulinstaller kontaktiert GitHub, wenn er ausdrücklich gestartet wird; die Anwendung ist kein Filter für ausgehenden Netzwerkverkehr.
+- Die Datenschutzampel ist eine regelbasierte Hilfe, kein vollständiger Detektor personenbezogener Daten und keine DSGVO- oder Compliance-Prüfung.
+- Bewahren Sie das dokumentierte Workspace-Schema und prüfen Sie Exporte vor einer Weitergabe auf unbeabsichtigte Daten. Die Schemafilterung ist keine Garantie, dass jeder Export anonym oder risikofrei ist.
+- Standardabläufe sollen keine Administratorrechte erfordern. Die Anwendung läuft mit den Berechtigungen des aufrufenden Benutzerkontos; dies bedeutet keine Prozess-Sandbox.
+- PDF-Passwörter müssen aus den dauerhaft gespeicherten Einstellungen ausgeschlossen bleiben. Regressionstests prüfen das aktuelle Verhalten der beiden Masterpasswort-Einstellungen. Verwenden Sie keine echten Zugangsdaten in Tests, Protokollen oder Fixtures.
+- Version `15.0.2` bleibt eingefroren, sofern der Maintainer die Versionssperre nicht ändert. Noch nicht veröffentlichte Pflege kommt unter `## [Unreleased]` in die `CHANGELOG.md`.
 
-1. **Local-First & Zero Egress (`INV-LOCAL-01`)**: 100% Offline-Betrieb. Keine Netzwerk-Telemetrie, kein Cloud-Upload, keine Analyse-Tracker und kein Zwangskonto. Alle Daten verbleiben ausnahmslos lokal in SQLite-Datenbanken.
-2. **Flüchtige Passwörter (`INV-SESSION-02`)**: PDF-Passwörter und temporäre Entschlüsselungsschlüssel verbleiben ausschließlich im flüchtigen Prozessspeicher; keine Speicherung auf Festplatte, in Einstellungen oder Logdateien.
-3. **Datenschutzampel & PII-Heuristik (`INV-GATE-03`)**: Integrierte Regex-Muster erkennen sensible personenbezogene Daten (IBAN, Steuer-IDs, Zugangsdaten) lokal und warnen vor dem Export ohne Netzwerkkommunikation.
-4. **Redigierter Datenaustausch (`INV-SCHEMA-04`)**: Exportierte Workspace-Archive folgen dem JSON-Schema v1 und entfernen systemspezifische absolute Pfade und Host-Identitäten.
-5. **Cloud-Platzhalter-Schutz (`INV-PLACEHOLDER-05`)**: Der Datei-Crawler erkennt OneDrive-Reparse-Points und verhindert das unbeabsichtigte Herunterladen riesiger Cloud-Bestände auf die lokale Festplatte.
-6. **Rechtefreier Benutzermodus (`INV-UNPRIV-06`)**: Reiner `RunAsInvoker`-Betrieb. Die Anwendung und alle Skripte laufen vollständig mit Standard-Benutzerrechten ohne Administratorrechte oder UAC-Aufforderungen.
-7. **Atomare SQLite-Indexierung (`INV-ATOMIC-07`)**: Transaktionale Datenhaltung im SQLite Write-Ahead-Logging (WAL) Modus mit atomaren Commits und zuverlässiger Absturzsicherheit.
-8. **SHA-256 Duplikaterkennung (`INV-INTEGRITY-08`)**: Deterministische kryptografische Chunk-Hashes identifizieren Datei-Duplikate ohne proprietäre Hashing-Verfahren.
-9. **Offline-OCR & Prozess-Sandbox (`INV-OFFLINE-09`)**: Tesseract OCR und Poppler laufen lokal als unprivilegierte Subprozesse mit strikten Timeout-Grenzen.
-10. **Sicherheits-Response SLA (`INV-SLA-10`)**: Verbindliche 48-Stunden-Erstantwortgarantie und 5-Werktage-Triage-Zusage für gemeldete Schwachstellen über `security@file-bricks.org`, `security@open-bricks.org` und `security@ellmos.ai`.
+### Einrichten und testen
 
-### 2. Plan D Lokaler Entwicklungsworkflow
-
-Gemäß unserer systemweiten Architektur (Plan D) bildet das lokale Repository unter `C:\_Local_DEV\repos\ProFiler` die alleinige maßgebliche **Source of Truth**. Entwicklung, Tests und Commits finden ausschließlich im kanonischen lokalen Klon statt. Cloud-Spiegel (z. B. OneDrive) dienen rein als gitlose Leseprojektionen.
+Verwenden Sie einen lokalen Git-Klon und eine virtuelle Umgebung. Im Repository-Stammverzeichnis:
 
 ```bash
-# Kanonischen Klon verwenden
-git clone https://github.com/file-bricks/ProFiler.git C:\_Local_DEV\repos\ProFiler
-cd C:\_Local_DEV\repos\ProFiler
-
-# Abhängigkeiten installieren
-python -m pip install -r requirements.txt
-
-# Testsuite mit isoliertem basetemp ausführen
-pytest
-
-# Anwendung starten
-python Profiler_Suite_V15.py
+python -m venv .venv
+python -m pip install -e ".[dev]"
+python -m pytest -ra -v
+ruff check .
+python -m compileall -q .
+git diff --check
 ```
 
-### 3. Version Freeze Discipline (`T-20260920-167562623`)
+Die optionalen Excel-Abläufe benötigen zusätzlich das Extra `excel`. Einige OCR- und PDF-Abläufe starten Tesseract oder Poppler auf dem Host; diese externen Programme sind nicht im Python-Test-Extra enthalten. Führen Sie Tests nicht mit echten Nutzerdateien, Einstellungen, der Zwischenablage, einem Schlüsselbund oder Netzwerkdiensten aus. Verwenden Sie Wegwerf-Fixtures und temporäre Anwendungspfade.
 
-Die ProFiler Suite unterliegt strikter Version-Freeze-Disziplin. Die Versionskennung (`15.0.2` in `version.py`, `pyproject.toml` und Manifesten) darf nicht beliebig erhöht werden. Alle Verbesserungen, Fehlerbehebungen und Hygiene-Maßnahmen werden unter `## [Unreleased]` in `CHANGELOG.md` erfasst.
+Prüfen Sie das CI-Ergebnis des konkreten Commits, bevor Sie eine Änderung als bestanden bezeichnen. Ein lokales Testergebnis belegt keine Prüfung aller Plattformen oder nativen Paketbestandteile.
 
-### 4. Qualitäts-Tore
+### Lizenzen und Sicherheitsmeldungen
 
-Vor dem Einreichen eines Pull Requests sind alle lokalen Prüfungen zu bestätigen:
-1. `pytest`: 100% bestandene Tests über alle Vertrags-, Sicherheits-, Barrierefreiheits- und Funktionssuiten.
-2. `ruff check .`: 0 Flotten-Linterfehler.
-3. `python -m compileall -q .`: 0 Bytecode-Kompilierungsfehler.
-4. `git diff --check`: 0 Whitespace- oder Zeilenumbruchfehler.
-5. `git diff -G"version = "`: 0 unautorisierte Versionsmodifikationen.
+Die Projektlizenz steht in [LICENSE](LICENSE). [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) führt deklarierte Abhängigkeiten und Upstream-Verweise auf; es ist weder ein vollständiges transitives Verzeichnis noch eine rechtliche Kompatibilitätsbewertung. Prüfen Sie vor einer Weitergabe als Binärdatei die tatsächlich enthaltenen Komponenten und Bedingungen.
 
-### 5. Gesetzlicher Hinweis (§ 521 BGB) & Nutzerdaten-Schutz
-
-Diese Software wird unentgeltlich unter der GNU Affero General Public License v3.0 (AGPL-3.0-only) bereitgestellt. Gemäß **§ 521 BGB** (*Haftung des Schenkers*) ist die Haftung für Sach- und Rechtsmängel auf Vorsatz und grobe Fahrlässigkeit beschränkt.
-
-**Zero-Copyleft auf Nutzerdaten:** Die Verarbeitung, Indexierung, OCR-Verarbeitung oder Schwärzung von Dokumenten mit der ProFiler Suite unterwirft verarbeitete Nutzerdateien, Datenbanken oder exportierte Archive **nicht** den Bestimmungen der AGPL-3.0. Alle Nutzerdaten verbleiben zu 100% privates, geschütztes Eigentum des Anwenders.
+Melden Sie vermutete Sicherheitsprobleme vertraulich wie in [SECURITY.md](SECURITY.md) beschrieben. Es wird keine Antwort- oder Behebungsfrist zugesagt. Veröffentlichen Sie keine Zugangsdaten, privaten Dokumente oder persönlichen Unterlagen in Issues oder Pull Requests.

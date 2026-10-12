@@ -1,43 +1,23 @@
-# Windows Store Prep - ProFiler Suite
+# Windows Store Preparation - ProFiler Suite
 
-Stand: 2026-10-01 (Version 15.0.2.0; Store-Readiness Audit & Packaging-Staging abgeschlossen)
+## Current status (2026-10-12)
 
-## Erledigt
+**NOT CLEARED for release or Store submission.** The source version remains frozen at `15.0.2`. The reviewed checkout does not contain the Tesseract/Poppler files required by `build_exe.bat`, so a native executable build cannot currently proceed. No signed MSIX, current WACK run on a built package, or Partner Center submission is evidenced.
 
-- `store_package.json` mit vollständigen Metadaten (`languages: ["de-DE", "en-US", "es-ES", "zh-CN", "ja-JP", "ru-RU"]`, `logo: "store_assets/StoreLogo.png"`, Publisher-ID, AGPL-Lizenz) gepflegt
-- Windows Store Packaging Staging unter `store_package/ProFiler/AppxManifest.xml` mit Identity `Geiger.ProFilerSuite`, Publisher `CN=52596601-BAB4-4F3F-B182-E8F3F273B202`, Version `15.0.2.0`, Capability `runFullTrust`, standardkonformer Desktop-Bridge-Properties `<Logo>icons\StoreLogo.png</Logo>` und mehrsprachigen Ressourcen (`de-de`, `en-us`, `es-es`, `zh-cn`, `ja-jp`, `ru-ru`) angelegt
-- Vollständiges Set an hochauflösenden MSIX-Tile- und Logo-Assets inklusive Partner-Center-konformem `StoreLogo.png` (50x50 PNG):
-  - `icon_44x44.png` (Square44x44Logo / Square71x71Logo)
-  - `icon_50x50.png` (Square50x50Logo)
-  - `StoreLogo.png` (50x50 Store-Logo)
-  - `icon_150x150.png` (Square150x150Logo)
-  - `icon_310x150.png` (Wide310x150Logo)
-  - `icon_310x310.png` (Square310x310Logo)
-  - synchronisiert in `store_package/ProFiler/icons/`, `store_assets/`, `assets/icons/` und `releases/windowsstore/`
-- Vier hochauflösende Store-Screenshots (1920x1080) unter `screenshots/store/`, `README/screenshots/store/` und `releases/windowsstore/screenshots/` hinterlegt (`shot-1-library-overview.png`, `shot-2-search-ocr.png`, `shot-3-privacy-traffic-light.png`, `shot-4-pdf-tools.png` sowie nummerierte Aliase `01-` bis `04-`)
-- Vollständiges Release-Packaging-Staging unter `releases/windowsstore/` aufgebaut (`BUILD.md`, `WACK_PROTOCOL.md`, `store_settings.json`, `store_listing_de.md`, `store_listing_en.md`, `StoreLogo.png`, `screenshots/`, `test_reports/`)
-- WACK-Runner `scripts/run_windows_wack.py` implementiert; hermetischer WACK-Preflight erzeugt und verifiziert (`wack_preflight_20261001.xml` und `.json`: 6 PASS / 0 FAIL / 0 WARNING)
-- `STORE_LISTING.md` mit bilingualen Texten (DE/EN), maximal 7 Schlagwörtern pro Sprache (Policy 10.1.3), Feature-Listen und Screenshot-Referenzen synchronisiert
-- `scripts/check_store_readiness.py` als 6-stufiges automatisiertes Readiness-Audit-Tool ausgebaut (6/6 Checks PASS)
-- Testsuiten in `tests/test_store_materials.py` (12/12 Store-Vertragstests passed) und Gesamtsuite mit 232 Tests (100% grün)
-- Plan-D-Kopplung mit `REPO.pointer.json` versioniert
-- Store-Readiness-Audit am 2026-10-01 vollständig durchgeführt und für Welle-2-Staging bestätigt (0 Fehler, 0 Warnungen)
-- App-Datenpfad auf Windows für Store-/Desktop-Readiness auf `%LOCALAPPDATA%\ProFilerSuite` umgestellt
-- Legacy-Lese-Fallback für alte `~/.profiler_suite`-Dateien bleibt erhalten
-- `THIRD_PARTY_LICENSES.txt` bildet die direkten Runtime-Abhängigkeiten manifestnah ab
-- Der Release-Build erwartet für die lokale OCR-Bündelung den expliziten Vertrag `runtime/tesseract/tesseract.exe`, `runtime/tesseract/tessdata/`, `runtime/poppler/pdftoppm.exe` und `runtime/poppler/pdfinfo.exe`; ohne diese Dateien beendet sich `build_exe.bat` vor PyInstaller.
-- Privacy- und Support-Links zeigen auf den realen Default-Branch `master`
+The tracked `wack_preflight_20261001.xml` and JSON are synthetic outputs from the former `scripts/run_windows_wack.py --preflight` implementation; they were generated without a package or WACK run. They are not a certification report and must not be used as evidence of Windows App Certification Kit results. The current option writes only a static `NOT_RUN` JSON status and does not create WACK XML.
 
-## Vor der Einreichung im Partner Center (externe Gates)
+The current `AppxManifest.xml` declares `runFullTrust`. That manifest value is staging data, not proof that a package meets Store requirements or has been accepted.
 
-- Signiertes MSIX-Paket im Partner Center hochladen
-- WACK-Zertifizierungslauf mit der signierten MSIX-Binärdatei durchführen
-- Poppler-/Tesseract-Bündelung gegen Store-Paket im Release-Workflow validieren
-- Partner-Center-Zertifikatsabgleich abschließen
+## Historical staging record (2026-10-01)
 
-## Technische Hinweise
+The repository contains Store listing drafts, package metadata, a manifest, screenshot references, icons, and an earlier synthetic preflight file. These files record preparation work only. Their presence does not establish that the current source builds, that runtime components are bundled, or that any package was tested, signed, submitted, or approved.
 
-- lokaler Konfigurationspfad: `%LOCALAPPDATA%\ProFilerSuite` (`LOCALAPPDATA\ProFilerSuite`)
-- OCR bleibt lokaler Desktop-Workflow über Tesseract
-- PDF-Redaktion kann PyMuPDF nutzen; AGPL-Hinweise bleiben sichtbar dokumentiert
-- `runFullTrust` ist bewusst gesetzt, weil lokale Dateisystem-, OCR- und Tool-Workflows benötigt werden
+## Gates before any future submission
+
+1. Identify and review the exact Tesseract and Poppler binaries, data files, and redistribution terms required by the application.
+2. Produce a native build from the exact reviewed source after the required bundle is present; preserve the actual build and artifact hashes.
+3. Inspect the executable and assembled MSIX contents, package metadata, and included license notices.
+4. Sign the exact MSIX and run the real WACK tool against that package. Record the actual tool, package hash, host, result, and report.
+5. Complete Partner Center review and approval before describing the app as available through the Store.
+
+No gate above is marked complete by this document. The source release gate remains closed until the actual build and external submission requirements are satisfied.

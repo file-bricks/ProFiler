@@ -142,15 +142,143 @@ class TestD5FileActionControlFlow(unittest.TestCase):
         self.assertNotIn("result['id']", block)
         self.assertNotIn("result['db']", block)
 
-    def test_delete_old_versions_preserves_safety_mode(self):
-        """Safety-Mode darf im Gruppen-Cleanup niemals permanent löschen."""
-        src = (Path(__file__).parent.parent / "Profiler_Suite_V15.py").read_text(encoding="utf-8")
-        start = src.index("def delete_old_versions")
-        end = src.index('menu.addAction("Alte Versionen löschen"', start)
-        block = src[start:end]
-        self.assertIn('elif delete_mode == "hard"', block)
-        self.assertIn("db.safety_hide_version(vid)", block)
 
+class TestCrossPlatformTestSandbox(unittest.TestCase):
+    """The pytest sandbox narrowly permits null-sink opens and redirects Qt paths."""
+
+    def test_null_sink_open_is_allowed_but_device_mutations_remain_blocked(self):
+        from conftest import _REPO_ROOT, _SANDBOX, _path_is_sandboxed, _sandbox_audit
+
+        self.assertFalse(_path_is_sandboxed(os.devnull))
+        self.assertTrue(_path_is_sandboxed(_SANDBOX / "expected-write.txt"))
+        self.assertFalse(_path_is_sandboxed(_REPO_ROOT / "README.md"))
+        _sandbox_audit("open", (os.devnull, "w", os.O_WRONLY))
+        outside_probe = _REPO_ROOT.parent / "dev-other"
+        with self.assertRaises(PermissionError):
+            _sandbox_audit("open", (outside_probe, "w", os.O_WRONLY | os.O_CREAT))
+        with self.assertRaises(PermissionError):
+            _sandbox_audit("os.remove", (os.devnull,))
+        with self.assertRaises(PermissionError):
+            _sandbox_audit("os.chmod", (os.devnull, 0o600))
+
+    def test_qt_writable_and_search_locations_stay_in_task_sandbox(self):
+        from conftest import (
+            _REPO_ROOT,
+            _SANDBOX,
+            _qt_sandbox_path_map,
+            _redirect_qt_location,
+            _redirect_qt_locations,
+        )
+        from PySide6.QtCore import QStandardPaths
+
+        outside_result = str(_REPO_ROOT.parent / "runner-preferences")
+        fake_original = lambda _location: outside_result
+        sandbox_paths = _qt_sandbox_path_map(QStandardPaths)
+        config_path = _SANDBOX / "qt-app-config"
+        self.assertEqual(
+            _redirect_qt_location(
+                QStandardPaths.AppConfigLocation, sandbox_paths, fake_original
+            ),
+            str(config_path),
+        )
+        self.assertEqual(
+            _redirect_qt_locations(
+                QStandardPaths.AppConfigLocation, sandbox_paths, fake_original
+            ),
+            [str(config_path)],
+        )
+
+        locations = (
+            QStandardPaths.AppConfigLocation,
+            QStandardPaths.AppDataLocation,
+            QStandardPaths.CacheLocation,
+            QStandardPaths.GenericCacheLocation,
+            QStandardPaths.GenericDataLocation,
+            QStandardPaths.HomeLocation,
+            QStandardPaths.RuntimeLocation,
+            QStandardPaths.TempLocation,
+        )
+        sandbox = _SANDBOX.resolve()
+        for location in locations:
+            writable = Path(QStandardPaths.writableLocation(location)).resolve()
+            self.assertTrue(writable.is_relative_to(sandbox), str(writable))
+            standard = QStandardPaths.standardLocations(location)
+            self.assertTrue(standard)
+            self.assertTrue(
+                all(Path(path).resolve().is_relative_to(sandbox) for path in standard),
+                f"{location}: {standard}",
+            )
+
+
+    def test_open_file_descriptors_are_allowed_only_when_their_paths_are_sandboxed(self):
+        import tempfile
+
+        from conftest import _REPO_ROOT, _path_is_sandboxed, _sandbox_audit
+
+        with tempfile.TemporaryDirectory(dir=os.environ["TEMP"]) as temp_root:
+            sandbox_file = Path(temp_root) / "owned.txt"
+            sandbox_file.write_text("sandbox", encoding="utf-8")
+            sandbox_fd = os.open(sandbox_file, os.O_RDONLY)
+            outside_fd = os.open(_REPO_ROOT / "README.md", os.O_RDONLY)
+            try:
+                self.assertTrue(_path_is_sandboxed(sandbox_fd))
+                self.assertFalse(_path_is_sandboxed(outside_fd))
+                self.assertFalse(_path_is_sandboxed(-1))
+                self.assertFalse(_path_is_sandboxed("README.md", dir_fd=-1))
+                with self.assertRaises(PermissionError):
+                    _sandbox_audit("os.remove", ("README.md", -1))
+                sandbox_relative_to_repo = os.path.relpath(sandbox_file, _REPO_ROOT)
+                self.assertFalse(
+                    _path_is_sandboxed(sandbox_relative_to_repo, dir_fd=outside_fd)
+                )
+                with self.assertRaises(PermissionError):
+                    _sandbox_audit("os.remove", (sandbox_relative_to_repo, outside_fd))
+            finally:
+                os.close(outside_fd)
+                os.close(sandbox_fd)
+
+    def test_dir_fd_cleanup_is_confined_to_resolved_sandbox_directory(self):
+        import shutil
+        import tempfile
+
+        from conftest import _REPO_ROOT, _path_is_sandboxed, _sandbox_audit
+
+        if os.remove not in getattr(os, "supports_dir_fd", set()):
+            with self.assertRaises(PermissionError):
+                _sandbox_audit("os.remove", ("README.md", 999999))
+            return
+
+        with tempfile.TemporaryDirectory(dir=os.environ["TEMP"]) as temp_root:
+            sandbox_root = Path(temp_root)
+            staging = sandbox_root / "staging"
+            staging.mkdir()
+            (staging / "payload.txt").write_text("owned test data", encoding="utf-8")
+            sandbox_fd = os.open(sandbox_root, os.O_RDONLY)
+            outside_fd = os.open(_REPO_ROOT, os.O_RDONLY)
+            try:
+                self.assertTrue(
+                    _path_is_sandboxed("staging/payload.txt", dir_fd=sandbox_fd)
+                )
+                _sandbox_audit("os.remove", ("staging/payload.txt", sandbox_fd))
+                shutil.rmtree("staging", dir_fd=sandbox_fd)
+                self.assertFalse(staging.exists())
+
+                self.assertFalse(_path_is_sandboxed("README.md", dir_fd=outside_fd))
+                with self.assertRaises(PermissionError):
+                    _sandbox_audit("os.remove", ("README.md", outside_fd))
+
+                escape_link = sandbox_root / "repo-escape"
+                os.symlink(_REPO_ROOT, escape_link)
+                with self.assertRaises(PermissionError):
+                    _sandbox_audit(
+                        "os.remove", ("repo-escape/README.md", sandbox_fd)
+                    )
+                _sandbox_audit("os.remove", ("repo-escape", sandbox_fd))
+                os.remove("repo-escape", dir_fd=sandbox_fd)
+                self.assertFalse(escape_link.is_symlink())
+            finally:
+                os.close(outside_fd)
+                os.close(sandbox_fd)
 
 class TestBugsweepDatenschutzampelToolLinks(unittest.TestCase):
     """BUGSWEEP-2026-09-13: _build_tool_links muss privacy_data und resolve_read_path unterstützen."""

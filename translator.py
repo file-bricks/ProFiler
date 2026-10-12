@@ -15,6 +15,7 @@ translator.set_language('en')
 
 import json
 import re
+import weakref
 from pathlib import Path
 from typing import Dict, List, Set
 
@@ -116,6 +117,33 @@ class TranslationSystem:
 
         return key
 
+    def translate_ui(self, key: str, **format_values) -> str:
+        """Read-only UI lookup with named formatting values and locale fallback.
+
+        Unlike t(), this method never inserts or saves missing catalog keys,
+        so rendering the interface cannot mutate the user's translation catalog.
+        """
+        entry = self.translations.get(key)
+        template = key
+        if isinstance(entry, dict):
+            for language in (self.current_lang, *self.FALLBACK_LANGUAGES):
+                value = entry.get(language)
+                if isinstance(value, str) and value:
+                    template = value
+                    break
+
+        if not format_values:
+            return template
+
+        class _MissingTemplateValues(dict):
+            def __missing__(self, name):
+                return "{" + name + "}"
+
+        try:
+            return template.format_map(_MissingTemplateValues(format_values))
+        except (AttributeError, IndexError, KeyError, TypeError, ValueError):
+            return template
+
     def set_language(self, lang: str):
         if lang in self.SUPPORTED_LANGUAGES:
             self.current_lang = lang
@@ -200,6 +228,183 @@ class TranslationSystem:
         entry = {language: "" for language in cls.SUPPORTED_LANGUAGES}
         entry.update({"de": de, "en": en})
         return entry
+
+
+def set_application_translator(app, translator: TranslationSystem) -> None:
+    """Set the per-process UI translator and initialize explicit text bindings."""
+    app._profiler_ui_translator = translator
+    if not hasattr(app, "_profiler_ui_text_bindings"):
+        app._profiler_ui_text_bindings = []
+
+
+def load_translator_from_settings(settings_path=None, app_dir=None):
+    """Load a translator using the persisted locale without writing settings."""
+    if settings_path is None:
+        try:
+            from app_paths import resolve_read_path
+            settings_path = resolve_read_path("profiler_settings.json")
+        except ImportError:
+            settings_path = None
+
+    language = "de"
+    if settings_path is not None:
+        try:
+            settings = json.loads(Path(settings_path).read_text(encoding="utf-8"))
+            candidate = settings.get("ui_language", settings.get("language", "de"))
+            if candidate in TranslationSystem.SUPPORTED_LANGUAGES:
+                language = candidate
+        except (OSError, TypeError, ValueError, json.JSONDecodeError):
+            pass
+
+    return TranslationSystem(language, app_dir=app_dir)
+
+
+def install_translator_from_settings(app, settings_path=None, app_dir=None):
+    """Install a translator using the persisted locale without writing settings."""
+    translator = load_translator_from_settings(settings_path, app_dir=app_dir)
+    set_application_translator(app, translator)
+    return translator
+
+
+def _render_for_app(app, key: str, format_values: Dict[str, object]) -> str:
+    translator = getattr(app, "_profiler_ui_translator", None) if app else None
+    if translator is not None:
+        return translator.translate_ui(key, **format_values)
+    if not format_values:
+        return key
+
+    class _MissingValues(dict):
+        def __missing__(self, name):
+            return "{" + name + "}"
+
+    try:
+        return key.format_map(_MissingValues(format_values))
+    except (AttributeError, IndexError, KeyError, TypeError, ValueError):
+        return key
+
+
+def bind_ui_text(
+    widget,
+    key: str,
+    setter: str = "setText",
+    *,
+    setter_args=(),
+    format_values=None,
+) -> str:
+    """Set and remember one explicitly bound UI string for locale changes.
+
+    Only call this for application-owned UI copy. User data and machine values
+    should be set directly and therefore never enter this binding registry.
+    """
+    app = widget if hasattr(widget, "_profiler_ui_translator") else None
+    if app is None:
+        try:
+            from PySide6.QtWidgets import QApplication
+            app = QApplication.instance()
+        except ImportError:
+            app = None
+
+    values = dict(format_values or {})
+    text = _render_for_app(app, key, values)
+    if app is not None:
+        if not hasattr(app, "_profiler_ui_text_bindings"):
+            app._profiler_ui_text_bindings = []
+        registry = app._profiler_ui_text_bindings
+        for record in registry:
+            if record[0]() is widget:
+                record[1][(setter, tuple(setter_args))] = (key, values, text)
+                break
+        else:
+            try:
+                reference = weakref.ref(widget)
+            except TypeError:
+                reference = lambda: None
+            registry.append((reference, {(setter, tuple(setter_args)): (key, values, text)}))
+
+    try:
+        method = getattr(widget, setter)
+        if setter == "setTabText":
+            method(*tuple(setter_args), text)
+        else:
+            method(text, *tuple(setter_args))
+    except (AttributeError, RuntimeError, TypeError):
+        return text
+    return text
+
+
+def create_ui_widget(
+    widget_type,
+    key: str,
+    *args,
+    setter: str = "setText",
+    setter_args=(),
+    format_values=None,
+    **kwargs,
+):
+    """Construct a widget whose first argument is explicitly translatable text."""
+    values = dict(format_values or {})
+    widget = widget_type(_render_for_app(_application_instance(), key, values), *args, **kwargs)
+    bind_ui_text(widget, key, setter, setter_args=setter_args, format_values=values)
+    return widget
+
+
+def _application_instance():
+    try:
+        from PySide6.QtWidgets import QApplication
+        return QApplication.instance()
+    except ImportError:
+        return None
+
+
+def retranslate_registered_ui(app) -> None:
+    """Reapply only explicitly registered UI copy in the current locale."""
+    registry = getattr(app, "_profiler_ui_text_bindings", [])
+    alive = []
+    for reference, bindings in registry:
+        widget = reference()
+        if widget is None:
+            continue
+        current_bindings = {}
+        for (setter, setter_args), (key, values, previous_text) in bindings.items():
+            getter_name = {
+                "setAccessibleDescription": "accessibleDescription",
+                "setAccessibleName": "accessibleName",
+                "setPlaceholderText": "placeholderText",
+                "setStatusTip": "statusTip",
+                "setToolTip": "toolTip",
+                "setTitle": "title",
+                "setWhatsThis": "whatsThis",
+                "setWindowTitle": "windowTitle",
+            }.get(setter)
+            if setter == "setText":
+                getter_name = "text"
+            elif setter == "setPlainText":
+                getter_name = "toPlainText"
+            elif setter == "setTabText" and setter_args:
+                getter_name = "tabText"
+
+            if getter_name:
+                try:
+                    getter = getattr(widget, getter_name)
+                    current_text = getter(*setter_args) if setter == "setTabText" else getter()
+                except (AttributeError, RuntimeError, TypeError):
+                    current_text = previous_text
+                if current_text != previous_text:
+                    continue
+
+            text = _render_for_app(app, key, values)
+            try:
+                method = getattr(widget, setter)
+                if setter == "setTabText":
+                    method(*setter_args, text)
+                else:
+                    method(text, *setter_args)
+            except (AttributeError, RuntimeError, TypeError):
+                continue
+            current_bindings[(setter, setter_args)] = (key, values, text)
+        if current_bindings:
+            alive.append((reference, current_bindings))
+    app._profiler_ui_text_bindings = alive
 
 
 if __name__ == "__main__":
