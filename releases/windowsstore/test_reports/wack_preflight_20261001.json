@@ -1,5 +1,8 @@
 {
-  "report": "C:\\_Local_DEV\\repos\\ProFiler\\releases\\windowsstore\\test_reports\\wack_preflight_20261001.xml",
+  "artifact_classification": "SYNTHETIC_NOT_WACK",
+  "wack_executed": false,
+  "classification_note": "Historical preflight values below were generated without a package or App Certification Kit run; they are not WACK results.",
+  "report": "releases/windowsstore/test_reports/wack_preflight_20261001.xml",
   "overall_result": "PASS",
   "requirement_count": 6,
   "pass_count": 6,

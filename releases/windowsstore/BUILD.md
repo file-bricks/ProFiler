@@ -18,7 +18,7 @@ python scripts\check_store_readiness.py
 Erwartetes Ergebnis:
 - Alle Kacheln in `store_assets/`, `store_package/ProFiler/icons/` und `releases/windowsstore/` vorhanden und maßhaltig.
 - Screenshots in `screenshots/store/` und `releases/windowsstore/screenshots/` maßhaltig (1920x1080).
-- Preflight-Auditor meldet 0 Findings (PASS).
+- Der Skriptlauf prüft nur die interne Konsistenz der lokalen Staging-Dateien. Er prüft weder einen Build noch Runtime-Bundles, Signatur, WACK, Store-Einreichung oder Freigabe.
 
 ## Schritt 1: Desktop-EXE bauen
 
