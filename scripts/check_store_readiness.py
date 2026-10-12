@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 """
-check_store_readiness.py - Windows Store Readiness Audit Tool for ProFiler Suite.
+check_store_readiness.py - static consistency check for Windows Store staging files.
+
+This script only inspects repository files. It does not build or run the app, bundle
+runtime components, sign a package, execute WACK, submit to the Store, or establish
+Store readiness or approval.
 
 Validates:
 1. store_package.json metadata and schema
 2. store_package/ProFiler/AppxManifest.xml syntax, identities, capabilities, and visual elements
 3. Tile icons presence, PNG signature, and exact dimensions in store_package and store_assets
 4. STORE_LISTING.md, PRIVACY_POLICY.md, SUPPORT.md, WINDOWS_STORE_PREP.md and keyword guidelines
-5. Store screenshot assets and 1920x1080 dimensions
+5. Staged screenshot assets and 1920x1080 dimensions
 """
 
 from __future__ import annotations
@@ -115,7 +119,10 @@ def check_store_package_json(results: dict) -> None:
     if not expected_data_dir.endswith(APP_DATA_DIRNAME):
         results["errors"].append(f"AppData-Pfad endet nicht auf {APP_DATA_DIRNAME}.")
 
-    results["ok"].append("store_package.json ist vollständig und richtlinienkonform.")
+    results["ok"].append(
+        "store_package.json enthält die erwarteten lokalen Pflichtfelder und Werte "
+        "(keine Richtlinien- oder Store-Freigabeprüfung)."
+    )
 
 
 def check_appx_manifest(results: dict) -> None:
@@ -229,7 +236,7 @@ def check_store_listing_and_docs(results: dict) -> None:
         for kw in keywords_de:
             if any(tm in kw.lower() for tm in DISALLOWED_KEYWORD_TRADEMARKS):
                 results["errors"].append(
-                    f"STORE_LISTING.md: Unzulässiges deutsches Trademark-Schlagwort '{kw}' (Policy 10.1.3)."
+                    f"STORE_LISTING.md: Begriff '{kw}' steht auf der lokalen Trademark-Prüfliste."
                 )
 
     # Check English keywords
@@ -243,10 +250,13 @@ def check_store_listing_and_docs(results: dict) -> None:
         for kw in keywords_en:
             if any(tm in kw.lower() for tm in DISALLOWED_KEYWORD_TRADEMARKS):
                 results["errors"].append(
-                    f"STORE_LISTING.md: Unzulässiges englisches Trademark-Keyword '{kw}' (Policy 10.1.3)."
+                    f"STORE_LISTING.md: Begriff '{kw}' steht auf der lokalen Trademark-Prüfliste."
                 )
 
-    results["ok"].append("STORE_LISTING.md und rechtliche Pflichtdokumente entsprechen Microsoft Store Policies.")
+    results["ok"].append(
+        "STORE_LISTING.md und die referenzierten lokalen Dokumente sind vorhanden; "
+        "dies ist keine Prüfung auf Richtlinienkonformität."
+    )
 
 
 def check_store_screenshots(results: dict) -> None:
@@ -311,17 +321,13 @@ def check_windowsstore_release_staging(results: dict) -> None:
     if not wack_script.exists():
         results["errors"].append("scripts/run_windows_wack.py fehlt.")
 
-    test_reports = rel_store / "test_reports"
-    if not test_reports.exists() or not list(test_reports.glob("wack_preflight_*.xml")):
-        results["errors"].append("releases/windowsstore/test_reports: Kein WACK-Preflight-Report vorhanden.")
-
     results["ok"].append(
-        "Release-Packaging-Staging unter releases/windowsstore/ ist vollständig bestückt "
-        "(BUILD.md, WACK_PROTOCOL.md, store_settings.json, Listings, StoreLogo.png, Screenshots, WACK-Preflight)."
+        "Die aufgelisteten Staging-Dateien und Screenshot-Dateien sind vorhanden "
+        "(keine Build-, Signatur-, WACK- oder Store-Prüfung)."
     )
 
 
-def evaluate_store_readiness() -> list[str]:
+def evaluate_staging_consistency() -> list[str]:
     results = {"ok": [], "errors": []}
     check_store_package_json(results)
     check_appx_manifest(results)
@@ -334,7 +340,7 @@ def evaluate_store_readiness() -> list[str]:
 
 def main() -> int:
     print("=" * 65)
-    print("  ProFiler Suite - Windows Store Readiness Audit")
+    print("  ProFiler Suite - Windows Store Staging Consistency Check")
     print("=" * 65)
 
     results = {"ok": [], "errors": []}
@@ -345,23 +351,22 @@ def main() -> int:
     check_store_screenshots(results)
     check_windowsstore_release_staging(results)
 
-    for ok_msg in results["ok"]:
-        print(f"  [PASS] {ok_msg}")
-
     if results["errors"]:
         print("\n" + "=" * 65)
-        print("  AUDIT FAILED - OFFENE PUNKTE:")
+        print("  STAGING CONSISTENCY CHECK FAILED - OFFENE DATEIPUNKTE:")
         print("=" * 65)
         for err in results["errors"]:
-            print(f"  [FAIL] {err}")
+            print(f"  [CHECK FAILED] {err}")
         return 1
 
+    for ok_msg in results["ok"]:
+        print(f"  [CHECK OK] {ok_msg}")
+
     print("\n" + "=" * 65)
-    print("  AUDIT PASSED (6/6 Checks OK - Vorbereitung vollständig)")
-    print(f"  - Package Version: {EXPECTED_VERSION}")
-    print(f"  - App Identity:    {EXPECTED_IDENTITY}")
-    print(f"  - Publisher:       {EXPECTED_PUBLISHER}")
-    print("  - Capabilities:    runFullTrust")
+    print("  STAGING CONSISTENCY CHECK PASSED")
+    print("  - Lokale Metadaten-, Manifest-, Icon- und Screenshot-Dateien wurden geprüft.")
+    print("  - Dies belegt keinen Build, keine Runtime-Bundles, keine Signatur und keinen WACK-Lauf.")
+    print("  - Store-Einreichung oder -Freigabe wurde nicht geprüft.")
     print("=" * 65)
     return 0
 

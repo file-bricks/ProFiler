@@ -11,6 +11,7 @@ import shutil
 import subprocess
 import sys
 from typing import Sequence
+import uuid
 import xml.etree.ElementTree as ET
 
 try:
@@ -20,7 +21,9 @@ except ImportError:
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_APPCERT = Path(r"C:\Program Files (x86)\Windows Kits\10\App Certification Kit\appcert.exe")
-WACK_REPORT_PREFIX = "wack_preflight_"
+WACK_REPORT_PREFIX = "wack_report_"
+SYNTHETIC_PREFLIGHT_PREFIX = "wack_preflight_"
+PREFLIGHT_STATUS_PREFIX = "store_preflight_"
 
 
 @dataclass(frozen=True)
@@ -55,8 +58,6 @@ def expected_msix_path(project_root: Path, store_config: dict[str, object]) -> P
         project_root / "releases" / "windowsstore",
         project_root / "releases",
         project_root / "dist",
-        Path(r"C:\_Local_DEV\codex_build\profiler-store"),
-        Path(r"C:\_Local_DEV\codex_build\profiler\dist"),
     ]
     for directory in candidate_dirs:
         candidate = directory / app_name
@@ -75,8 +76,8 @@ def resolve_report_path(project_root: Path, report_dir: Path | None, explicit: P
     if explicit is not None:
         return explicit.expanduser().resolve()
     base_dir = (report_dir or (project_root / "releases" / "windowsstore" / "test_reports")).expanduser().resolve()
-    timestamp = datetime.now().strftime("%Y%m%d")
-    return base_dir / f"{WACK_REPORT_PREFIX}{timestamp}.xml"
+    run_id = datetime.now().strftime("%Y%m%dT%H%M%S%f") + f"_{uuid.uuid4().hex}"
+    return base_dir / f"{WACK_REPORT_PREFIX}{run_id}.xml"
 
 
 def find_appcert(explicit: Path | None = None) -> Path | None:
@@ -118,10 +119,29 @@ def build_finalize_command(appcert: Path, report_path: Path) -> list[str]:
 
 
 def parse_wack_report(report_path: Path) -> WackSummary:
+    if report_path.name.casefold().startswith(SYNTHETIC_PREFLIGHT_PREFIX):
+        raise ValueError(
+            f"{report_path.name} verwendet einen historischen Preflight-Dateinamen; "
+            "die Herkunft ist damit nicht verifiziert und wird nicht als WACK-Nachweis akzeptiert."
+        )
+    try:
+        marker_text = report_path.read_text(encoding="utf-8", errors="replace")[:2048]
+    except OSError as exc:
+        raise ValueError(f"WACK-Report kann nicht gelesen werden: {report_path}") from exc
+    if "SYNTHETIC NOT WACK" in marker_text.upper():
+        raise ValueError(f"{report_path.name} ist ausdrücklich als synthetisch und nicht als WACK markiert.")
+
     tree = ET.parse(report_path)
     root = tree.getroot()
+    root_name = root.tag.rsplit("}", 1)[-1].casefold()
+    if root_name != "report":
+        raise ValueError(f"{report_path.name} hat kein erwartetes WACK-Report-Root-Element.")
     overall = root.attrib.get("OVERALL_RESULT") or root.attrib.get("OverallResult") or "UNKNOWN"
     requirements = root.findall(".//REQUIREMENT") or root.findall(".//Requirement")
+    if overall.upper() not in {"PASS", "FAIL", "WARNING", "WARN"}:
+        raise ValueError(f"{report_path.name} enthält keinen auswertbaren WACK-Gesamtstatus.")
+    if not requirements:
+        raise ValueError(f"{report_path.name} enthält keine WACK-Anforderungen.")
     pass_count = 0
     fail_count = 0
     warning_count = 0
@@ -145,36 +165,53 @@ def parse_wack_report(report_path: Path) -> WackSummary:
     )
 
 
-def write_summary(summary: WackSummary, destination: Path, exit_code: int = 0) -> None:
+def write_summary(
+    summary: WackSummary,
+    destination: Path,
+    exit_code: int = 0,
+    *,
+    appcert_invoked_by_this_run: bool,
+) -> None:
     data = asdict(summary)
+    data["report_type"] = "wack_xml_summary"
+    data["appcert_invoked_by_this_run"] = appcert_invoked_by_this_run
     data["exit_code"] = exit_code
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
-def generate_preflight_report(project_root: Path, report_dir: Path | None = None) -> tuple[Path, Path]:
+def generate_preflight_status(
+    project_root: Path,
+    report_dir: Path | None = None,
+    msix: Path | None = None,
+    appcert_path: Path | None = None,
+) -> Path:
+    """Write a static preflight record; this function never creates a WACK report."""
     target_dir = (report_dir or (project_root / "releases" / "windowsstore" / "test_reports")).expanduser().resolve()
     target_dir.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d")
-    xml_path = target_dir / f"{WACK_REPORT_PREFIX}{timestamp}.xml"
-    json_path = target_dir / f"{WACK_REPORT_PREFIX}{timestamp}.json"
-
-    xml_content = (
-        '<?xml version="1.0" encoding="utf-8"?>\n'
-        '<REPORT OVERALL_RESULT="PASS" Version="10.0.22621.0">\n'
-        '  <REQUIREMENT Id="1" Name="AppManifest" RESULT="PASS" />\n'
-        '  <REQUIREMENT Id="2" Name="SecurityFeatures" RESULT="PASS" />\n'
-        '  <REQUIREMENT Id="3" Name="SupportedAPIs" RESULT="PASS" />\n'
-        '  <REQUIREMENT Id="4" Name="PackageCompliance" RESULT="PASS" />\n'
-        '  <REQUIREMENT Id="5" Name="PerformanceAndResources" RESULT="PASS" />\n'
-        '  <REQUIREMENT Id="6" Name="CleanUninstall" RESULT="PASS" />\n'
-        '</REPORT>\n'
-    )
-    xml_path.write_text(xml_content, encoding="utf-8")
-
-    summary = parse_wack_report(xml_path)
-    write_summary(summary, json_path, exit_code=0)
-    return xml_path, json_path
+    json_path = target_dir / f"{PREFLIGHT_STATUS_PREFIX}{timestamp}.json"
+    store_config = load_store_config(project_root)
+    msix_path = resolve_msix_path(project_root, store_config, msix)
+    appcert = find_appcert(appcert_path)
+    has_msix = msix_path.is_file() and msix_path.stat().st_size > 0
+    payload = {
+        "schema": "profiler.windows-store-preflight.v1",
+        "report_type": "static_preflight",
+        "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "status": "NOT_RUN",
+        "wack_executed": False,
+        "static_checks": {
+            "appcert_available": "PRESENT" if appcert is not None else "MISSING",
+            "msix_available": "PRESENT" if has_msix else "MISSING",
+        },
+        "note": (
+            "This is a static preparation record only. It does not contain WACK results, "
+            "and no package certification test was executed."
+        ),
+    }
+    json_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return json_path
 
 
 def format_command(command: Sequence[str]) -> str:
@@ -216,7 +253,11 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--report-dir", type=Path, help="Report-Verzeichnis, Standard: releases/windowsstore/test_reports.")
     parser.add_argument("--report-path", type=Path, help="Expliziter XML-Reportpfad.")
     parser.add_argument("--parse-report", type=Path, help="Vorhandenen WACK-XML-Report auswerten und JSON schreiben.")
-    parser.add_argument("--preflight", action="store_true", help="Erzeugt einen hermetischen Preflight-Report ohne Elevation.")
+    parser.add_argument(
+        "--preflight",
+        action="store_true",
+        help="Schreibt einen statischen Vorbereitungsstatus; startet WACK nicht.",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Pfade und WACK-Befehl anzeigen, nichts ausführen.")
     parser.add_argument("--allow-non-admin", action="store_true", help="WACK trotz fehlender Admin-Erkennung starten.")
     parser.add_argument("--skip-reset", action="store_true", help="appcert reset vor dem Test auslassen.")
@@ -227,25 +268,29 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
 
     if args.preflight:
-        xml_path, json_path = generate_preflight_report(args.project_root, args.report_dir)
-        print(f"Preflight XML: {xml_path}")
-        print(f"Preflight JSON: {json_path}")
-        summary = parse_wack_report(xml_path)
-        print(
-            "Preflight-Ergebnis: "
-            f"{summary.overall_result}, {summary.pass_count} PASS, "
-            f"{summary.fail_count} FAIL, {summary.warning_count} WARNING"
-        )
+        json_path = generate_preflight_status(args.project_root, args.report_dir, args.msix, args.appcert)
+        print(f"Statischer Vorbereitungsstatus: {json_path}")
+        print("Status: NOT_RUN (WACK wurde nicht gestartet; dies ist kein Zertifizierungsbericht).")
         return 0
 
     if args.parse_report:
         report_path = args.parse_report.expanduser().resolve()
-        summary = parse_wack_report(report_path)
+        try:
+            summary = parse_wack_report(report_path)
+        except (ValueError, ET.ParseError) as exc:
+            print(f"[BLOCKER] {exc}", file=sys.stderr)
+            return 2
         summary_path = report_path.with_suffix(".json")
-        write_summary(summary, summary_path, exit_code=0)
+        summary_exit_code = 1 if summary.fail_count > 0 or summary.overall_result == "FAIL" else 0
+        write_summary(
+            summary,
+            summary_path,
+            exit_code=summary_exit_code,
+            appcert_invoked_by_this_run=False,
+        )
         print(json.dumps(asdict(summary), ensure_ascii=False, indent=2))
         print(f"WACK-Zusammenfassung: {summary_path}")
-        return 0 if summary.fail_count == 0 and summary.overall_result != "FAIL" else 1
+        return summary_exit_code
 
     project_root = args.project_root.resolve()
     store_config = load_store_config(project_root)
@@ -266,6 +311,19 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.dry_run:
         return 0
+
+    if report_path.name.casefold().startswith(SYNTHETIC_PREFLIGHT_PREFIX):
+        print(
+            "[BLOCKER] Der historische Preflight-Dateiname ist für einen neuen WACK-Lauf nicht zulässig.",
+            file=sys.stderr,
+        )
+        return 2
+
+    existing_artifacts = [path for path in (report_path, log_path, summary_path) if path.exists()]
+    if existing_artifacts:
+        for path in existing_artifacts:
+            print(f"[BLOCKER] Ausgabe existiert bereits und bleibt unverändert: {path}", file=sys.stderr)
+        return 2
 
     errors: list[str] = []
     if appcert is None:
@@ -289,30 +347,48 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if not args.skip_reset:
         reset_exit = run_command(build_reset_command(appcert), log_path)
-        if reset_exit == 740:
-            print("[BLOCKER] appcert reset verlangt erhöhte Rechte.", file=sys.stderr)
-            return 2
+        if reset_exit != 0:
+            print(f"[BLOCKER] appcert reset ist mit Exitcode {reset_exit} fehlgeschlagen.", file=sys.stderr)
+            return reset_exit
 
     exit_code = run_command(build_test_command(appcert, msix_path, report_path), log_path)
-    if exit_code == 740:
-        print("[BLOCKER] appcert test verlangt erhöhte Rechte.", file=sys.stderr)
-        return 2
-    if report_path.exists():
-        run_command(build_finalize_command(appcert, report_path), log_path)
-        summary = parse_wack_report(report_path)
-        write_summary(summary, summary_path, exit_code=exit_code)
+    if exit_code != 0:
         print(
-            "WACK-Ergebnis: "
-            f"{summary.overall_result}, {summary.pass_count} PASS, "
-            f"{summary.fail_count} FAIL, {summary.warning_count} WARNING"
+            f"[BLOCKER] appcert test ist mit Exitcode {exit_code} fehlgeschlagen; "
+            "ein vorhandener Report wird nicht als erfolgreicher Lauf gewertet.",
+            file=sys.stderr,
         )
-        print(f"WACK-Zusammenfassung: {summary_path}")
-        if summary.fail_count > 0 or summary.overall_result == "FAIL":
-            return 1
-        return 0 if exit_code in (0, 1) else exit_code
+        return exit_code
 
-    print("[BLOCKER] WACK hat keinen XML-Report erzeugt.", file=sys.stderr)
-    return exit_code if exit_code != 0 else 1
+    if not report_path.is_file() or report_path.stat().st_size == 0:
+        print("[BLOCKER] WACK hat keinen neuen, nichtleeren XML-Report erzeugt.", file=sys.stderr)
+        return 1
+
+    finalize_exit = run_command(build_finalize_command(appcert, report_path), log_path)
+    if finalize_exit != 0:
+        print(f"[BLOCKER] appcert finalizereport ist mit Exitcode {finalize_exit} fehlgeschlagen.", file=sys.stderr)
+        return finalize_exit
+
+    try:
+        summary = parse_wack_report(report_path)
+    except (ValueError, ET.ParseError) as exc:
+        print(f"[BLOCKER] WACK-Report kann nicht ausgewertet werden: {exc}", file=sys.stderr)
+        return 2
+    write_summary(
+        summary,
+        summary_path,
+        exit_code=exit_code,
+        appcert_invoked_by_this_run=True,
+    )
+    print(
+        "WACK-Ergebnis: "
+        f"{summary.overall_result}, {summary.pass_count} PASS, "
+        f"{summary.fail_count} FAIL, {summary.warning_count} WARNING"
+    )
+    print(f"WACK-Zusammenfassung: {summary_path}")
+    if summary.fail_count > 0 or summary.overall_result == "FAIL":
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
