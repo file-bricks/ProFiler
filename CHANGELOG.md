@@ -5,6 +5,11 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Changed (2026-10-18 — Public platform contract)
+- Public platform decisions and their contract tests now use PLATFORM_SUPPORT.md without a user-specific mirror fallback.
+- Internal platform planning stays local and is excluded from version control and source distributions.
+
+
 ### Changed (2026-10-12 — Full-care maintenance)
 - Updated the active desktop UI and six locale catalogs, including language switching that preserves the current window state and stored machine-readable settings.
 - Replaced unsupported privacy, security, licensing, and accessibility guarantees in current product documentation with bounded descriptions of the reviewed source behavior and its limits.

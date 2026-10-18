@@ -7,6 +7,27 @@ Stand: 2026-08-21 (Verifikation & Plattform-Smokes)
 Windows Desktop ist die primäre Release- und Store-Produktlinie. Android, iOS
 und Web/PWA sind keine Ziele der lokalen Vollanwendung.
 
+## Öffentliche Plattformmatrix
+
+Diese Matrix beschreibt die Produktentscheidung; sie ist kein neuer
+Plattform-, Paket- oder Store-Freigabenachweis.
+
+| Plattform | Status | Begründung und Grenze |
+| --- | --- | --- |
+| Windows Desktop | Hauptlinie | Lokale Datei-, OCR-, PDF-, Tray- und Vorschau-Workflows bleiben die Desktop-Hauptanwendung. |
+| Windows Store | Kandidat, extern gegatet | Signiertes MSIX, WACK, Partner-Center-Upload, Tesseract-/Poppler-Bündelung und ein installierter Paket-Smoke bleiben gesonderte Freigabegates. |
+| macOS | Source-Smoke, keine Paketlinie | Dieselbe Codebasis wird auf Pfade, PySide6, Export, SQLite, i18n und Fallbacks geprüft; keine eigenständige App-/Store-Paketlinie. |
+| Linux | Source-Smoke, keine Paketlinie | Dieselbe Codebasis wird auf XDG/POSIX, PySide6, Export, SQLite, i18n und Fallbacks geprüft; keine eigenständige Paketlinie. |
+| Web/PWA | Nicht-Ziel | Die lokale Vollanwendung benötigt Rohdateien, OCR/PDF und Desktop-Vorschau; ohne neuen dokumentierten Nutzer-Usecase keine Weblinie. |
+| Android/iOS | Nicht-Ziel | Ohne eigenständigen mobilen Aktionsnutzen keine native Mobile-App und kein Port der lokalen Vollanwendung. |
+| Server-Sync | Nicht-Ziel | Der redigierte Workspace bleibt ein dateibasierter Austausch, keine direkte Live-Synchronisierung. Das ist keine allgemeine Netzwerksperre. |
+| Read-only Companion | Nicht-Ziel | Ein reines Statusbild begründet keinen eigenständigen Aktionsnutzen; lokale Geschwisterwerkzeuge sind keine neue Companion-Linie. |
+
+Icons, Store-Assets, Source-Smokes und Workspace-Exporte begründen keine
+zusätzliche Produktlinie. Neue Ziele benötigen einen neuen dokumentierten
+Nutzer-Usecase. Die folgenden Zahlen sind historische Ergebnisse vom
+2026-08-21, keine hiermit neu ausgeführten Tests oder Gerätefreigaben.
+
 ## Belegte Basis- und Plattform-Smokes
 
 Die Testmatrix und GitHub-Actions-Pipeline führt `source_platform_smoke.py`,
