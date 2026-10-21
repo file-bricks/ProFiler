@@ -169,3 +169,6 @@ docs/superpowers/
 # Interne Agenten-Arbeitsnotizen (GITHUB-POLICY.md SS3, T-20260926-510472849)
 BEFUNDE.md
 TASKPLAN_STATUS_*.md
+
+# Internal platform planning; public contract lives in PLATFORM_SUPPORT.md
+/PORTIERUNGSPLAN.md

@@ -1,39 +1,90 @@
 from __future__ import annotations
 
 import json
+
+import pytest
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-ONEDRIVE_MIRROR = Path(r"C:\Users\User\OneDrive\.TOPICS\.SOFTWARE\DATA\REL-PUB_ProFiler")
+
+
+def _assert_platform_matrix_consistency(root: Path) -> None:
+    """Read the public checkout contract only; a missing matrix fails closed."""
+    path = root / "PLATFORM_SUPPORT.md"
+    assert path.is_file(), "PLATFORM_SUPPORT.md must exist in the checkout; no external fallback"
+    text = path.read_text(encoding="utf-8")
+    rows = {}
+    for line in text.splitlines():
+        if not line.startswith("|"):
+            continue
+        cells = [cell.strip() for cell in line.strip("|").split("|")]
+        if len(cells) == 3 and cells[0] not in {"Plattform", "---"}:
+            assert cells[0] not in rows, f"Duplicate platform row: {cells[0]}"
+            rows[cells[0]] = cells[1:]
+    expected = {
+        "Windows Desktop": "Hauptlinie",
+        "Windows Store": "Kandidat, extern gegatet",
+        "macOS": "Source-Smoke, keine Paketlinie",
+        "Linux": "Source-Smoke, keine Paketlinie",
+        "Web/PWA": "Nicht-Ziel",
+        "Android/iOS": "Nicht-Ziel",
+        "Server-Sync": "Nicht-Ziel",
+        "Read-only Companion": "Nicht-Ziel",
+    }
+    assert set(rows) == set(expected), "Public platform matrix must list exactly the supported targets and non-goals"
+    for platform, status in expected.items():
+        actual_status, boundary = rows[platform]
+        assert actual_status == status, f"{platform}: expected {status}, got {actual_status}"
+        assert boundary, f"{platform}: a product boundary is required"
 
 
 def test_snw_profiler_01_platform_matrix_consistency():
-    """SNW-PROFILER-01: Windows is primary, macOS/Linux source-smoke, mobile/web/sync non-goals."""
-    # Check PORTIERUNGSPLAN.md (either in repo or in OneDrive mirror)
-    port_plan_path = PROJECT_ROOT / "PORTIERUNGSPLAN.md"
-    if not port_plan_path.exists():
-        port_plan_path = ONEDRIVE_MIRROR / "PORTIERUNGSPLAN.md"
-    assert port_plan_path.exists(), "PORTIERUNGSPLAN.md must exist in repo root or OneDrive mirror"
-
-    port_plan = port_plan_path.read_text(encoding="utf-8")
-    assert "Windows Desktop" in port_plan and "Hauptlinie" in port_plan
-    assert "macOS" in port_plan and "Source-Smoke" in port_plan
-    assert "Linux" in port_plan and "Source-Smoke" in port_plan
-    assert "Web/PWA" in port_plan and "Nicht-Ziel" in port_plan
-    assert "Android/iOS" in port_plan and "Nicht-Ziel" in port_plan
-    assert "Server-Sync" in port_plan and "Nicht-Ziel" in port_plan
-
-    # Verify PLATFORM_SUPPORT.md consistency
-    platform_support = (PROJECT_ROOT / "PLATFORM_SUPPORT.md").read_text(encoding="utf-8")
-    assert "Tier-1: Windows Desktop (Primary)" in platform_support or "Windows Desktop" in platform_support
-    assert "Tier-3 (Source-Smoke / Non-Goals)" in platform_support or "Source-Smoke" in platform_support
-    assert "Android" in platform_support
-    assert "iOS" in platform_support
-
-    # Verify WINDOWS_STORE_PREP.md
+    """Windows primary; source smokes and non-goals come from the public matrix."""
+    _assert_platform_matrix_consistency(PROJECT_ROOT)
     store_prep = (PROJECT_ROOT / "WINDOWS_STORE_PREP.md").read_text(encoding="utf-8")
     assert "MSIX" in store_prep or "msix" in store_prep.lower()
     assert "WACK" in store_prep or "Windows App Certification Kit" in store_prep
+
+
+def test_platform_matrix_is_checkout_local_without_internal_plan(tmp_path, monkeypatch):
+    """No private plan, user directory or OneDrive lookup is needed."""
+    (tmp_path / "PLATFORM_SUPPORT.md").write_bytes(
+        (PROJECT_ROOT / "PLATFORM_SUPPORT.md").read_bytes()
+    )
+    assert not (tmp_path / "PORTIERUNGSPLAN.md").exists()
+
+    def forbidden_home_lookup(*args, **kwargs):
+        raise AssertionError("The public contract must not inspect a user home")
+
+    monkeypatch.setattr(Path, "home", forbidden_home_lookup)
+    _assert_platform_matrix_consistency(tmp_path)
+
+
+def test_missing_public_matrix_fails_even_with_an_internal_plan(tmp_path):
+    (tmp_path / "PORTIERUNGSPLAN.md").write_text("Windows Desktop | Hauptlinie", encoding="utf-8")
+    with pytest.raises(AssertionError, match="PLATFORM_SUPPORT.md must exist"):
+        _assert_platform_matrix_consistency(tmp_path)
+
+
+@pytest.mark.parametrize(
+    "platform",
+    ["Windows Desktop", "Windows Store", "macOS", "Linux", "Web/PWA", "Android/iOS", "Server-Sync", "Read-only Companion"],
+)
+def test_public_matrix_rejects_changed_product_decisions(tmp_path, platform):
+    """Exercise the same matrix contract with a changed status, not a fallback fixture."""
+    text = (PROJECT_ROOT / "PLATFORM_SUPPORT.md").read_text(encoding="utf-8")
+    lines = text.splitlines()
+    for index, line in enumerate(lines):
+        if line.startswith(f"| {platform} |"):
+            cells = line.split("|")
+            cells[2] = " unsupported status "
+            lines[index] = "|".join(cells)
+            break
+    else:
+        pytest.fail(f"Missing public row for {platform}")
+    (tmp_path / "PLATFORM_SUPPORT.md").write_text("\n".join(lines), encoding="utf-8")
+    with pytest.raises(AssertionError, match=platform):
+        _assert_platform_matrix_consistency(tmp_path)
 
 
 def test_snw_profiler_02_store_gates_require_real_evidence():
