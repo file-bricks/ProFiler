@@ -20,7 +20,7 @@ Thank you for contributing to ProFiler Suite, a PySide6 desktop application for 
 
 ### Set up and test
 
-Use a local Git checkout and a virtual environment. From the repository root:
+Use Python 3.11 or newer, a local Git checkout, and a virtual environment. From the repository root:
 
 ```bash
 python -m venv .venv
@@ -59,7 +59,7 @@ Vielen Dank für Beiträge zur ProFiler Suite, einer PySide6-Desktopanwendung f�
 
 ### Einrichten und testen
 
-Verwenden Sie einen lokalen Git-Klon und eine virtuelle Umgebung. Im Repository-Stammverzeichnis:
+Verwenden Sie Python 3.11 oder neuer, einen lokalen Git-Klon und eine virtuelle Umgebung. Im Repository-Stammverzeichnis:
 
 ```bash
 python -m venv .venv

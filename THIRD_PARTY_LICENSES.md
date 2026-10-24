@@ -2,7 +2,7 @@
 
 **Project:** ProFiler Suite (`file-bricks/ProFiler`)
 **Project license:** GNU Affero General Public License version 3; see [LICENSE](LICENSE) and [NOTICE](NOTICE).
-**Reviewed:** 2026-10-12 against the repository dependency declarations
+**Reviewed:** 2026-10-24 against the repository dependency declarations
 **Version:** `15.0.2` (frozen)
 
 This page identifies declared dependencies and points to their upstream projects. It is not a complete software bill of materials, a review of every transitive package, a vulnerability assessment, or a legal opinion about license compatibility. A future binary package may contain a different set of components; inspect the exact artifact and its included notices before distribution.
@@ -20,7 +20,7 @@ The constraints below are from `pyproject.toml` and `requirements.txt`. The requ
 | pdf2image | `>=1.16.0` | PDF page rendering through host tools | [pdf2image](https://github.com/Belval/pdf2image) |
 | python-docx | `>=1.0.0` | DOCX reading | [python-docx](https://github.com/python-openxml/python-docx) |
 | pytesseract | `>=0.3.10` | Tesseract OCR interface | [pytesseract](https://github.com/madmaze/pytesseract) |
-| Pillow | `>=12.3.0` | Image loading and conversion | [Pillow](https://github.com/python-pillow/Pillow) |
+| Pillow | `>=13.0.0` | Image loading and conversion | [Pillow](https://github.com/python-pillow/Pillow) |
 | watchdog | `>=3.0.0` | File-change monitoring | [watchdog](https://github.com/gorakhargosh/watchdog) |
 | ReportLab | `>=4.0.0` | PDF generation | [ReportLab](https://www.reportlab.com/) |
 

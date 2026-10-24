@@ -5,6 +5,12 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Security / Sicherheit (2026-10-24 — Pillow 13)
+- Require Pillow 13.0.0 or newer and pin the runtime/build lock to 13.0.0 for the published upstream security fixes. The maintainer approved retiring Python 3.10: package metadata, contributor instructions, READMEs and native-build prerequisites now require Python 3.11 or newer.
+- Pillow-Mindestversion und Laufzeit-/Build-Pin auf 13.0.0 angehoben. Der Maintainer hat den Wechsel auf Python 3.11+ freigegeben; Metadaten, Beitragsrichtlinie, READMEs und Voraussetzungen für den nativen Build sind entsprechend aktualisiert.
+- Keep application version 15.0.2 frozen. This dependency change is not a native-package, Store, or exhaustive security acceptance.
+- Anwendungsversion 15.0.2 bleibt eingefroren. Die Abhängigkeitsänderung ist keine Abnahme nativer Pakete, der Store-Veröffentlichung oder sämtlicher Sicherheitsgrenzen.
+
 ### Changed (2026-10-18 — Public platform contract)
 - Public platform decisions and their contract tests now use PLATFORM_SUPPORT.md without a user-specific mirror fallback.
 - Internal platform planning stays local and is excluded from version control and source distributions.

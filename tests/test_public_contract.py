@@ -25,7 +25,7 @@ def test_runtime_and_store_use_one_version_contract() -> None:
     assert package["version"] == f"{version}.0"
 
 
-def test_public_docs_require_python_310_and_valid_master_links() -> None:
+def test_public_docs_require_python_311_and_valid_master_links() -> None:
     readme = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
     readme_de = (PROJECT_ROOT / "README_de.md").read_text(encoding="utf-8")
     listing = (PROJECT_ROOT / "STORE_LISTING.md").read_text(encoding="utf-8")
@@ -33,8 +33,10 @@ def test_public_docs_require_python_310_and_valid_master_links() -> None:
 
     assert "Python 3.8+" not in readme
     assert "Python 3.8+" not in readme_de
-    assert "Python 3.10+" in readme
-    assert "Python 3.10+" in readme_de
+    assert "Python 3.10+" not in readme
+    assert "Python 3.10+" not in readme_de
+    assert "Python 3.11+" in readme
+    assert "Python 3.11+" in readme_de
     assert "/blob/main/" not in listing
     assert "PRIVACY_POLICY.md" in listing
     assert "SUPPORT.md" in listing

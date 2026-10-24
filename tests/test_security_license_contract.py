@@ -6,6 +6,9 @@ import re
 import tomllib
 from pathlib import Path
 
+from packaging.requirements import Requirement
+from packaging.version import Version
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -22,8 +25,10 @@ def test_dependency_security_minimum_floors() -> None:
     # Author support email contract
     assert any(a.get("email") == "support@lukasgeiger.com" for a in authors), "Missing support email in pyproject authors"
 
-    # Pillow must be >= 12.3.0 to mitigate 26 CVEs/GHSAs in <= 12.2.0 (GHSA-4x4j-2g7c-83w6, GHSA-45hq-cxwh-f6vc)
-    assert any("Pillow>=12.3" in dep for dep in deps), f"Vulnerable Pillow floor in {deps}"
+    # Published Pillow advisories require 13.0.0; later safe pins remain valid.
+    pillow = next(Requirement(dep) for dep in deps if Requirement(dep).name.lower() == "pillow")
+    assert Version("12.3.0") not in pillow.specifier
+    assert Version("13.0.0") in pillow.specifier
     assert any("PySide6>=6.5" in dep for dep in deps), f"PySide6 floor missing in {deps}"
     assert any("pypdf>=6.14" in dep for dep in deps), f"pypdf floor missing in {deps}"
     assert any("pikepdf>=8.0" in dep for dep in deps), f"pikepdf floor missing in {deps}"
@@ -39,7 +44,13 @@ def test_dependency_security_minimum_floors() -> None:
 
     # requirements.txt must also enforce safe runtime floors
     req_text = (ROOT / "requirements.txt").read_text(encoding="utf-8")
-    assert "Pillow>=12.3.0" in req_text
+    requirement = next(Requirement(line) for line in req_text.splitlines() if line.lower().startswith("pillow"))
+    assert Version("12.3.0") not in requirement.specifier
+    assert Version("13.0.0") in requirement.specifier
+    locked = next(Requirement(line) for line in (ROOT / "requirements-lock.txt").read_text(encoding="utf-8").splitlines() if line.lower().startswith("pillow"))
+    assert len(list(locked.specifier)) == 1
+    assert all(spec.operator == "==" and Version(spec.version) >= Version("13.0.0") for spec in locked.specifier)
+    assert "-r requirements-lock.txt" in (ROOT / "requirements-build.txt").read_text(encoding="utf-8")
     assert "PySide6>=6.5.0" in req_text
     assert "pypdf>=6.14.2" in req_text
     assert "pikepdf>=8.0.0" in req_text
