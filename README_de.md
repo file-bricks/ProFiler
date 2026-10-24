@@ -17,7 +17,7 @@
 
 
 [![Attribution: NOTICE](https://img.shields.io/badge/Attribution-NOTICE-blue.svg)](NOTICE)
-[![Python: 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
+[![Python: 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/)
 [![GUI: PySide6](https://img.shields.io/badge/GUI-PySide6-green.svg)](https://wiki.qt.io/Qt_for_Python)
 
 
@@ -244,7 +244,7 @@ ProFiler ist die ideale Wahl, wenn Sie ein privates Dokumentenwerkzeug benötige
 
 ### Voraussetzungen & Systemanforderungen
 
-- Python 3.10+ (getestet unter Python 3.10, 3.11, 3.12, 3.13)
+- Python 3.11+ (Pillow 13 setzt mindestens Python 3.11 voraus; Umfang der aktuellen CI siehe unten)
 - PySide6
 - Tesseract OCR (optional, erforderlich für Bild- und Scan-OCR)
 - Poppler-Dienstprogramme (optional, erforderlich für PDF-Rendering und Konvertierung)

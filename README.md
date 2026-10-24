@@ -17,7 +17,7 @@
 
 
 [![Attribution: NOTICE](https://img.shields.io/badge/Attribution-NOTICE-blue.svg)](NOTICE)
-[![Python: 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
+[![Python: 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/)
 [![GUI: PySide6](https://img.shields.io/badge/GUI-PySide6-green.svg)](https://wiki.qt.io/Qt_for_Python)
 
 
@@ -244,7 +244,7 @@ ProFiler is the optimal solution when you require a private document management 
 
 ### Prerequisites & Requirements
 
-- Python 3.10+ (tested on Python 3.10, 3.11, 3.12, 3.13)
+- Python 3.11+ (required by Pillow 13; see the current CI scope below)
 - PySide6
 - Tesseract OCR (optional, required for image and scanned PDF OCR)
 - Poppler utilities (optional, required for PDF rendering and page conversion)

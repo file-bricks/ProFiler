@@ -7,7 +7,7 @@ name = "profiler-suite"
 version = "15.0.2"
 description = "Local-first desktop file and document manager with search, preview, and privacy inspection."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "AGPL-3.0-only"
 license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_LICENSES.md", "THIRD_PARTY_LICENSES.txt"]
 authors = [
@@ -34,7 +34,6 @@ keywords = [
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -54,7 +53,7 @@ dependencies = [
     "pdf2image>=1.16.0",
     "python-docx>=1.0.0",
     "pytesseract>=0.3.10",
-    "Pillow>=12.3.0",
+    "Pillow>=13.0.0",
     "watchdog>=3.0.0",
     "reportlab>=4.0.0",
 ]

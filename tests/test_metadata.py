@@ -154,6 +154,8 @@ def test_pyproject_pep621_metadata_and_urls() -> None:
     config = tomllib.loads((PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     project = config["project"]
     urls = project["urls"]
+    assert project["requires-python"] == ">=3.11"
+    assert "Programming Language :: Python :: 3.10" not in project["classifiers"]
     assert project["keywords"]
     assert "Programming Language :: Python :: 3.13" in project["classifiers"]
     assert "Topic :: Security" in project["classifiers"]

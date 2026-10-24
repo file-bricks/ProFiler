@@ -1,5 +1,5 @@
 PROFILER SUITE - THIRD-PARTY DEPENDENCY NOTES
-Reviewed: 2026-10-12
+Reviewed: 2026-10-24
 Project version: 15.0.2 (frozen)
 Project license: GNU Affero General Public License version 3; see LICENSE and NOTICE.
 
@@ -18,7 +18,7 @@ DIRECT RUNTIME REQUIREMENTS (pyproject.toml / requirements.txt)
 - pdf2image >=1.16.0 - PDF page rendering interface - https://github.com/Belval/pdf2image
 - python-docx >=1.0.0 - DOCX reading - https://github.com/python-openxml/python-docx
 - pytesseract >=0.3.10 - Tesseract OCR interface - https://github.com/madmaze/pytesseract
-- Pillow >=12.3.0 - image loading/conversion - https://github.com/python-pillow/Pillow
+- Pillow >=13.0.0 - image loading/conversion - https://github.com/python-pillow/Pillow
 - watchdog >=3.0.0 - file-change monitoring - https://github.com/gorakhargosh/watchdog
 - ReportLab >=4.0.0 - PDF generation - https://www.reportlab.com/
 
