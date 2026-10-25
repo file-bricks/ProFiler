@@ -2,7 +2,7 @@
 
 ## Voraussetzungen
 
-1. Python 3.10+ mit PySide6, PyMuPDF, pytesseract, Pillow, reportlab
+1. Python 3.11+ mit PySide6, PyMuPDF, pytesseract, Pillow, reportlab
 2. PyInstaller für den Desktop-Build
 3. Windows 10/11 SDK mit `makeappx.exe` und `appcert.exe` (WACK)
 4. Lokaler Schreibpfad außerhalb synchronisierter Cloud-Ordner: `C:\_Local_DEV\codex_build\profiler`
