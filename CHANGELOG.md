@@ -5,6 +5,24 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Geändert / Changed (2026-10-30 - UX & Accessibility Review nach WCAG 2.1 AA / BITV 2.0)
+- **Barrierefreier Über-Dialog (`AboutDialog`) & Tastaturkürzel (`Profiler_Suite_V15.py`):**
+  - Dedizierter, barrierefreier Modaldialog `AboutDialog` mit Accessible Name, Accessible Description, Version 15.0.2, GNU AGPL v3 Lizenz, Local-First / Zero-Egress Invarianten, Systempfaden (`app_data_dir()`, `SETTINGS_PATH`) und Escape-Handler integriert.
+  - Menü-Aktion `self.action_about` (`self.act_about`) im Menü „Hilfe“ mit Tastaturkürzel `Shift+F1` und aussagekräftigem Statustipp angebunden.
+  - `ShortcutsDialog` um den Eintrag `Shift+F1` zur Anzeige des Über-Dialogs erweitert.
+- **Barrierefreiheit & Tastaturbedienung in Referenz- und Dokumentdialogen (`Profiler_Suite_V15.py`):**
+  - `MaterialReferenceDialog`, `PromptFileDialog`, `InternetResourceDialog` und `LiteratureReferenceDialog` vollständig nach WCAG 2.1 AA / BITV 2.0 gehärtet:
+    - Eindeutige Accessible Names und Accessible Descriptions auf Dialog- und Widget-Ebene via `_ui_set`.
+    - Formular-Labels mit Tastatur-Mnemonics und `setBuddy()` an alle Eingabefelder und TextAreas gekoppelt.
+    - Tooltips und Platzhaltertexte auf allen Steuerelementen.
+    - Bereinigung führender Whitespaces auf Abbrechen-Schaltflächen (`&Abbrechen`).
+    - Standard-Schaltflächen (`&Speichern`) mit Default-Enter-Verhalten und Tastatur-Escape-Handler (`keyPressEvent` für Esc) in allen 4 Dialogen.
+- **Echte deutsche Umlaute (`Profiler_Suite_V15.py`):**
+  - Bereinigung deutscher UI-Texte, Beschriftungen und Kommentare mit echten Umlauten (ä, ö, ü, ß).
+- **Automatisierte A11y-Vertragstests (`tests/test_ui_accessibility.py`):**
+  - 2 neue umfassende Vertragstests `test_reference_dialogs_expose_accessible_context_and_umlauts` und `test_about_dialog_conformance_and_shortcut` implementiert; gesamte Testsuite auf 293 Tests ausgebaut (100% bestanden).
+
+
 ### Security / Sicherheit (2026-10-24 — Pillow 13)
 - Require Pillow 13.0.0 or newer and pin the runtime/build lock to 13.0.0 for the published upstream security fixes. The maintainer approved retiring Python 3.10: package metadata, contributor instructions, READMEs and native-build prerequisites now require Python 3.11 or newer.
 - Pillow-Mindestversion und Laufzeit-/Build-Pin auf 13.0.0 angehoben. Der Maintainer hat den Wechsel auf Python 3.11+ freigegeben; Metadaten, Beitragsrichtlinie, READMEs und Voraussetzungen für den nativen Build sind entsprechend aktualisiert.

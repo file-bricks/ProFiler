@@ -16,6 +16,7 @@ import traceback
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import PySide6
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QListWidget, QListWidgetItem,
     QMenu, QHBoxLayout, QPushButton, QProgressBar, QLabel,
@@ -3358,6 +3359,7 @@ class ShortcutsDialog(QDialog):
             ("Alt+D", "Menü „Datei“ öffnen", "Menüleiste"),
             ("Alt+T", "Menü „Tools“ öffnen", "Menüleiste"),
             ("Alt+H", "Menü „Hilfe“ öffnen", "Menüleiste"),
+            ("Shift+F1", "Über-Dialog mit Versions-, Lizenz- und Systemangaben öffnen", "Global"),
             ("Esc", "Aktiven Dialog oder Suchfilter schließen", "Dialoge & Fenster"),
         ]
 
@@ -3405,6 +3407,76 @@ class ShortcutsDialog(QDialog):
             return
         super().keyPressEvent(event)
 
+
+# ============================================================================
+# ABOUT DIALOG (BARRIEREFREI & LOCAL-FIRST INVARIANTEN)
+# ============================================================================
+
+class AboutDialog(QDialog):
+    """Barrierefreier Modaldialog mit Anwendungs-, Lizenz- und Systeminformationen."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        _ui_set(self, 'setWindowTitle', "Über ProFiler Suite {version}", version=APP_VERSION)
+        _ui_set(self, 'setAccessibleName', "Über ProFiler Suite Dialog")
+        _ui_set(
+            self,
+            'setAccessibleDescription',
+            "Informationen zu Programmversion, Lizenzierung, Zero-Egress Invarianten und lokalen Speicherpfaden.",
+        )
+        self.resize(580, 480)
+        self.setModal(True)
+
+        layout = QVBoxLayout(self)
+
+        header_label = _ui_widget(
+            QLabel,
+            f"<h2>ProFiler Suite</h2>"
+            f"<p><b>Version {APP_VERSION}</b> &bull; Local-First Document Detective</p>",
+            setter='setText',
+        )
+        header_label.setWordWrap(True)
+        _ui_set(header_label, 'setAccessibleName', "Anwendungsüberschrift und Version")
+        layout.addWidget(header_label)
+
+        info_text = (
+            "<b>Funktionsumfang & Architektur:</b><br>"
+            "&bull; Lokale Volltextindexierung, Duplikaterkennung und Tesseract-OCR<br>"
+            "&bull; PDF-Verschlüsselung, Auszüge, Schwärzung und Metadaten-Bereinigung<br>"
+            "&bull; Datenschutzampel nach DSGVO / BITV 2.0 / WCAG 2.1 AA<br><br>"
+            "<b>Sicherheits- & Lizenzierungs-Invarianten:</b><br>"
+            "&bull; <b>100% Local-First / Zero-Egress:</b> Keine Übertragung von Nutzerdaten ins Netzwerk<br>"
+            "&bull; <b>RunAsInvoker:</b> Ausführung ohne erweiterte Administratorrechte<br>"
+            "&bull; <b>Lizenz:</b> GNU AGPL v3 or later (&copy; 2026 file-bricks / open-bricks)<br><br>"
+            "<b>System- & Umgebungspfade:</b><br>"
+            f"&bull; Datenablage: <code>{app_data_dir()}</code><br>"
+            f"&bull; Konfiguration: <code>{SETTINGS_PATH}</code><br>"
+            f"&bull; Python: <code>{sys.version.split()[0]}</code> &bull; Qt Runtime: <code>{PySide6.__version__}</code>"
+        )
+        lbl_content = _ui_widget(QLabel, info_text, setter='setText')
+        lbl_content.setWordWrap(True)
+        _ui_set(lbl_content, 'setAccessibleName', "Detaillierte Lizenz- und Systemangaben")
+        layout.addWidget(lbl_content)
+
+        layout.addStretch()
+
+        btn_layout = QHBoxLayout()
+        btn_layout.addStretch()
+        self.btn_close = _ui_widget(QPushButton, "&Schließen", setter='setText')
+        self.btn_close.setDefault(True)
+        _ui_set(self.btn_close, 'setAccessibleName', "Dialog schließen")
+        _ui_set(self.btn_close, 'setToolTip', "Diesen Dialog schließen (Esc oder Enter)")
+        self.btn_close.clicked.connect(self.accept)
+        btn_layout.addWidget(self.btn_close)
+        layout.addLayout(btn_layout)
+
+        self.btn_close.setFocus()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Escape:
+            self.accept()
+            return
+        super().keyPressEvent(event)
 
 # ============================================================================
 # 7. SETTINGS DIALOG MIT PDF-BEREICH
@@ -3988,81 +4060,129 @@ class SettingsDialog(QDialog):
 # ============================================================================
 
 class MaterialReferenceDialog(QDialog):
-    """Dialog zum Anlegen von Materialverweisen"""
-    
+    """Dialog zum Anlegen von Materialverweisen (barrierefrei nach WCAG 2.1 AA / BITV 2.0)."""
+
     def __init__(self, parent=None):
         super().__init__(parent)
         _ui_set(self, 'setWindowTitle', "Neuer Materialverweis")
-        self.resize(600, 500)
+        _ui_set(self, 'setAccessibleName', "Neuer Materialverweis")
+        _ui_set(self, 'setAccessibleDescription', "Formulardialog zur Erfassung physischer Material- und Archivstandorte")
+        self.resize(600, 520)
         self.result_data = None
         self.init_ui()
-    
+
     def init_ui(self):
         layout = QVBoxLayout(self)
-        
+
         # Info Label
         info = _ui_widget(QLabel, "Erstellen Sie einen Verweis auf physisch vorhandenes Material:", setter='setText')
         info.setWordWrap(True)
+        _ui_set(info, 'setAccessibleName', "Hinweis zum Materialverweis")
         layout.addWidget(info)
-        
+
         # Formular
         form = QFormLayout()
-        
+
         self.bezeichnung_input = QLineEdit()
         _ui_set(self.bezeichnung_input, 'setPlaceholderText', "z.B. Ordner mit Dokumenten")
-        form.addRow(_ui_text("Bezeichnung*:"), self.bezeichnung_input)
-        
+        _ui_set(self.bezeichnung_input, 'setAccessibleName', "Materialbezeichnung")
+        _ui_set(self.bezeichnung_input, 'setAccessibleDescription', "Eindeutige Bezeichnung des physischen Materials oder Ordners")
+        _ui_set(self.bezeichnung_input, 'setToolTip', "Bezeichnung des Materials eingeben (Pflichtfeld)")
+        lbl_bezeichnung = _ui_widget(QLabel, "&Bezeichnung*:", setter='setText')
+        lbl_bezeichnung.setBuddy(self.bezeichnung_input)
+        form.addRow(lbl_bezeichnung, self.bezeichnung_input)
+
         self.raum_input = QLineEdit()
         _ui_set(self.raum_input, 'setPlaceholderText', "z.B. Büro, Keller, Raum 204")
-        form.addRow(_ui_text("Raum:"), self.raum_input)
-        
+        _ui_set(self.raum_input, 'setAccessibleName', "Raumangabe")
+        _ui_set(self.raum_input, 'setAccessibleDescription', "Standort oder Raumnummer des Materials")
+        _ui_set(self.raum_input, 'setToolTip', "Raum oder Büro eingeben (optional)")
+        lbl_raum = _ui_widget(QLabel, "&Raum:", setter='setText')
+        lbl_raum.setBuddy(self.raum_input)
+        form.addRow(lbl_raum, self.raum_input)
+
         self.regal_input = QLineEdit()
         _ui_set(self.regal_input, 'setPlaceholderText', "z.B. Regal A, Schrank 3")
-        form.addRow(_ui_text("Regal:"), self.regal_input)
-        
+        _ui_set(self.regal_input, 'setAccessibleName', "Regalangabe")
+        _ui_set(self.regal_input, 'setAccessibleDescription', "Regal oder Schrankbezeichnung")
+        _ui_set(self.regal_input, 'setToolTip', "Regal oder Schrank eingeben (optional)")
+        lbl_regal = _ui_widget(QLabel, "Re&gal:", setter='setText')
+        lbl_regal.setBuddy(self.regal_input)
+        form.addRow(lbl_regal, self.regal_input)
+
         self.bereich_input = QLineEdit()
         _ui_set(self.bereich_input, 'setPlaceholderText', "z.B. Fach 2, links oben")
-        form.addRow(_ui_text("Bereich:"), self.bereich_input)
-        
+        _ui_set(self.bereich_input, 'setAccessibleName', "Bereichs- oder Fachangabe")
+        _ui_set(self.bereich_input, 'setAccessibleDescription', "Genaues Fach oder Ebene im Regal")
+        _ui_set(self.bereich_input, 'setToolTip', "Fach oder Position eingeben (optional)")
+        lbl_bereich = _ui_widget(QLabel, "&Bereich / Fach:", setter='setText')
+        lbl_bereich.setBuddy(self.bereich_input)
+        form.addRow(lbl_bereich, self.bereich_input)
+
         self.inventar_input = QLineEdit()
         _ui_set(self.inventar_input, 'setPlaceholderText', "z.B. INV-2024-001")
-        form.addRow(_ui_text("Inventarnummer:"), self.inventar_input)
-        
+        _ui_set(self.inventar_input, 'setAccessibleName', "Inventarnummer")
+        _ui_set(self.inventar_input, 'setAccessibleDescription', "Offizielle Inventarnummer oder Barcode")
+        _ui_set(self.inventar_input, 'setToolTip', "Inventarnummer eingeben (optional)")
+        lbl_inventar = _ui_widget(QLabel, "&Inventarnummer:", setter='setText')
+        lbl_inventar.setBuddy(self.inventar_input)
+        form.addRow(lbl_inventar, self.inventar_input)
+
         self.tags_input = QLineEdit()
         _ui_set(self.tags_input, 'setPlaceholderText', "Tags mit Komma getrennt")
-        form.addRow(_ui_text("Tags:"), self.tags_input)
-        
+        _ui_set(self.tags_input, 'setAccessibleName', "Schlagwörter und Tags")
+        _ui_set(self.tags_input, 'setAccessibleDescription', "Kommagetrennte Schlagwörter zur schnelleren Auffindbarkeit")
+        _ui_set(self.tags_input, 'setToolTip', "Kommagetrennte Tags eingeben (optional)")
+        lbl_tags = _ui_widget(QLabel, "&Schlagwörter / Tags:", setter='setText')
+        lbl_tags.setBuddy(self.tags_input)
+        form.addRow(lbl_tags, self.tags_input)
+
         self.beschreibung_input = QTextEdit()
         _ui_set(self.beschreibung_input, 'setPlaceholderText', "Weitere Details zum Material...")
         self.beschreibung_input.setMaximumHeight(150)
-        form.addRow(_ui_text("Beschreibung:"), self.beschreibung_input)
-        
+        _ui_set(self.beschreibung_input, 'setAccessibleName', "Materialbeschreibung")
+        _ui_set(self.beschreibung_input, 'setAccessibleDescription', "Ausführliche Beschreibung und Details zum Inhalt")
+        _ui_set(self.beschreibung_input, 'setToolTip', "Details und Notizen eingeben (optional)")
+        lbl_beschreibung = _ui_widget(QLabel, "Bes&chreibung:", setter='setText')
+        lbl_beschreibung.setBuddy(self.beschreibung_input)
+        form.addRow(lbl_beschreibung, self.beschreibung_input)
+
         layout.addLayout(form)
-        
+
         # Buttons
         btn_layout = QHBoxLayout()
-        
-        btn_save = _ui_widget(QPushButton, "Speichern", setter='setText')
+
+        btn_save = _ui_widget(QPushButton, "&Speichern", setter='setText')
+        _ui_set(btn_save, 'setAccessibleName', "Materialverweis speichern")
+        _ui_set(btn_save, 'setToolTip', "Materialverweis speichern und schließen (Enter)")
         btn_save.clicked.connect(self.save_material)
         btn_save.setDefault(True)
-        
-        btn_cancel = _ui_widget(QPushButton, " Abbrechen", setter='setText')
+
+        btn_cancel = _ui_widget(QPushButton, "&Abbrechen", setter='setText')
+        _ui_set(btn_cancel, 'setAccessibleName', "Vorgang abbrechen")
+        _ui_set(btn_cancel, 'setToolTip', "Dialog schließen ohne zu speichern (Esc)")
         btn_cancel.clicked.connect(self.reject)
-        
+
         btn_layout.addStretch()
         btn_layout.addWidget(btn_save)
         btn_layout.addWidget(btn_cancel)
-        
+
         layout.addLayout(btn_layout)
-    
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Escape:
+            self.reject()
+            return
+        super().keyPressEvent(event)
+
     def save_material(self):
         """Speichert Materialverweis"""
         bezeichnung = self.bezeichnung_input.text().strip()
-        
+
         if not bezeichnung:
             _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Bezeichnung ist erforderlich!"))
             return
-        
+
         self.result_data = {
             'bezeichnung': bezeichnung,
             'raum': self.raum_input.text().strip(),
@@ -4072,115 +4192,158 @@ class MaterialReferenceDialog(QDialog):
             'tags': self.tags_input.text().strip(),
             'beschreibung': self.beschreibung_input.toPlainText().strip()
         }
-        
+
         self.accept()
 
 
 class PromptFileDialog(QDialog):
-    """Dialog zum Anlegen/Bearbeiten von Prompt-Dateien"""
-    
+    """Dialog zum Anlegen/Bearbeiten von Prompt-Dateien (barrierefrei nach WCAG 2.1 AA / BITV 2.0)."""
+
     def __init__(self, parent=None, existing_data=None):
         super().__init__(parent)
         title_key = "Prompt-Datei bearbeiten" if existing_data else "Prompt-Datei erstellen"
-        self.setWindowTitle(_ui_text(title_key))
+        _ui_set(self, 'setWindowTitle', title_key)
+        _ui_set(self, 'setAccessibleName', "Prompt-Datei Dialog")
+        _ui_set(self, 'setAccessibleDescription', "Dialog zur Erstellung und Versionierung von Prompt-Vorlagen für LLMs")
         self.resize(800, 700)
         self.result_data = None
         self.existing_data = existing_data
         self.init_ui()
-        
+
         if existing_data:
             self.load_existing_data()
-    
+
     def init_ui(self):
         layout = QVBoxLayout(self)
-        
+
         # Info
         if not self.existing_data:
             info = _ui_widget(QLabel, "Erstellen Sie eine neue Prompt-Datei mit Versionsverwaltung:", setter='setText')
         else:
             info = _ui_widget(QLabel, "Neue Version wird in derselben Datei gespeichert:", setter='setText')
         info.setWordWrap(True)
+        _ui_set(info, 'setAccessibleName', "Hinweis zur Prompt-Erstellung")
         layout.addWidget(info)
-        
+
         # Formular
         form = QFormLayout()
-        
+
         self.name_input = QLineEdit()
         _ui_set(self.name_input, 'setPlaceholderText', "z.B. Blog-Artikel Generator")
+        _ui_set(self.name_input, 'setAccessibleName', "Prompt-Name")
+        _ui_set(self.name_input, 'setAccessibleDescription', "Name der Prompt-Datei")
+        _ui_set(self.name_input, 'setToolTip', "Eindeutigen Namen für den Prompt eingeben")
         if self.existing_data:
             self.name_input.setEnabled(False)
-        form.addRow(_ui_text("Name*:"), self.name_input)
-        
+        lbl_name = _ui_widget(QLabel, "&Name*:", setter='setText')
+        lbl_name.setBuddy(self.name_input)
+        form.addRow(lbl_name, self.name_input)
+
         # Version (auto oder manuell)
         version_layout = QHBoxLayout()
         self.version_input = QLineEdit()
         _ui_set(self.version_input, 'setPlaceholderText', "Auto-generiert")
+        _ui_set(self.version_input, 'setAccessibleName', "Prompt-Versionsnummer")
+        _ui_set(self.version_input, 'setAccessibleDescription', "Versionsnummer der Vorlage, wird automatisch inkrementiert")
+        _ui_set(self.version_input, 'setToolTip', "Versionsnummer der Prompt-Datei")
         self.version_input.setEnabled(False)
         version_layout.addWidget(self.version_input)
-        form.addRow(_ui_text("Version:"), version_layout)
-        
+        lbl_version = _ui_widget(QLabel, "&Version:", setter='setText')
+        lbl_version.setBuddy(self.version_input)
+        form.addRow(lbl_version, version_layout)
+
         self.zweck_input = QTextEdit()
         _ui_set(self.zweck_input, 'setPlaceholderText', "Wofür ist dieser Prompt gedacht?")
         self.zweck_input.setMaximumHeight(80)
-        form.addRow(_ui_text("Zweck/Beschreibung*:"), self.zweck_input)
-        
+        _ui_set(self.zweck_input, 'setAccessibleName', "Prompt-Zweck und Beschreibung")
+        _ui_set(self.zweck_input, 'setAccessibleDescription', "Einsatzbereich und Zielsetzung des Prompts")
+        _ui_set(self.zweck_input, 'setToolTip', "Zweck und Zielgruppe des Prompts beschreiben")
+        lbl_zweck = _ui_widget(QLabel, "&Zweck / Beschreibung*:", setter='setText')
+        lbl_zweck.setBuddy(self.zweck_input)
+        form.addRow(lbl_zweck, self.zweck_input)
+
         self.prompt_input = QTextEdit()
         _ui_set(self.prompt_input, 'setPlaceholderText', "Der eigentliche Prompt-Text...")
         self.prompt_input.setMinimumHeight(200)
-        form.addRow(_ui_text("Prompt-Text*:"), self.prompt_input)
-        
+        _ui_set(self.prompt_input, 'setAccessibleName', "Prompt-Volltext")
+        _ui_set(self.prompt_input, 'setAccessibleDescription', "Vollständiger Prompt-Text inklusive Anweisungen und Platzhaltern")
+        _ui_set(self.prompt_input, 'setToolTip', "Den eigentlichen Prompt-Text eingeben")
+        lbl_prompt = _ui_widget(QLabel, "&Prompt-Text*:", setter='setText')
+        lbl_prompt.setBuddy(self.prompt_input)
+        form.addRow(lbl_prompt, self.prompt_input)
+
         self.resultate_input = QTextEdit()
         _ui_set(self.resultate_input, 'setPlaceholderText', "Ergebnisse/Outputs (optional)")
         self.resultate_input.setMaximumHeight(100)
-        form.addRow(_ui_text("Resultate:"), self.resultate_input)
-        
+        _ui_set(self.resultate_input, 'setAccessibleName', "Optionale Beispielresultate")
+        _ui_set(self.resultate_input, 'setAccessibleDescription', "Typische Ausgabe oder Beispielergebnisse des Prompts")
+        _ui_set(self.resultate_input, 'setToolTip', "Beispielergebnisse oder Test-Outputs dokumentieren (optional)")
+        lbl_resultate = _ui_widget(QLabel, "&Resultate:", setter='setText')
+        lbl_resultate.setBuddy(self.resultate_input)
+        form.addRow(lbl_resultate, self.resultate_input)
+
         self.verbesserungen_input = QTextEdit()
         _ui_set(self.verbesserungen_input, 'setPlaceholderText', "Ideen für Verbesserungen (optional)")
         self.verbesserungen_input.setMaximumHeight(80)
-        form.addRow(_ui_text("Verbesserungsvorschläge:"), self.verbesserungen_input)
-        
+        _ui_set(self.verbesserungen_input, 'setAccessibleName', "Verbesserungsvorschläge")
+        _ui_set(self.verbesserungen_input, 'setAccessibleDescription', "Notizen für künftige Optimierungen und Iterationen")
+        _ui_set(self.verbesserungen_input, 'setToolTip', "Ideen für künftige Prompt-Versionen festhalten (optional)")
+        lbl_verbesserungen = _ui_widget(QLabel, "&Verbesserungsvorschläge:", setter='setText')
+        lbl_verbesserungen.setBuddy(self.verbesserungen_input)
+        form.addRow(lbl_verbesserungen, self.verbesserungen_input)
+
         layout.addLayout(form)
-        
+
         # Buttons
         btn_layout = QHBoxLayout()
-        
-        btn_save = _ui_widget(QPushButton, "Speichern", setter='setText')
+
+        btn_save = _ui_widget(QPushButton, "&Speichern", setter='setText')
+        _ui_set(btn_save, 'setAccessibleName', "Prompt-Datei speichern")
+        _ui_set(btn_save, 'setToolTip', "Prompt-Datei speichern und schließen (Enter)")
         btn_save.clicked.connect(self.save_prompt)
         btn_save.setDefault(True)
-        
-        btn_cancel = _ui_widget(QPushButton, " Abbrechen", setter='setText')
+
+        btn_cancel = _ui_widget(QPushButton, "&Abbrechen", setter='setText')
+        _ui_set(btn_cancel, 'setAccessibleName', "Vorgang abbrechen")
+        _ui_set(btn_cancel, 'setToolTip', "Dialog schließen ohne zu speichern (Esc)")
         btn_cancel.clicked.connect(self.reject)
-        
+
         btn_layout.addStretch()
         btn_layout.addWidget(btn_save)
         btn_layout.addWidget(btn_cancel)
-        
+
         layout.addLayout(btn_layout)
-    
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Escape:
+            self.reject()
+            return
+        super().keyPressEvent(event)
+
     def load_existing_data(self):
-        """Ldt existierende Daten"""
+        """Lädt existierende Daten"""
         if not self.existing_data:
             return
-        
+
         self.name_input.setText(self.existing_data.get('name', ''))
-        # Zweck, Prompt etc. knnen leer sein für neue Version
-    
+        # Zweck, Prompt etc. können leer sein für neue Version
+
     def save_prompt(self):
         """Speichert Prompt-Datei"""
         name = self.name_input.text().strip()
         zweck = self.zweck_input.toPlainText().strip()
         prompt_text = self.prompt_input.toPlainText().strip()
-        
+
         if not name or not zweck or not prompt_text:
             _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Name, Zweck und Prompt-Text sind erforderlich!"))
             return
-        
+
         # Version berechnen
         if self.existing_data:
             version = self.existing_data.get('version', 1) + 1
         else:
             version = 1
-        
+
         self.result_data = {
             'name': name,
             'version': version,
@@ -4191,84 +4354,122 @@ class PromptFileDialog(QDialog):
             'created_at': datetime.now().isoformat(),
             'modified_at': datetime.now().isoformat()
         }
-        
+
         self.accept()
 
 
 class InternetResourceDialog(QDialog):
-    """Dialog zum Anlegen von Internetressourcen"""
-    
+    """Dialog zum Anlegen von Internetressourcen (barrierefrei nach WCAG 2.1 AA / BITV 2.0)."""
+
     def __init__(self, parent=None):
         super().__init__(parent)
-        _ui_set(self, 'setWindowTitle', " Neue Internetressource")
-        self.resize(600, 450)
+        _ui_set(self, 'setWindowTitle', "Neue Internetressource")
+        _ui_set(self, 'setAccessibleName', "Neue Internetressource")
+        _ui_set(self, 'setAccessibleDescription', "Dialog zur Erfassung und Verknüpfung von Internet- und Web-Ressourcen")
+        self.resize(600, 480)
         self.result_data = None
         self.init_ui()
-    
+
     def init_ui(self):
         layout = QVBoxLayout(self)
-        
+
         # Info
         info = _ui_widget(QLabel, "Erstellen Sie einen Verweis auf eine Internetressource:", setter='setText')
         info.setWordWrap(True)
+        _ui_set(info, 'setAccessibleName', "Hinweis zur Internetressource")
         layout.addWidget(info)
-        
+
         # Formular
         form = QFormLayout()
-        
+
         self.bezeichnung_input = QLineEdit()
         _ui_set(self.bezeichnung_input, 'setPlaceholderText', "z.B. Anthropic Documentation")
-        form.addRow(_ui_text("Bezeichnung*:"), self.bezeichnung_input)
-        
+        _ui_set(self.bezeichnung_input, 'setAccessibleName', "Ressourcenbezeichnung")
+        _ui_set(self.bezeichnung_input, 'setAccessibleDescription', "Titel oder Name der Webressource")
+        _ui_set(self.bezeichnung_input, 'setToolTip', "Titel der Internetressource eingeben (Pflichtfeld)")
+        lbl_bezeichnung = _ui_widget(QLabel, "&Bezeichnung*:", setter='setText')
+        lbl_bezeichnung.setBuddy(self.bezeichnung_input)
+        form.addRow(lbl_bezeichnung, self.bezeichnung_input)
+
         self.anbieter_input = QLineEdit()
         _ui_set(self.anbieter_input, 'setPlaceholderText', "z.B. Anthropic, GitHub, Stack Overflow")
-        form.addRow(_ui_text("Anbieter:"), self.anbieter_input)
-        
+        _ui_set(self.anbieter_input, 'setAccessibleName', "Anbieter oder Plattform")
+        _ui_set(self.anbieter_input, 'setAccessibleDescription', "Website-Betreiber, Dienst oder Plattform")
+        _ui_set(self.anbieter_input, 'setToolTip', "Anbieter oder Herausgeber eingeben (optional)")
+        lbl_anbieter = _ui_widget(QLabel, "&Anbieter / Plattform:", setter='setText')
+        lbl_anbieter.setBuddy(self.anbieter_input)
+        form.addRow(lbl_anbieter, self.anbieter_input)
+
         self.adresse_input = QLineEdit()
         _ui_set(self.adresse_input, 'setPlaceholderText', "https://...")
-        form.addRow(_ui_text("Adresse (URL)*:"), self.adresse_input)
-        
+        _ui_set(self.adresse_input, 'setAccessibleName', "Internetadresse (URL)")
+        _ui_set(self.adresse_input, 'setAccessibleDescription', "Vollständige Web-Adresse beginnend mit https:// oder http://")
+        _ui_set(self.adresse_input, 'setToolTip', "Vollständige URL eingeben (Pflichtfeld)")
+        lbl_adresse = _ui_widget(QLabel, "&Adresse (URL)*:", setter='setText')
+        lbl_adresse.setBuddy(self.adresse_input)
+        form.addRow(lbl_adresse, self.adresse_input)
+
         self.tags_input = QLineEdit()
         _ui_set(self.tags_input, 'setPlaceholderText', "Tags mit Komma getrennt")
-        form.addRow(_ui_text("Tags:"), self.tags_input)
-        
+        _ui_set(self.tags_input, 'setAccessibleName', "Schlagwörter und Tags")
+        _ui_set(self.tags_input, 'setAccessibleDescription', "Kommagetrennte Tags zur Klassifizierung")
+        _ui_set(self.tags_input, 'setToolTip', "Kommagetrennte Schlagwörter eingeben (optional)")
+        lbl_tags = _ui_widget(QLabel, "&Schlagwörter / Tags:", setter='setText')
+        lbl_tags.setBuddy(self.tags_input)
+        form.addRow(lbl_tags, self.tags_input)
+
         self.beschreibung_input = QTextEdit()
         _ui_set(self.beschreibung_input, 'setPlaceholderText', "Beschreibung der Ressource...")
         self.beschreibung_input.setMaximumHeight(150)
-        form.addRow(_ui_text("Beschreibung:"), self.beschreibung_input)
-        
+        _ui_set(self.beschreibung_input, 'setAccessibleName', "Ressourcenbeschreibung")
+        _ui_set(self.beschreibung_input, 'setAccessibleDescription', "Zusammenfassung oder Beschreibung des Inhalts")
+        _ui_set(self.beschreibung_input, 'setToolTip', "Zusammenfassung oder Notizen eingeben (optional)")
+        lbl_beschreibung = _ui_widget(QLabel, "Bes&chreibung:", setter='setText')
+        lbl_beschreibung.setBuddy(self.beschreibung_input)
+        form.addRow(lbl_beschreibung, self.beschreibung_input)
+
         layout.addLayout(form)
-        
+
         # Buttons
         btn_layout = QHBoxLayout()
-        
-        btn_save = _ui_widget(QPushButton, "Speichern", setter='setText')
+
+        btn_save = _ui_widget(QPushButton, "&Speichern", setter='setText')
+        _ui_set(btn_save, 'setAccessibleName', "Internetressource speichern")
+        _ui_set(btn_save, 'setToolTip', "Internetressource als URL-Verknüpfung speichern (Enter)")
         btn_save.clicked.connect(self.save_resource)
         btn_save.setDefault(True)
-        
-        btn_cancel = _ui_widget(QPushButton, " Abbrechen", setter='setText')
+
+        btn_cancel = _ui_widget(QPushButton, "&Abbrechen", setter='setText')
+        _ui_set(btn_cancel, 'setAccessibleName', "Vorgang abbrechen")
+        _ui_set(btn_cancel, 'setToolTip', "Dialog schließen ohne zu speichern (Esc)")
         btn_cancel.clicked.connect(self.reject)
-        
+
         btn_layout.addStretch()
         btn_layout.addWidget(btn_save)
         btn_layout.addWidget(btn_cancel)
-        
+
         layout.addLayout(btn_layout)
-    
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Escape:
+            self.reject()
+            return
+        super().keyPressEvent(event)
+
     def save_resource(self):
         """Speichert Internetressource"""
         bezeichnung = self.bezeichnung_input.text().strip()
         adresse = self.adresse_input.text().strip()
-        
+
         if not bezeichnung or not adresse:
             _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Bezeichnung und Adresse sind erforderlich!"))
             return
-        
+
         # URL validieren
         if not adresse.startswith(('http://', 'https://', 'ftp://')):
             _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Adresse muss mit http://, https:// oder ftp:// beginnen!"))
             return
-        
+
         self.result_data = {
             'bezeichnung': bezeichnung,
             'anbieter': self.anbieter_input.text().strip(),
@@ -4276,100 +4477,163 @@ class InternetResourceDialog(QDialog):
             'tags': self.tags_input.text().strip(),
             'beschreibung': self.beschreibung_input.toPlainText().strip()
         }
-        
+
         self.accept()
 
 
 class LiteratureReferenceDialog(QDialog):
-    """Dialog zum Anlegen von Literaturverweisen"""
-    
+    """Dialog zum Anlegen von Literaturverweisen (barrierefrei nach WCAG 2.1 AA / BITV 2.0)."""
+
     def __init__(self, parent=None):
         super().__init__(parent)
-        _ui_set(self, 'setWindowTitle', " Neuer Literaturverweis")
-        self.resize(650, 550)
+        _ui_set(self, 'setWindowTitle', "Neuer Literaturverweis")
+        _ui_set(self, 'setAccessibleName', "Neuer Literaturverweis")
+        _ui_set(self, 'setAccessibleDescription', "Dialog zur Erfassung bibliografischer Literaturangaben und physischer Standorte")
+        self.resize(650, 560)
         self.result_data = None
         self.init_ui()
-    
+
     def init_ui(self):
         layout = QVBoxLayout(self)
-        
+
         # Info
         info = _ui_widget(QLabel, "Erstellen Sie einen Literaturverweis:", setter='setText')
         info.setWordWrap(True)
+        _ui_set(info, 'setAccessibleName', "Hinweis zum Literaturverweis")
         layout.addWidget(info)
-        
+
         # Formular
         form = QFormLayout()
-        
+
         self.titel_input = QLineEdit()
         _ui_set(self.titel_input, 'setPlaceholderText', "z.B. Künstliche Intelligenz - Eine Einführung")
-        form.addRow(_ui_text("Titel*:"), self.titel_input)
-        
+        _ui_set(self.titel_input, 'setAccessibleName', "Buchtitel")
+        _ui_set(self.titel_input, 'setAccessibleDescription', "Vollständiger Titel des Buchs oder Papers")
+        _ui_set(self.titel_input, 'setToolTip', "Titel der Publikation eingeben (Pflichtfeld)")
+        lbl_titel = _ui_widget(QLabel, "&Titel*:", setter='setText')
+        lbl_titel.setBuddy(self.titel_input)
+        form.addRow(lbl_titel, self.titel_input)
+
         self.jahr_input = QLineEdit()
         _ui_set(self.jahr_input, 'setPlaceholderText', "z.B. 2024")
-        form.addRow(_ui_text("Jahr:"), self.jahr_input)
-        
+        _ui_set(self.jahr_input, 'setAccessibleName', "Erscheinungsjahr")
+        _ui_set(self.jahr_input, 'setAccessibleDescription', "Jahr der Veröffentlichung")
+        _ui_set(self.jahr_input, 'setToolTip', "Erscheinungsjahr eingeben (optional)")
+        lbl_jahr = _ui_widget(QLabel, "&Jahr:", setter='setText')
+        lbl_jahr.setBuddy(self.jahr_input)
+        form.addRow(lbl_jahr, self.jahr_input)
+
         self.autoren_input = QLineEdit()
         _ui_set(self.autoren_input, 'setPlaceholderText', "z.B. Max Mustermann, Anna Schmidt")
-        form.addRow(_ui_text("Autoren:"), self.autoren_input)
-        
+        _ui_set(self.autoren_input, 'setAccessibleName', "Autorenangabe")
+        _ui_set(self.autoren_input, 'setAccessibleDescription', "Kommagetrennte Autorennamen")
+        _ui_set(self.autoren_input, 'setToolTip', "Autoren der Publikation eingeben (optional)")
+        lbl_autoren = _ui_widget(QLabel, "&Autoren:", setter='setText')
+        lbl_autoren.setBuddy(self.autoren_input)
+        form.addRow(lbl_autoren, self.autoren_input)
+
         self.verlag_input = QLineEdit()
         _ui_set(self.verlag_input, 'setPlaceholderText', "z.B. Springer Verlag")
-        form.addRow(_ui_text("Verlag:"), self.verlag_input)
-        
+        _ui_set(self.verlag_input, 'setAccessibleName', "Verlag oder Herausgeber")
+        _ui_set(self.verlag_input, 'setAccessibleDescription', "Verlag oder publizierende Institution")
+        _ui_set(self.verlag_input, 'setToolTip', "Verlag oder Herausgeber eingeben (optional)")
+        lbl_verlag = _ui_widget(QLabel, "&Verlag:", setter='setText')
+        lbl_verlag.setBuddy(self.verlag_input)
+        form.addRow(lbl_verlag, self.verlag_input)
+
         self.isbn_input = QLineEdit()
         _ui_set(self.isbn_input, 'setPlaceholderText', "z.B. 978-3-16-148410-0")
-        form.addRow(_ui_text("ISBN:"), self.isbn_input)
-        
+        _ui_set(self.isbn_input, 'setAccessibleName', "ISBN-Nummer")
+        _ui_set(self.isbn_input, 'setAccessibleDescription', "Internationale Standardbuchnummer")
+        _ui_set(self.isbn_input, 'setToolTip', "ISBN eingeben (optional)")
+        lbl_isbn = _ui_widget(QLabel, "&ISBN:", setter='setText')
+        lbl_isbn.setBuddy(self.isbn_input)
+        form.addRow(lbl_isbn, self.isbn_input)
+
         # Physische Standortangaben
         self.raum_input = QLineEdit()
         _ui_set(self.raum_input, 'setPlaceholderText', "z.B. Arbeitszimmer, Bibliothek")
-        form.addRow(_ui_text("Raum:"), self.raum_input)
-        
+        _ui_set(self.raum_input, 'setAccessibleName', "Raumangabe")
+        _ui_set(self.raum_input, 'setAccessibleDescription', "Standort oder Bibliothek")
+        _ui_set(self.raum_input, 'setToolTip', "Raum oder Bibliothek eingeben (optional)")
+        lbl_raum = _ui_widget(QLabel, "&Raum:", setter='setText')
+        lbl_raum.setBuddy(self.raum_input)
+        form.addRow(lbl_raum, self.raum_input)
+
         self.regal_input = QLineEdit()
         _ui_set(self.regal_input, 'setPlaceholderText', "z.B. Regal B, links")
-        form.addRow(_ui_text("Regal:"), self.regal_input)
-        
+        _ui_set(self.regal_input, 'setAccessibleName', "Regalangabe")
+        _ui_set(self.regal_input, 'setAccessibleDescription', "Regal oder Standort im Raum")
+        _ui_set(self.regal_input, 'setToolTip', "Regal eingeben (optional)")
+        lbl_regal = _ui_widget(QLabel, "Re&gal:", setter='setText')
+        lbl_regal.setBuddy(self.regal_input)
+        form.addRow(lbl_regal, self.regal_input)
+
         # Online
         self.internet_input = QLineEdit()
         _ui_set(self.internet_input, 'setPlaceholderText', "https://... (optional)")
-        form.addRow(_ui_text("Internetlink:"), self.internet_input)
-        
+        _ui_set(self.internet_input, 'setAccessibleName', "Online-Link oder DOI")
+        _ui_set(self.internet_input, 'setAccessibleDescription', "Web-Link oder DOI zur elektronischen Fassung")
+        _ui_set(self.internet_input, 'setToolTip', "Weblink oder DOI eingeben (optional)")
+        lbl_internet = _ui_widget(QLabel, "Internet&link:", setter='setText')
+        lbl_internet.setBuddy(self.internet_input)
+        form.addRow(lbl_internet, self.internet_input)
+
         self.tags_input = QLineEdit()
         _ui_set(self.tags_input, 'setPlaceholderText', "Tags mit Komma getrennt")
-        form.addRow(_ui_text("Tags:"), self.tags_input)
-        
+        _ui_set(self.tags_input, 'setAccessibleName', "Schlagwörter und Tags")
+        _ui_set(self.tags_input, 'setAccessibleDescription', "Kommagetrennte Schlagwörter zur thematischen Einordnung")
+        _ui_set(self.tags_input, 'setToolTip', "Kommagetrennte Schlagwörter eingeben (optional)")
+        lbl_tags = _ui_widget(QLabel, "&Schlagwörter / Tags:", setter='setText')
+        lbl_tags.setBuddy(self.tags_input)
+        form.addRow(lbl_tags, self.tags_input)
+
         self.beschreibung_input = QTextEdit()
         _ui_set(self.beschreibung_input, 'setPlaceholderText', "Notizen, Zusammenfassung...")
         self.beschreibung_input.setMaximumHeight(120)
-        form.addRow(_ui_text("Beschreibung:"), self.beschreibung_input)
-        
+        _ui_set(self.beschreibung_input, 'setAccessibleName', "Literaturzusammenfassung")
+        _ui_set(self.beschreibung_input, 'setAccessibleDescription', "Notizen, Zusammenfassung oder Abstract")
+        _ui_set(self.beschreibung_input, 'setToolTip', "Notizen oder Kurzbeschreibung eingeben (optional)")
+        lbl_beschreibung = _ui_widget(QLabel, "Bes&chreibung:", setter='setText')
+        lbl_beschreibung.setBuddy(self.beschreibung_input)
+        form.addRow(lbl_beschreibung, self.beschreibung_input)
+
         layout.addLayout(form)
-        
+
         # Buttons
         btn_layout = QHBoxLayout()
-        
-        btn_save = _ui_widget(QPushButton, "Speichern", setter='setText')
+
+        btn_save = _ui_widget(QPushButton, "&Speichern", setter='setText')
+        _ui_set(btn_save, 'setAccessibleName', "Literaturverweis speichern")
+        _ui_set(btn_save, 'setToolTip', "Literaturverweis speichern und schließen (Enter)")
         btn_save.clicked.connect(self.save_reference)
         btn_save.setDefault(True)
-        
-        btn_cancel = _ui_widget(QPushButton, " Abbrechen", setter='setText')
+
+        btn_cancel = _ui_widget(QPushButton, "&Abbrechen", setter='setText')
+        _ui_set(btn_cancel, 'setAccessibleName', "Vorgang abbrechen")
+        _ui_set(btn_cancel, 'setToolTip', "Dialog schließen ohne zu speichern (Esc)")
         btn_cancel.clicked.connect(self.reject)
-        
+
         btn_layout.addStretch()
         btn_layout.addWidget(btn_save)
         btn_layout.addWidget(btn_cancel)
-        
+
         layout.addLayout(btn_layout)
-    
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Escape:
+            self.reject()
+            return
+        super().keyPressEvent(event)
+
     def save_reference(self):
         """Speichert Literaturverweis"""
         titel = self.titel_input.text().strip()
-        
+
         if not titel:
             _ui_message_box('warning', self, _ui_text("Fehler"), _ui_text("Titel ist erforderlich!"))
             return
-        
+
         self.result_data = {
             'titel': titel,
             'jahr': self.jahr_input.text().strip(),
@@ -4382,7 +4646,7 @@ class LiteratureReferenceDialog(QDialog):
             'tags': self.tags_input.text().strip(),
             'beschreibung': self.beschreibung_input.toPlainText().strip()
         }
-        
+
         self.accept()
 
 
@@ -9126,7 +9390,10 @@ class UnifiedMainWindow(QMainWindow):
         self.act_shortcuts.setShortcut(QKeySequence("F1"))
         _ui_set(self.act_shortcuts, 'setStatusTip', "Übersicht zu Tastaturkürzeln und Navigation anzeigen (F1)")
         self.help_menu.addSeparator()
-        self.action_about = self.help_menu.addAction(_ui_text("Über"), self.show_about)
+        self.action_about = self.help_menu.addAction(_ui_text("&Über ProFiler Suite"), self.show_about)
+        self.act_about = self.action_about
+        self.action_about.setShortcut(QKeySequence("Shift+F1"))
+        _ui_set(self.action_about, 'setStatusTip', "Informationen über ProFiler Suite, Version und Lizenz anzeigen (Shift+F1)")
 
         # Global keyboard shortcuts.
         self.shortcut_find = QShortcut(QKeySequence("Ctrl+F"), self)
@@ -9185,7 +9452,8 @@ class UnifiedMainWindow(QMainWindow):
         self.act_shortcuts.setStatusTip(
             _ui_text("Übersicht zu Tastaturkürzeln und Navigation anzeigen (F1)")
         )
-        self.action_about.setText(_ui_text("Über"))
+        self.action_about.setText(_ui_text("&Über ProFiler Suite"))
+        self.action_about.setStatusTip(_ui_text("Informationen über ProFiler Suite, Version und Lizenz anzeigen (Shift+F1)"))
         key, values, deadline = self._status_message
         if deadline is not None:
             remaining_ms = int((deadline - time.monotonic()) * 1000)
@@ -9332,8 +9600,14 @@ class UnifiedMainWindow(QMainWindow):
         return dialog.exec()
     
     def show_about(self):
-        """Über-Dialog"""
-        _ui_message_box('about', self, _ui_text("ProFiler Suite {value0}", value0=APP_VERSION), _ui_text("ProFiler Suite {value0}\n\nFeatures:\n• PDF-Verschlüsselung/Entschlüsselung\n• PDF-Auszüge erstellen\n• OCR-Texterkennung\n• Text aus PDF entfernen\n• Masterpasswort-Management\n\n© 2024", value0=APP_VERSION))
+        """Über-Dialog (barrierefrei mit Shift+F1)."""
+        dialog = AboutDialog(self)
+        if os.environ.get("QT_QPA_PLATFORM") == "offscreen":
+            dialog.show()
+            dialog.close()
+            return dialog
+        dialog.exec()
+        return dialog
         
     def launch_form_constructor(self):
         """Startet FormConstructor (NEU V13!)"""

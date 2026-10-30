@@ -1034,3 +1034,144 @@ def test_worker_messages_picker_accessibility_and_pdf_intro_follow_ui_locale(mon
                 delattr(app, "_profiler_ui_translator")
         else:
             app._profiler_ui_translator = previous_translator
+
+def test_reference_dialogs_expose_accessible_context_and_umlauts():
+    app = QApplication.instance() or QApplication([])
+
+    # 1. MaterialReferenceDialog
+    mat_dialog = profiler.MaterialReferenceDialog()
+    assert mat_dialog.windowTitle() == "Neuer Materialverweis"
+    assert mat_dialog.accessibleName() == "Neuer Materialverweis"
+    assert "physischer Material-" in mat_dialog.accessibleDescription()
+    assert mat_dialog.bezeichnung_input.accessibleName() == "Materialbezeichnung"
+    assert "Pflichtfeld" in mat_dialog.bezeichnung_input.toolTip()
+    assert mat_dialog.raum_input.accessibleName() == "Raumangabe"
+    assert mat_dialog.regal_input.accessibleName() == "Regalangabe"
+    assert mat_dialog.bereich_input.accessibleName() == "Bereichs- oder Fachangabe"
+    assert mat_dialog.inventar_input.accessibleName() == "Inventarnummer"
+    assert mat_dialog.tags_input.accessibleName() == "Schlagwörter und Tags"
+    assert mat_dialog.beschreibung_input.accessibleName() == "Materialbeschreibung"
+
+    # Buttons & Esc-Handler
+    btn_save = _button_by_accessible_name(mat_dialog, "Materialverweis speichern")
+    assert btn_save.text() == "&Speichern"
+    assert btn_save.isDefault()
+    btn_cancel = _button_by_accessible_name(mat_dialog, "Vorgang abbrechen")
+    assert btn_cancel.text() == "&Abbrechen"
+
+    from PySide6.QtCore import Qt
+    from PySide6.QtGui import QKeyEvent
+    key_esc = QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_Escape, Qt.KeyboardModifier.NoModifier)
+    mat_dialog.keyPressEvent(key_esc)
+    assert mat_dialog.result() == profiler.QDialog.DialogCode.Rejected
+
+    # 2. PromptFileDialog & echte Umlaute
+    prompt_dialog = profiler.PromptFileDialog()
+    assert prompt_dialog.windowTitle() == "Prompt-Datei erstellen"
+    assert prompt_dialog.accessibleName() == "Prompt-Datei Dialog"
+    assert "Prompt-Vorlagen" in prompt_dialog.accessibleDescription()
+    assert prompt_dialog.name_input.accessibleName() == "Prompt-Name"
+    assert prompt_dialog.version_input.accessibleName() == "Prompt-Versionsnummer"
+    assert prompt_dialog.zweck_input.accessibleName() == "Prompt-Zweck und Beschreibung"
+    assert prompt_dialog.prompt_input.accessibleName() == "Prompt-Volltext"
+    assert prompt_dialog.resultate_input.accessibleName() == "Optionale Beispielresultate"
+
+    # Echte deutsche Umlaute für Verbesserungsvorschläge
+    assert prompt_dialog.verbesserungen_input.accessibleName() == "Verbesserungsvorschläge"
+    labels = [lbl.text() for lbl in prompt_dialog.findChildren(profiler.QLabel)]
+    assert any("Verbesserungsvorschläge:" in t for t in labels)
+    assert not any("Verbesserungsvorschlge:" in t for t in labels)
+
+    prompt_save = _button_by_accessible_name(prompt_dialog, "Prompt-Datei speichern")
+    assert prompt_save.text() == "&Speichern"
+    prompt_dialog.keyPressEvent(key_esc)
+    assert prompt_dialog.result() == profiler.QDialog.DialogCode.Rejected
+
+    # 3. InternetResourceDialog
+    net_dialog = profiler.InternetResourceDialog()
+    assert net_dialog.windowTitle() == "Neue Internetressource"
+    assert not net_dialog.windowTitle().startswith(" ")
+    assert net_dialog.accessibleName() == "Neue Internetressource"
+    assert net_dialog.bezeichnung_input.accessibleName() == "Ressourcenbezeichnung"
+    assert net_dialog.anbieter_input.accessibleName() == "Anbieter oder Plattform"
+    assert net_dialog.adresse_input.accessibleName() == "Internetadresse (URL)"
+    assert net_dialog.tags_input.accessibleName() == "Schlagwörter und Tags"
+    assert net_dialog.beschreibung_input.accessibleName() == "Ressourcenbeschreibung"
+    net_dialog.keyPressEvent(key_esc)
+    assert net_dialog.result() == profiler.QDialog.DialogCode.Rejected
+
+    # 4. LiteratureReferenceDialog
+    lit_dialog = profiler.LiteratureReferenceDialog()
+    assert lit_dialog.windowTitle() == "Neuer Literaturverweis"
+    assert not lit_dialog.windowTitle().startswith(" ")
+    assert lit_dialog.accessibleName() == "Neuer Literaturverweis"
+    assert lit_dialog.titel_input.accessibleName() == "Buchtitel"
+    assert lit_dialog.jahr_input.accessibleName() == "Erscheinungsjahr"
+    assert lit_dialog.autoren_input.accessibleName() == "Autorenangabe"
+    assert lit_dialog.verlag_input.accessibleName() == "Verlag oder Herausgeber"
+    assert lit_dialog.isbn_input.accessibleName() == "ISBN-Nummer"
+    assert lit_dialog.raum_input.accessibleName() == "Raumangabe"
+    assert lit_dialog.regal_input.accessibleName() == "Regalangabe"
+    assert lit_dialog.internet_input.accessibleName() == "Online-Link oder DOI"
+    assert lit_dialog.tags_input.accessibleName() == "Schlagwörter und Tags"
+    assert lit_dialog.beschreibung_input.accessibleName() == "Literaturzusammenfassung"
+    lit_dialog.keyPressEvent(key_esc)
+    assert lit_dialog.result() == profiler.QDialog.DialogCode.Rejected
+
+    mat_dialog.close()
+    prompt_dialog.close()
+    net_dialog.close()
+    lit_dialog.close()
+
+
+def test_about_dialog_conformance_and_shortcut():
+    app = QApplication.instance() or QApplication([])
+    about = profiler.AboutDialog()
+
+    assert f"ProFiler Suite {profiler.APP_VERSION}" in about.windowTitle()
+    assert about.accessibleName() == "Über ProFiler Suite Dialog"
+    assert "Lizenzierung, Zero-Egress Invarianten" in about.accessibleDescription()
+    assert about.isModal()
+
+    labels = [lbl.text() for lbl in about.findChildren(profiler.QLabel)]
+    full_text = " ".join(labels)
+    assert profiler.APP_VERSION in full_text
+    assert "GNU AGPL v3" in full_text
+    assert "100% Local-First / Zero-Egress" in full_text
+    assert "RunAsInvoker" in full_text
+    assert "file-bricks / open-bricks" in full_text
+    assert str(profiler.app_data_dir()) in full_text
+    assert str(profiler.SETTINGS_PATH) in full_text
+
+    # Button
+    assert about.btn_close.text() == "&Schließen"
+    assert about.btn_close.isDefault()
+    assert about.btn_close.accessibleName() == "Dialog schließen"
+
+    # Esc
+    from PySide6.QtCore import Qt
+    from PySide6.QtGui import QKeyEvent
+    key_esc = QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_Escape, Qt.KeyboardModifier.NoModifier)
+    about.keyPressEvent(key_esc)
+    assert about.result() == profiler.QDialog.DialogCode.Accepted
+
+    # Main window action & Shift+F1 shortcut
+    settings = DummySettings()
+    win = profiler.UnifiedMainWindow(settings=settings)
+    assert hasattr(win, "act_about")
+    assert win.act_about.text() == "&Über ProFiler Suite"
+    assert win.act_about.shortcut().toString() == "Shift+F1"
+    assert "Shift+F1" in win.act_about.statusTip()
+
+    # show_about returns AboutDialog
+    dlg = win.show_about()
+    assert isinstance(dlg, profiler.AboutDialog)
+
+    # ShortcutsDialog lists Shift+F1
+    sc_dlg = profiler.ShortcutsDialog()
+    keys = [sc_dlg.table.item(row, 0).text() for row in range(sc_dlg.table.rowCount())]
+    assert "Shift+F1" in keys
+
+    sc_dlg.close()
+    win.close()
+    about.close()
