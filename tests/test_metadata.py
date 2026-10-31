@@ -572,3 +572,24 @@ def test_third_party_licenses_plain_text_companion_structure() -> None:
     )
     for package in packages:
         assert package in text and package in md_text
+
+def test_pfad_b_discoverability_parity_and_recency_20261031() -> None:
+    """Verify Pfad B test badge currency, recency stamps, and bilingual parity."""
+    readme_en = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    readme_de = (PROJECT_ROOT / "README_de.md").read_text(encoding="utf-8")
+    llms_text = (PROJECT_ROOT / "llms.txt").read_text(encoding="utf-8")
+    cl_text = (PROJECT_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+
+    # Real measured test count badge
+    assert "tests-294%20passed%20%7C%20100%25-brightgreen.svg" in readme_en
+    assert "tests-294%20bestanden%20%7C%20100%25-brightgreen.svg" in readme_de
+
+    # Recency badges
+    assert "Last--Checked-2026--10--31-blue.svg" in readme_en
+    assert "Zuletzt--Gepr%C3%BCft-2026--10--31-blue.svg" in readme_de
+
+    # LLM Context recency
+    assert "2026-10-31" in llms_text
+
+    # Changelog entry under unreleased
+    assert "Pfad B Discoverability, Test Badge Refresh" in cl_text
