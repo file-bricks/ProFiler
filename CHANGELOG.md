@@ -5,6 +5,16 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Geändert / Changed (2026-10-31 — Pfad B Discoverability, Test Badge Refresh & Documentation Polish)
+- **README & Badges Polish (README.md, README_de.md):**
+  - Aktualisierung und Bereinigung der Badges-Header: Testsuite-Badge auf reale Messung (294 passed / 294 bestanden, 100% grün) synchronisiert; Prüfstempel auf 2026-10-31 aktualisiert.
+  - Bereinigung von Whitespace und Leerzeilen im Kopfbereich beider READMEs unter striktem Erhalt aller 18 bilateralen Schnellnavigations-Anker und wechselseitigen HTML-Anker-Tags (sec-01 bis sec-18).
+- **LLM Context & RAG Index (llms.txt):**
+  - Prüfdatum auf aktuellen Stand 2026-10-31 nachgezogen.
+- **Eingefrorene Version 15.0.2:**
+  - Versionsnummer gemäß T-20260920-167562623 unangetastet gelassen.
+
+
 ### Geändert / Changed (2026-10-30 - UX & Accessibility Review nach WCAG 2.1 AA / BITV 2.0)
 - **Barrierefreier Über-Dialog (`AboutDialog`) & Tastaturkürzel (`Profiler_Suite_V15.py`):**
   - Dedizierter, barrierefreier Modaldialog `AboutDialog` mit Accessible Name, Accessible Description, Version 15.0.2, GNU AGPL v3 Lizenz, Local-First / Zero-Egress Invarianten, Systempfaden (`app_data_dir()`, `SETTINGS_PATH`) und Escape-Handler integriert.
@@ -244,6 +254,16 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - `llms.txt`: Last-checked Datum auf 2026-08-14 und Teststand auf 119/119 synchronisiert.
 
 ## [Unreleased]
+
+### Geändert / Changed (2026-10-31 — Pfad B Discoverability, Test Badge Refresh & Documentation Polish)
+- **README & Badges Polish (README.md, README_de.md):**
+  - Aktualisierung und Bereinigung der Badges-Header: Testsuite-Badge auf reale Messung (294 passed / 294 bestanden, 100% grün) synchronisiert; Prüfstempel auf 2026-10-31 aktualisiert.
+  - Bereinigung von Whitespace und Leerzeilen im Kopfbereich beider READMEs unter striktem Erhalt aller 18 bilateralen Schnellnavigations-Anker und wechselseitigen HTML-Anker-Tags (sec-01 bis sec-18).
+- **LLM Context & RAG Index (llms.txt):**
+  - Prüfdatum auf aktuellen Stand 2026-10-31 nachgezogen.
+- **Eingefrorene Version 15.0.2:**
+  - Versionsnummer gemäß T-20260920-167562623 unangetastet gelassen.
+
 
 ### Geändert / Changed (2026-08-14)
 - **I18N foundation:** `TranslationSystem v2.0.0` and the translation scanner support the planned DE/EN/ES/ZH/JA/RU schema with deterministic English-then-German fallbacks. New regression tests protect the language registry, direct Tier-2 values, fallback behavior, new-entry schema, and existing DE/EN translation integrity; reviewed Tier-2 translations remain a separate task.
