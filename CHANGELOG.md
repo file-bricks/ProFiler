@@ -5,6 +5,24 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Behoben / Fixed (2026-10-31 — Bugsweep BS-01: Translation Catalog CLI Interface, Parity Gate, Stream Encoding & Atomicity)
+- **CLI-Argumentbehandlung & Phantom-Ordner (`manage_translations.py`):**
+  - Naives `target = sys.argv[1]` durch standardisiertes `argparse` mit `--check` und `--dir` ersetzt; verhindert die fälschliche Erstellung von Phantom-Verzeichnissen wie `--check`.
+- **CI-Paritätsprüfung & Exit-Gating (`manage_translations.py`):**
+  - `check_translations()` implementiert: Validiert 100% Sprachabdeckung aller 966 Übersetzungsschlüssel über alle 6 Zielsprachen (DE, EN, ES, ZH, JA, RU) gemäß Policy P-006 Tier-2 mit Exit-Code 0/1.
+- **Windows UTF-8 Stream-Resilienz (`manage_translations.py`):**
+  - `_ensure_utf8_streams()` rekonfiguriert `sys.stdout` und `sys.stderr` defensiv auf UTF-8 und schützt vor Windows cp1252 `UnicodeEncodeError`-Abstürzen bei Umlauten.
+- **Quelltext-Scan-Filter gegen Test-Pollution (`manage_translations.py`, `translator.py`):**
+  - Ausschluss von `tests/`, `test_*.py`, `scripts/`, `scratch/`, `flutter_port/`, `web_companion/`, `manage_translations.py`, `translator.py` und `source_platform_smoke.py` aus String-Scans verhindert das Einspülen interner Test- und Prüfmuster in den Produktionskatalog.
+- **Regex Newline-Guards (`manage_translations.py`):**
+  - Ausschluss von Zeilenumbrüchen (`[^"\n]+`, `[^"'\n]+`) in `STRING_PATTERNS` verhindert Fehlmatches über Zeilengrenzen.
+- **Atomare Dateispeicherung & Verzeichnisschutz (`manage_translations.py`, `translator.py`):**
+  - Speichern von `translations.json` via `.tmp.{pid}`, `flush()`, `os.fsync()` und `os.replace` mit `stat.S_IWRITE`-Absicherung gegen Crash- und Stromausfallkorruption gehärtet.
+- **CWD-Unabhängigkeit (`manage_translations.py`):**
+  - Wurzelverzeichnis dynamisch an `APP_DIR = Path(__file__).resolve().parent` verankert; zuverlässige Ausführung aus beliebigen Arbeitsverzeichnissen.
+- **Hermetische Regressionstests (`tests/test_manage_translations_cli.py`):**
+  - 10 neue Vertragstests implementiert (10/10 bestanden); Gesamttestsuite auf 304 Tests ausgebaut (258 in tests/ + 46 Plattform-Smokes, 100% grün).
+
 ### Geändert / Changed (2026-10-31 — Pfad B Discoverability, Test Badge Refresh & Documentation Polish)
 - **README & Badges Polish (README.md, README_de.md):**
   - Aktualisierung und Bereinigung der Badges-Header: Testsuite-Badge auf reale Messung (294 passed / 294 bestanden, 100% grün) synchronisiert; Prüfstempel auf 2026-10-31 aktualisiert.

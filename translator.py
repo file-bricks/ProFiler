@@ -14,7 +14,9 @@ translator.set_language('en')
 """
 
 import json
+import os
 import re
+import stat
 import weakref
 from pathlib import Path
 from typing import Dict, List, Set
@@ -91,8 +93,25 @@ class TranslationSystem:
 
     def _save_translations(self):
         self.translations_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(self.translations_file, 'w', encoding='utf-8') as f:
-            json.dump(self.translations, f, indent=2, ensure_ascii=False)
+        temp_file = self.translations_file.with_name(f"{self.translations_file.name}.tmp.{os.getpid()}")
+        try:
+            with open(temp_file, 'w', encoding='utf-8') as f:
+                json.dump(self.translations, f, indent=2, ensure_ascii=False)
+                f.flush()
+                os.fsync(f.fileno())
+            if self.translations_file.exists():
+                try:
+                    os.chmod(self.translations_file, stat.S_IWRITE | stat.S_IREAD)
+                except (OSError, PermissionError):
+                    pass
+            temp_file.replace(self.translations_file)
+        except Exception:
+            if temp_file.exists():
+                try:
+                    temp_file.unlink()
+                except OSError:
+                    pass
+            raise
 
     def t(self, key: str) -> str:
         """
@@ -192,10 +211,18 @@ class TranslationSystem:
 
     def _find_german_strings(self, directory: Path) -> Set[str]:
         german_strings = set()
-        skip_dirs = {'build', 'dist', 'venv', '.venv', '__pycache__', 'releases'}
+        skip_dirs = {
+            'build', 'dist', 'venv', '.venv', '__pycache__', 'releases',
+            'scratch', 'tests', 'scripts', 'flutter_port', 'web_companion', '.git', '.pytest_temp'
+        }
+        skip_files = {
+            'manage_translations.py', 'translator.py', 'run_tests.py', 'source_platform_smoke.py', 'indent_gui_checker.py'
+        }
 
         for py_file in directory.rglob("*.py"):
             if any(folder in py_file.parts for folder in skip_dirs):
+                continue
+            if py_file.name.startswith("test_") or py_file.name in skip_files:
                 continue
             try:
                 with open(py_file, 'r', encoding='utf-8') as f:
