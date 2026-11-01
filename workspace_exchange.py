@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import logging
 import os
 import re
 import sqlite3
+import sys
 import tempfile
 from collections import Counter
 from collections.abc import Iterable
@@ -104,7 +106,7 @@ class PathRedactor:
 
 
 def export_workspace(
-    output_path: str,
+    output_path: str | Path,
     search_manager: Any,
     settings_manager: Any,
     connection_manager: Any,
@@ -163,7 +165,7 @@ def build_workspace_export(
 
 
 def import_workspace(
-    input_path: str,
+    input_path: str | Path,
     settings_manager: Any,
     preview_path: str | None = None,
     imported_at: datetime | None = None,
@@ -195,7 +197,7 @@ def import_workspace(
     }
 
 
-def load_workspace(input_path: str) -> dict[str, Any]:
+def load_workspace(input_path: str | Path) -> dict[str, Any]:
     """Load and validate a workspace export."""
     source = Path(input_path)
     try:
@@ -638,3 +640,368 @@ def _write_json_atomic(target: Path, payload: dict[str, Any],
                 pass
             except OSError:
                 logging.getLogger(__name__).warning("Eigene temporäre Workspace-Datei konnte nicht entfernt werden: %s", temporary, exc_info=True)
+
+
+class HeadlessConfigAdapter:
+    """Headless configuration adapter for workspace export/import without Qt."""
+
+    def __init__(self, config_dir: Path | None = None) -> None:
+        self.config_dir = config_dir or CONFIG_DIR
+        self.settings_path = config_path("profiler_settings.json")
+        self.search_path = config_path("search_config.json")
+        self.connections_path = config_path("connections.json")
+        self.dbs: list[str] = []
+        self.data: dict[str, Any] = {
+            "delete_mode": "soft",
+            "trash_retention_days": 30,
+            "auto_cleanup_enabled": True,
+            "ocr_language": "deu",
+            "ocr_enabled": True,
+            "prosync_path": "",
+            "theme": "dark",
+            "ui_language": "de",
+        }
+        self.connections: list[dict[str, Any]] = []
+        self._load()
+
+    def _load(self) -> None:
+        read_settings = resolve_read_path(self.settings_path.name)
+        if read_settings.exists():
+            try:
+                loaded = json.loads(read_settings.read_text(encoding="utf-8-sig"))
+                if isinstance(loaded, dict):
+                    self.data.update(loaded)
+            except (OSError, ValueError):
+                pass
+
+        read_search = resolve_read_path(self.search_path.name)
+        if read_search.exists():
+            try:
+                loaded = json.loads(read_search.read_text(encoding="utf-8-sig"))
+                if isinstance(loaded, dict):
+                    self.dbs = list(loaded.get("databases", []))
+            except (OSError, ValueError):
+                pass
+
+        read_conn = resolve_read_path(self.connections_path.name)
+        if read_conn.exists():
+            try:
+                loaded = json.loads(read_conn.read_text(encoding="utf-8-sig"))
+                if isinstance(loaded, dict):
+                    self.connections = list(loaded.get("connections", []))
+            except (OSError, ValueError):
+                pass
+
+    def list_connections(self) -> list[dict[str, Any]]:
+        return list(self.connections)
+
+    def set(self, key: str, value: Any) -> None:
+        self.data[key] = value
+
+    def save(self) -> None:
+        self.settings_path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = self.settings_path.with_suffix(f".tmp.{os.getpid()}")
+        try:
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(self.data, f, indent=2, ensure_ascii=False)
+                f.write("\n")
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(tmp, self.settings_path)
+        finally:
+            if tmp.exists():
+                try:
+                    tmp.unlink()
+                except OSError:
+                    pass
+
+
+def summarize_workspace(payload: dict[str, Any]) -> dict[str, Any]:
+    """Generate a structured summary dictionary from a validated workspace payload."""
+    workspace = payload.get("workspace", {})
+    indexes = payload.get("indexes", [])
+    total_files = sum(int(idx.get("file_count", 0)) for idx in indexes if isinstance(idx, dict))
+    all_formats = sorted({
+        fmt.lower()
+        for idx in indexes if isinstance(idx, dict)
+        for fmt in idx.get("formats", [])
+        if isinstance(fmt, str) and fmt
+    })
+    settings = payload.get("settings", {})
+    privacy = payload.get("privacy_summary", {})
+    redactions = payload.get("redactions", {})
+    app = payload.get("app", {})
+
+    return {
+        "schema": payload.get("schema", SCHEMA_NAME),
+        "schema_version": payload.get("schema_version", SCHEMA_VERSION),
+        "exported_at": payload.get("exported_at", ""),
+        "app_name": app.get("name", APP_NAME),
+        "app_version": app.get("version", APP_VERSION),
+        "workspace_name": workspace.get("name", APP_NAME),
+        "workspace_notes": workspace.get("notes", ""),
+        "connection_count": int(workspace.get("connection_count", 0)),
+        "enabled_connection_count": int(workspace.get("enabled_connection_count", 0)),
+        "indexes_count": len(indexes),
+        "total_files": total_files,
+        "formats": all_formats,
+        "settings_count": len(settings),
+        "settings": dict(settings),
+        "privacy_status": privacy.get("status", "unknown"),
+        "blacklist_terms_count": int(privacy.get("blacklist_terms_count", 0)),
+        "whitelist_terms_count": int(privacy.get("whitelist_terms_count", 0)),
+        "redactions": dict(redactions),
+    }
+
+
+def _ensure_utf8_streams() -> None:
+    """Ensure stdout and stderr use UTF-8 on Windows consoles to prevent cp1252 errors."""
+    for stream_name in ("stdout", "stderr"):
+        stream = getattr(sys, stream_name, None)
+        if stream and hasattr(stream, "reconfigure"):
+            try:
+                stream.reconfigure(encoding="utf-8", errors="replace")
+            except Exception:
+                pass
+
+
+def build_arg_parser() -> argparse.ArgumentParser:
+    """Construct command-line argument parser for workspace exchange."""
+    parser = argparse.ArgumentParser(
+        prog="workspace_exchange",
+        description="ProFiler Workspace Exchange CLI (v1) — Validierung, Inspektion, Export und Import von Arbeitsständen.",
+    )
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
+        "--validate",
+        metavar="DATEI",
+        help="Workspace-Datei gegen das profiler-workspace-v1 Schema validieren",
+    )
+    group.add_argument(
+        "--info",
+        metavar="DATEI",
+        help="Detaillierte Struktur- und Metadaten-Übersicht eines Snapshots anzeigen",
+    )
+    group.add_argument(
+        "--export",
+        metavar="ZIELDATEI",
+        help="Aktuelle ProFiler-Workspace-Konfiguration und Indizes exportieren",
+    )
+    group.add_argument(
+        "--import",
+        dest="import_file",
+        metavar="QUELLDATEI",
+        help="Workspace-Snapshot importieren und sichere Einstellungen übernehmen",
+    )
+    parser.add_argument(
+        "--preview-path",
+        metavar="PFAD",
+        help="Zielpfad für die importierte Workspace-Vorschau (Standard: imported_workspace_preview.json)",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Nur Validierung und Simulation; keine Änderungen an Einstellungen oder Vorschau",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Ergebnisse maschinenlesbar als JSON ausgeben",
+    )
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    """CLI-Haupteinstiegspunkt für workspace_exchange."""
+    _ensure_utf8_streams()
+    parser = build_arg_parser()
+
+    if argv is None and len(sys.argv) == 1:
+        parser.print_help()
+        return 2
+
+    try:
+        args = parser.parse_args(argv)
+    except SystemExit as exc:
+        return exc.code if isinstance(exc.code, int) else 2
+
+    is_json = bool(args.json)
+
+    if args.validate:
+        target = Path(args.validate)
+        try:
+            if not target.exists():
+                err_msg = f"Datei existiert nicht: {target}"
+                if is_json:
+                    print(json.dumps({"valid": False, "file": str(target), "error": err_msg, "error_type": "FileNotFoundError"}, ensure_ascii=False))
+                else:
+                    print(f"[FEHLER] {err_msg}", file=sys.stderr)
+                return 2
+            load_workspace(target)
+            if is_json:
+                print(json.dumps({"valid": True, "file": str(target), "schema": SCHEMA_NAME, "schema_version": SCHEMA_VERSION}, ensure_ascii=False))
+            else:
+                print(f"[OK] Valide Workspace-Datei: {target} (Schema: {SCHEMA_NAME} v{SCHEMA_VERSION})")
+            return 0
+        except WorkspaceFormatError as exc:
+            if is_json:
+                print(json.dumps({"valid": False, "file": str(target), "error": str(exc), "error_type": "WorkspaceFormatError"}, ensure_ascii=False))
+            else:
+                print(f"[FEHLER] Ungültiges Workspace-Format in {target}: {exc}", file=sys.stderr)
+            return 1
+        except OSError as exc:
+            if is_json:
+                print(json.dumps({"valid": False, "file": str(target), "error": str(exc), "error_type": exc.__class__.__name__}, ensure_ascii=False))
+            else:
+                print(f"[FEHLER] E/A-Fehler beim Lesen von {target}: {exc}", file=sys.stderr)
+            return 2
+
+    if args.info:
+        target = Path(args.info)
+        try:
+            if not target.exists():
+                err_msg = f"Datei existiert nicht: {target}"
+                if is_json:
+                    print(json.dumps({"success": False, "file": str(target), "error": err_msg, "error_type": "FileNotFoundError"}, ensure_ascii=False))
+                else:
+                    print(f"[FEHLER] {err_msg}", file=sys.stderr)
+                return 2
+            payload = load_workspace(target)
+            summary = summarize_workspace(payload)
+            if is_json:
+                print(json.dumps(summary, indent=2, ensure_ascii=False))
+            else:
+                formats_str = ", ".join(summary["formats"]) if summary["formats"] else "keine"
+                settings_keys = ", ".join(sorted(summary["settings"].keys())) if summary["settings"] else "keine"
+                print("=" * 60)
+                print(f"  ProFiler Workspace-Snapshot: {summary['workspace_name']}")
+                print("=" * 60)
+                print(f"  Schema:         {summary['schema']} (v{summary['schema_version']})")
+                print(f"  Exportiert am:  {summary['exported_at']}")
+                print(f"  Anwendung:      {summary['app_name']} v{summary['app_version']}")
+                print(f"  Verbindungen:   {summary['enabled_connection_count']} / {summary['connection_count']} aktiv")
+                print(f"  Indizes:        {summary['indexes_count']} ({summary['total_files']} Dateien)")
+                print(f"  Formate:        {formats_str}")
+                print(f"  Einstellungen:  {settings_keys}")
+                print(f"  Datenschutz:    {summary['privacy_status']} ({summary['blacklist_terms_count']} Blacklist, {summary['whitelist_terms_count']} Whitelist)")
+                print(f"  Redaktion:      Pfade={summary['redactions'].get('paths')}, Secrets={summary['redactions'].get('secrets')}, Rohdokumente={summary['redactions'].get('raw_documents')}")
+                print("=" * 60)
+            return 0
+        except WorkspaceFormatError as exc:
+            if is_json:
+                print(json.dumps({"success": False, "file": str(target), "error": str(exc), "error_type": "WorkspaceFormatError"}, ensure_ascii=False))
+            else:
+                print(f"[FEHLER] Ungültiges Workspace-Format in {target}: {exc}", file=sys.stderr)
+            return 1
+        except OSError as exc:
+            if is_json:
+                print(json.dumps({"success": False, "file": str(target), "error": str(exc), "error_type": exc.__class__.__name__}, ensure_ascii=False))
+            else:
+                print(f"[FEHLER] E/A-Fehler beim Lesen von {target}: {exc}", file=sys.stderr)
+            return 2
+
+    if args.export:
+        target = Path(args.export)
+        adapter = HeadlessConfigAdapter()
+        try:
+            payload = export_workspace(
+                target,
+                adapter,
+                adapter,
+                adapter,
+            )
+            file_size = target.stat().st_size if target.exists() else 0
+            if is_json:
+                print(json.dumps({
+                    "success": True,
+                    "exported_file": str(target),
+                    "file_size": file_size,
+                    "workspace_name": payload.get("workspace", {}).get("name", APP_NAME),
+                    "indexes_count": len(payload.get("indexes", [])),
+                }, ensure_ascii=False))
+            else:
+                print(f"[OK] Workspace erfolgreich exportiert nach: {target}")
+                print(f"     Dateigröße: {file_size} Bytes | Indizes: {len(payload.get('indexes', []))}")
+            return 0
+        except WorkspaceFormatError as exc:
+            if is_json:
+                print(json.dumps({"success": False, "target": str(target), "error": str(exc), "error_type": "WorkspaceFormatError"}, ensure_ascii=False))
+            else:
+                print(f"[FEHLER] Export abgelehnt: {exc}", file=sys.stderr)
+            return 1
+        except OSError as exc:
+            if is_json:
+                print(json.dumps({"success": False, "target": str(target), "error": str(exc), "error_type": exc.__class__.__name__}, ensure_ascii=False))
+            else:
+                print(f"[FEHLER] E/A-Fehler beim Export nach {target}: {exc}", file=sys.stderr)
+            return 2
+
+    if args.import_file:
+        source = Path(args.import_file)
+        try:
+            if not source.exists():
+                err_msg = f"Datei existiert nicht: {source}"
+                if is_json:
+                    print(json.dumps({"success": False, "file": str(source), "error": err_msg, "error_type": "FileNotFoundError"}, ensure_ascii=False))
+                else:
+                    print(f"[FEHLER] {err_msg}", file=sys.stderr)
+                return 2
+
+            if args.dry_run:
+                payload = load_workspace(source)
+                settings = payload.get("settings", {})
+                applicable = [k for k in SAFE_IMPORT_SETTINGS if k in settings]
+                if is_json:
+                    print(json.dumps({
+                        "success": True,
+                        "dry_run": True,
+                        "file": str(source),
+                        "workspace_name": payload.get("workspace", {}).get("name", APP_NAME),
+                        "indexes_count": len(payload.get("indexes", [])),
+                        "applicable_settings": applicable,
+                    }, ensure_ascii=False))
+                else:
+                    print(f"[DRY-RUN] Workspace-Snapshot ist valide: {source}")
+                    print(f"          Workspace: {payload.get('workspace', {}).get('name', APP_NAME)}")
+                    print(f"          Indizes im Snapshot: {len(payload.get('indexes', []))}")
+                    print(f"          Anwendbare Einstellungen: {', '.join(applicable) if applicable else 'keine'}")
+                return 0
+
+            adapter = HeadlessConfigAdapter()
+            result = import_workspace(source, adapter, preview_path=args.preview_path)
+            adapter.save()
+            if is_json:
+                print(json.dumps({
+                    "success": True,
+                    "file": str(source),
+                    "workspace_name": result["workspace_name"],
+                    "indexes_count": result["indexes_count"],
+                    "applied_settings": result["applied_settings"],
+                    "preview_path": result["preview_path"],
+                }, ensure_ascii=False))
+            else:
+                applied_str = ", ".join(result["applied_settings"]) if result["applied_settings"] else "keine"
+                print(f"[OK] Workspace erfolgreich importiert: {source}")
+                print(f"     Workspace: {result['workspace_name']}")
+                print(f"     Indizes im Snapshot: {result['indexes_count']}")
+                print(f"     Übernommene Einstellungen: {applied_str}")
+                print(f"     Vorschau gespeichert unter: {result['preview_path']}")
+            return 0
+        except WorkspaceFormatError as exc:
+            if is_json:
+                print(json.dumps({"success": False, "file": str(source), "error": str(exc), "error_type": "WorkspaceFormatError"}, ensure_ascii=False))
+            else:
+                print(f"[FEHLER] Import abgelehnt: {exc}", file=sys.stderr)
+            return 1
+        except OSError as exc:
+            if is_json:
+                print(json.dumps({"success": False, "file": str(source), "error": str(exc), "error_type": exc.__class__.__name__}, ensure_ascii=False))
+            else:
+                print(f"[FEHLER] E/A-Fehler beim Import von {source}: {exc}", file=sys.stderr)
+            return 2
+
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -5,6 +5,20 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Hinzugefügt / Added (2026-11-02 — Headless Workspace Exchange CLI, Validation Gate & Structure Summary)
+- **Headless CLI Interface (`workspace_exchange.py`):**
+  - Standalone-CLI-Einstiegspunkt mit standardisiertem `argparse` integriert: `--validate` zur schema-konformen Prüfung ohne Qt-Initialisierung, `--info` zur Anzeige einer detaillierten Struktur- und Metadaten-Übersicht, `--export` für den headless Export des aktuellen Arbeitsstands und `--import` (inkl. `--dry-run`) für die sichere Übernahme von Einstellungen.
+- **Maschinenlesbare JSON-Ausgabe (`workspace_exchange.py`):**
+  - `--json`-Flag für alle Modi (--validate, --info, --export, --import) zur nahtlosen CI/CD- und Automation-Integration implementiert; standardisierte Exit-Codes (0 = Erfolg/valide, 1 = Formaterror/Schema-Ablehnung, 2 = E/A- oder Dateifehler).
+- **Headless Configuration Adapter (`workspace_exchange.py`):**
+  - `HeadlessConfigAdapter` implementiert: Lädt und persistiert Konfigurations- und Indexquellen (`profiler_settings.json`, `search_config.json`, `connections.json`) CWD- und AppData-konform via atomarem Schreibschutz ohne PySide6-Abhängigkeit.
+- **Strukturübersicht & Aggregation (`workspace_exchange.py`):**
+  - `summarize_workspace()` aggregiert Snapshot-Metadaten, Indexstatistiken (Dateianzahlen, Formatkataloge), Datenschutzstatus und Redaktionsflags zu einer konsistenten Übersicht.
+- **Windows UTF-8 Stream-Resilienz (`workspace_exchange.py`):**
+  - `_ensure_utf8_streams()` konfiguriert `sys.stdout` und `sys.stderr` defensiv auf UTF-8 und verhindert Windows cp1252 `UnicodeEncodeError`-Abstürze bei Umlauten in CLI-Ausgaben.
+- **Automatisierte Vertragstests (`tests/test_workspace_exchange_cli.py`):**
+  - 20 neue hermetische Vertragstests implementiert (20/20 bestanden); Gesamttestsuite auf 324 Tests ausgebaut (278 in tests/ + 46 Root-Smokes, 100% grün).
+
 ### Behoben / Fixed (2026-10-31 — Bugsweep BS-01: Translation Catalog CLI Interface, Parity Gate, Stream Encoding & Atomicity)
 - **CLI-Argumentbehandlung & Phantom-Ordner (`manage_translations.py`):**
   - Naives `target = sys.argv[1]` durch standardisiertes `argparse` mit `--check` und `--dir` ersetzt; verhindert die fälschliche Erstellung von Phantom-Verzeichnissen wie `--check`.
