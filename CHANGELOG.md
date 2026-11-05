@@ -5,6 +5,21 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Geändert / Changed (2026-11-05 — Software Pipeline Wartung, Git-Hygiene & Badges Parity)
+- **Git-Hygiene & Pattern Defense (`.gitignore`):**
+  - `MARKETING-LOG.txt` aus Git-Tracking entfernt (`git rm --cached`) und `.gitignore` um Ausschlussregeln für interne Logdateien (`MARKETING-LOG.txt`, `CHECKS-LOG.txt`) gehärtet (T-20260926-455218633 / GITHUB-POLICY.md §4).
+- **Universal-Launcher (`START.bat`):**
+  - Forwarding für CLI-Argumente (`%*`) hinzugefügt; Erkennung für `dist\ProFiler.exe` sowie `py -3` Launcher-Unterstützung implementiert.
+- **README & Badges Synchronisation (`README.md`, `README_de.md`):**
+  - Testsuite-Badge auf den realen Stand von 326 Tests (326 passed / 326 bestanden | 100% grün) synchronisiert.
+  - Prüfstempel auf 2026-11-05 (`Last-Checked-2026--11--05`, `Zuletzt-Geprüft-2026--11--05`) aktualisiert.
+- **LLM Context & RAG Index (`llms.txt`):**
+  - Prüfdatum auf 2026-11-05 synchronisiert.
+- **Automatisierte Vertragstests (`tests/test_metadata.py`):**
+  - `test_internal_logs_not_tracked()` und `test_start_bat_launcher()` hinzugefügt; Test- und Prüfstempelassertionen auf 326 Tests und 2026-11-05 aktualisiert.
+- **Version-Freeze Disziplin:**
+  - Version 15.0.2 strikt unangetastet gelassen gem. T-20260920-167562623.
+
 ### Hinzugefügt / Added (2026-11-02 — Headless Workspace Exchange CLI, Validation Gate & Structure Summary)
 - **Headless CLI Interface (`workspace_exchange.py`):**
   - Standalone-CLI-Einstiegspunkt mit standardisiertem `argparse` integriert: `--validate` zur schema-konformen Prüfung ohne Qt-Initialisierung, `--info` zur Anzeige einer detaillierten Struktur- und Metadaten-Übersicht, `--export` für den headless Export des aktuellen Arbeitsstands und `--import` (inkl. `--dry-run`) für die sichere Übernahme von Einstellungen.
@@ -286,6 +301,21 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - `llms.txt`: Last-checked Datum auf 2026-08-14 und Teststand auf 119/119 synchronisiert.
 
 ## [Unreleased]
+
+### Geändert / Changed (2026-11-05 — Software Pipeline Wartung, Git-Hygiene & Badges Parity)
+- **Git-Hygiene & Pattern Defense (`.gitignore`):**
+  - `MARKETING-LOG.txt` aus Git-Tracking entfernt (`git rm --cached`) und `.gitignore` um Ausschlussregeln für interne Logdateien (`MARKETING-LOG.txt`, `CHECKS-LOG.txt`) gehärtet (T-20260926-455218633 / GITHUB-POLICY.md §4).
+- **Universal-Launcher (`START.bat`):**
+  - Forwarding für CLI-Argumente (`%*`) hinzugefügt; Erkennung für `dist\ProFiler.exe` sowie `py -3` Launcher-Unterstützung implementiert.
+- **README & Badges Synchronisation (`README.md`, `README_de.md`):**
+  - Testsuite-Badge auf den realen Stand von 326 Tests (326 passed / 326 bestanden | 100% grün) synchronisiert.
+  - Prüfstempel auf 2026-11-05 (`Last-Checked-2026--11--05`, `Zuletzt-Geprüft-2026--11--05`) aktualisiert.
+- **LLM Context & RAG Index (`llms.txt`):**
+  - Prüfdatum auf 2026-11-05 synchronisiert.
+- **Automatisierte Vertragstests (`tests/test_metadata.py`):**
+  - `test_internal_logs_not_tracked()` und `test_start_bat_launcher()` hinzugefügt; Test- und Prüfstempelassertionen auf 326 Tests und 2026-11-05 aktualisiert.
+- **Version-Freeze Disziplin:**
+  - Version 15.0.2 strikt unangetastet gelassen gem. T-20260920-167562623.
 
 ### Geändert / Changed (2026-10-31 — Pfad B Discoverability, Test Badge Refresh & Documentation Polish)
 - **README & Badges Polish (README.md, README_de.md):**
