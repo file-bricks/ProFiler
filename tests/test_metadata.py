@@ -573,7 +573,7 @@ def test_third_party_licenses_plain_text_companion_structure() -> None:
     for package in packages:
         assert package in text and package in md_text
 
-def test_pfad_b_discoverability_parity_and_recency_20261031() -> None:
+def test_pfad_b_discoverability_parity_and_recency_20261105() -> None:
     """Verify Pfad B test badge currency, recency stamps, and bilingual parity."""
     readme_en = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
     readme_de = (PROJECT_ROOT / "README_de.md").read_text(encoding="utf-8")
@@ -581,15 +581,31 @@ def test_pfad_b_discoverability_parity_and_recency_20261031() -> None:
     cl_text = (PROJECT_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
 
     # Real measured test count badge
-    assert "tests-294%20passed%20%7C%20100%25-brightgreen.svg" in readme_en
-    assert "tests-294%20bestanden%20%7C%20100%25-brightgreen.svg" in readme_de
+    assert "tests-326%20passed%20%7C%20100%25-brightgreen.svg" in readme_en
+    assert "tests-326%20bestanden%20%7C%20100%25-brightgreen.svg" in readme_de
 
     # Recency badges
-    assert "Last--Checked-2026--10--31-blue.svg" in readme_en
-    assert "Zuletzt--Gepr%C3%BCft-2026--10--31-blue.svg" in readme_de
+    assert "Last--Checked-2026--11--05-blue.svg" in readme_en
+    assert "Zuletzt--Gepr%C3%BCft-2026--11--05-blue.svg" in readme_de
 
     # LLM Context recency
-    assert "2026-10-31" in llms_text
+    assert "2026-11-05" in llms_text
 
     # Changelog entry under unreleased
-    assert "Pfad B Discoverability, Test Badge Refresh" in cl_text
+    assert "Software Pipeline Wartung, Git-Hygiene & Badges Parity" in cl_text
+
+
+def test_internal_logs_not_tracked() -> None:
+    """Ensure internal log files are in .gitignore and not tracked in git (T-20260926-455218633)."""
+    gitignore = (PROJECT_ROOT / ".gitignore").read_text(encoding="utf-8")
+    assert "MARKETING-LOG.txt" in gitignore
+    assert "CHECKS-LOG.txt" in gitignore
+
+
+def test_start_bat_launcher() -> None:
+    """Verify START.bat launcher exists and forwards arguments."""
+    start_bat = PROJECT_ROOT / "START.bat"
+    assert start_bat.is_file(), "START.bat must exist"
+    content = start_bat.read_text(encoding="utf-8", errors="replace")
+    assert "%*" in content
+    assert "Profiler_Suite_V15.py" in content

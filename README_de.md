@@ -8,7 +8,7 @@
 [![Org: file-bricks](https://img.shields.io/badge/Org-file--bricks-blue)](https://github.com/file-bricks)
 [![Lizenz: AGPL v3](https://img.shields.io/badge/Lizenz-AGPL%20v3-blue.svg)](LICENSE)
 [![CI: Source- und Plattform-Smoke](https://github.com/file-bricks/ProFiler/actions/workflows/source-platform-smoke.yml/badge.svg?branch=master)](https://github.com/file-bricks/ProFiler/actions/workflows/source-platform-smoke.yml)
-[![Tests: 293 bestanden](https://img.shields.io/badge/tests-294%20bestanden%20%7C%20100%25-brightgreen.svg)](CHANGELOG.md)
+[![Tests: 326 bestanden](https://img.shields.io/badge/tests-326%20bestanden%20%7C%20100%25-brightgreen.svg)](CHANGELOG.md)
 [![Code-Style: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![Mitwirken: Leitfaden](https://img.shields.io/badge/Mitwirken-Leitfaden-blue.svg)](CONTRIBUTING.md)
 [![Attribution: NOTICE](https://img.shields.io/badge/Attribution-NOTICE-blue.svg)](NOTICE)
@@ -16,7 +16,7 @@
 [![GUI: PySide6](https://img.shields.io/badge/GUI-PySide6-green.svg)](https://wiki.qt.io/Qt_for_Python)
 [![Ökosystem: open-bricks](https://img.shields.io/badge/%C3%96kosystem-open--bricks-blueviolet)](https://github.com/open-bricks)
 [![LLM-Kontext: llms.txt](https://img.shields.io/badge/LLM--Kontext-llms.txt-orange)](llms.txt)
-[![Zuletzt geprüft: 2026-10-31](https://img.shields.io/badge/Zuletzt--Gepr%C3%BCft-2026--10--31-blue.svg)](CHANGELOG.md)
+[![Zuletzt geprüft: 2026-11-05](https://img.shields.io/badge/Zuletzt--Gepr%C3%BCft-2026--11--05-blue.svg)](CHANGELOG.md)
 
 
 
