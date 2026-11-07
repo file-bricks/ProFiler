@@ -47,8 +47,17 @@ def test_store_package_matches_project_metadata() -> None:
     assert package["privacy_url"].endswith("/PRIVACY_POLICY.md")
     assert package["support_url"].endswith("/SUPPORT.md")
     assert package["logo"] == "store_assets/StoreLogo.png"
-    assert "de-DE" in package["languages"]
-    assert "en-US" in package["languages"]
+    expected_langs = ["de-DE", "en-US", "es-ES", "zh-CN", "ja-JP", "ru-RU"]
+    assert package["languages"] == expected_langs
+    for code in ["de", "en", "es", "zh", "ja", "ru"]:
+        desc_key = f"description_{code}"
+        kw_key = f"keywords_{code}"
+        assert desc_key in package, f"Missing {desc_key}"
+        assert len(package[desc_key]) <= 100, f"{desc_key} exceeds 100 chars"
+        assert kw_key in package, f"Missing {kw_key}"
+        assert 1 <= len(package[kw_key]) <= 7, f"{kw_key} count not 1..7"
+        for kw in package[kw_key]:
+            assert len(kw) <= 30, f"Keyword '{kw}' in {kw_key} exceeds 30 chars"
 
 
 def test_appx_manifest_structure_and_identity() -> None:
@@ -140,6 +149,30 @@ def test_store_listing_keyword_policies() -> None:
     keywords_en = [k.strip() for k in match_en.group(1).split(",") if k.strip()]
     assert 1 <= len(keywords_en) <= 7
 
+    # ES keywords <= 7
+    match_es = re.search(r"### Palabras clave\s*\n([^\n#]+)", listing)
+    assert match_es is not None
+    keywords_es = [k.strip() for k in match_es.group(1).split(",") if k.strip()]
+    assert 1 <= len(keywords_es) <= 7
+
+    # ZH keywords <= 7
+    match_zh = re.search(r"### 关键词\s*\n([^\n#]+)", listing)
+    assert match_zh is not None
+    keywords_zh = [k.strip() for k in match_zh.group(1).split(",") if k.strip()]
+    assert 1 <= len(keywords_zh) <= 7
+
+    # JA keywords <= 7
+    match_ja = re.search(r"### 検索キーワード\s*\n([^\n#]+)", listing)
+    assert match_ja is not None
+    keywords_ja = [k.strip() for k in match_ja.group(1).split(",") if k.strip()]
+    assert 1 <= len(keywords_ja) <= 7
+
+    # RU keywords <= 7
+    match_ru = re.search(r"### Ключевые слова\s*\n([^\n#]+)", listing)
+    assert match_ru is not None
+    keywords_ru = [k.strip() for k in match_ru.group(1).split(",") if k.strip()]
+    assert 1 <= len(keywords_ru) <= 7
+
 
 def test_store_documents_reference_local_data_and_license_notes() -> None:
     listing = (PROJECT_ROOT / "STORE_LISTING.md").read_text(encoding="utf-8")
@@ -163,11 +196,9 @@ def test_existing_main_screenshot_is_present() -> None:
 
 
 def test_readmes_reference_policy_screenshot_path() -> None:
-    readme = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
-    readme_de = (PROJECT_ROOT / "README_de.md").read_text(encoding="utf-8")
-
-    assert "README/screenshots/main.png" in readme
-    assert "README/screenshots/main.png" in readme_de
+    for name in ["README.md", "README_de.md", "README_es.md", "README_zh.md", "README_ja.md", "README_ru.md"]:
+        content = (PROJECT_ROOT / name).read_text(encoding="utf-8")
+        assert "README/screenshots/main.png" in content, f"{name} does not reference screenshot"
 
 
 def test_desktop_release_materials_point_to_local_build_flow() -> None:
@@ -196,6 +227,10 @@ def test_windowsstore_release_staging_complete() -> None:
         "store_settings.json",
         "store_listing_de.md",
         "store_listing_en.md",
+        "store_listing_es.md",
+        "store_listing_zh.md",
+        "store_listing_ja.md",
+        "store_listing_ru.md",
         "StoreLogo.png",
     ]
     for rf in required_files:
@@ -513,6 +548,10 @@ def test_staging_file_check_does_not_require_a_fake_preflight_report(tmp_path: P
         "store_settings.json",
         "store_listing_de.md",
         "store_listing_en.md",
+        "store_listing_es.md",
+        "store_listing_zh.md",
+        "store_listing_ja.md",
+        "store_listing_ru.md",
         "StoreLogo.png",
     ):
         (rel_store / name).write_text("staging fixture\n", encoding="utf-8")

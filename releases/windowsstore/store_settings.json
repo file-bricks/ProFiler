@@ -12,14 +12,74 @@
   "pfx_path": "",
   "pfx_password": "",
   "timestamp_url": "http://timestamp.digicert.com",
-  "license_files": ["../../LICENSE"],
+  "license_files": [
+    "../../LICENSE"
+  ],
   "enable_i18n": true,
   "capabilities": "runFullTrust",
   "privacy_url": "https://github.com/file-bricks/ProFiler/blob/master/PRIVACY_POLICY.md",
   "support_url": "https://github.com/file-bricks/ProFiler/blob/master/SUPPORT.md",
   "category": "Productivity",
   "age_rating": "3+",
-  "description_de": "Lokale Dokument- und Dateiverwaltung mit Volltextsuche, OCR, Datenschutzprüfung und PDF-Werkzeugen ohne Cloud-Zwang.",
-  "description_en": "Local-first document and file management with full-text search, OCR, privacy review, and PDF tools without cloud lock-in.",
+  "description_de": "Lokale Dokumentverwaltung mit Volltextsuche, OCR, PDF-Werkzeugen und Datenschutzprüfung.",
+  "description_en": "Local document manager with full-text search, OCR, PDF tools, and privacy inspection.",
+  "description_es": "Gestor local de documentos con búsqueda, OCR, utilidades PDF y revisión de privacidad.",
+  "description_zh": "本地文档管理与全文搜索工具，支持OCR文字识别、PDF实用工具及隐私安全审查。",
+  "description_ja": "全文検索、OCR文字認識、PDFツール、プライバシー保護検査を備えたローカル文書管理ソフト。",
+  "description_ru": "Локальный менеджер документов с полнотекстовым поиском, OCR, PDF и проверкой приватности.",
+  "keywords_de": [
+    "Dokumentverwaltung",
+    "OCR",
+    "PDF-Werkzeuge",
+    "Datenschutz",
+    "Volltextsuche",
+    "Offline",
+    "Dateimanager"
+  ],
+  "keywords_en": [
+    "Document Manager",
+    "OCR",
+    "PDF Tools",
+    "Privacy Review",
+    "Full Text Search",
+    "Offline",
+    "File Organizer"
+  ],
+  "keywords_es": [
+    "Gestor Documental",
+    "OCR",
+    "Herramientas PDF",
+    "Privacidad",
+    "Búsqueda",
+    "Sin Conexión",
+    "Organizador"
+  ],
+  "keywords_zh": [
+    "文档管理",
+    "文字识别",
+    "PDF工具",
+    "隐私保护",
+    "全文搜索",
+    "离线工具",
+    "文件整理"
+  ],
+  "keywords_ja": [
+    "文書管理",
+    "OCR文字認識",
+    "PDFツール",
+    "プライバシー保護",
+    "全文検索",
+    "オフライン",
+    "ファイル整理"
+  ],
+  "keywords_ru": [
+    "Управление файлами",
+    "OCR распознавание",
+    "PDF утилиты",
+    "Конфиденциальность",
+    "Поиск документов",
+    "Офлайн",
+    "Файловый менеджер"
+  ],
   "keywords": "Dokumentverwaltung, OCR, PDF-Werkzeuge, Datenschutz, Volltextsuche, Offline, Dateimanager"
 }

@@ -5,6 +5,26 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Hinzugefügt / Added (2026-11-07 — Windows Store Tier-2 6-Languages Harmonization, Multilingual Staging, Platform Smoke & READMEs)
+- **Store-Packaging & Metadaten-Harmonisierung (Policy P-006 Tier-2):**
+  - `store_package.json` und `releases/windowsstore/store_settings.json` um alle 6 Tier-2-Sprachen (`de-DE`, `en-US`, `es-ES`, `zh-CN`, `ja-JP`, `ru-RU`), Kurzbeschreibungen (strikt <= 100 Zeichen) und Schlüsselwörter (jeweils 7 Begriffe <= 30 Zeichen, frei von verbotenen Markennamen) erweitert.
+- **Multilinguales Store-Listing-Staging (`releases/windowsstore/`):**
+  - 4 neue Staging-Dateien für den Windows Store erstellt: `store_listing_es.md` (Spanisch), `store_listing_zh.md` (Chinesisch), `store_listing_ja.md` (Japanisch) und `store_listing_ru.md` (Russisch).
+  - `STORE_LISTING.md` um vollständige Abschnitte für Spanisch, Chinesisch, Japanisch und Russisch inklusive lokalisierter Keywords und Richtlinienhinweise erweitert.
+- **Store Readiness Linter Härtung (`scripts/check_store_readiness.py`):**
+  - Prüft nun obligatorisch alle 6 Staging-Dateien, 6-Sprachen-Beschreibungen (<= 100 Zeichen) und Keyword-Policies (<= 7 Keywords, <= 30 Zeichen, Trademark-Blacklist).
+- **Einheitlicher Source-Plattform-Smoke (`tests/source_platform_smoke.py`, `tests/test_source_platform_smoke.py`):**
+  - `tests/source_platform_smoke.py` mit 7 Kernprüfungen implementiert: Desktop-Target, App-Pfade & Sandbox, Workspace-Exchange Unicode-Roundtrip (ohne BOM, Geheimnisse redigiert), SQLite CRUD & Umlaut-Verarbeitung, OCR/PDF Graceful-Fallback, Tier-2 6-Sprachen-Auflösung und Übersetzungsparitätsprüfung.
+  - Integration in `tests/test_platform_smoke_contract.py` und separate Pytest-Adapter-Testsuite `tests/test_source_platform_smoke.py`.
+- **Multilinguale Dokumentation (Policy P-006 Tier-2):**
+  - 4 neue lokalisierte Dokumentationen erstellt: `README_es.md`, `README_zh.md`, `README_ja.md` und `README_ru.md`.
+  - Konsistenter 6-Sprachen-Header in `README.md`, `README_de.md` und allen 4 neuen READMEs verankert.
+- **Hermetische Vertragstests (`tests/test_store_materials.py`):**
+  - Vertragstests für 6-Sprachen-Metadaten, Staging-Dateien, Keyword-Policies und README-Screenshot-Referenzen erweitert; 286/286 Tests 100% grün.
+- **Eingefrorene Version 15.0.2:**
+  - Versionsnummer gemäß T-20260920-167562623 strikt unverändert gelassen (Store `15.0.2.0`).
+
+
 ### Hinzugefügt / Added (2026-11-02 — Headless Workspace Exchange CLI, Validation Gate & Structure Summary)
 - **Headless CLI Interface (`workspace_exchange.py`):**
   - Standalone-CLI-Einstiegspunkt mit standardisiertem `argparse` integriert: `--validate` zur schema-konformen Prüfung ohne Qt-Initialisierung, `--info` zur Anzeige einer detaillierten Struktur- und Metadaten-Übersicht, `--export` für den headless Export des aktuellen Arbeitsstands und `--import` (inkl. `--dry-run`) für die sichere Übernahme von Einstellungen.
@@ -286,6 +306,26 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - `llms.txt`: Last-checked Datum auf 2026-08-14 und Teststand auf 119/119 synchronisiert.
 
 ## [Unreleased]
+
+### Hinzugefügt / Added (2026-11-07 — Windows Store Tier-2 6-Languages Harmonization, Multilingual Staging, Platform Smoke & READMEs)
+- **Store-Packaging & Metadaten-Harmonisierung (Policy P-006 Tier-2):**
+  - `store_package.json` und `releases/windowsstore/store_settings.json` um alle 6 Tier-2-Sprachen (`de-DE`, `en-US`, `es-ES`, `zh-CN`, `ja-JP`, `ru-RU`), Kurzbeschreibungen (strikt <= 100 Zeichen) und Schlüsselwörter (jeweils 7 Begriffe <= 30 Zeichen, frei von verbotenen Markennamen) erweitert.
+- **Multilinguales Store-Listing-Staging (`releases/windowsstore/`):**
+  - 4 neue Staging-Dateien für den Windows Store erstellt: `store_listing_es.md` (Spanisch), `store_listing_zh.md` (Chinesisch), `store_listing_ja.md` (Japanisch) und `store_listing_ru.md` (Russisch).
+  - `STORE_LISTING.md` um vollständige Abschnitte für Spanisch, Chinesisch, Japanisch und Russisch inklusive lokalisierter Keywords und Richtlinienhinweise erweitert.
+- **Store Readiness Linter Härtung (`scripts/check_store_readiness.py`):**
+  - Prüft nun obligatorisch alle 6 Staging-Dateien, 6-Sprachen-Beschreibungen (<= 100 Zeichen) und Keyword-Policies (<= 7 Keywords, <= 30 Zeichen, Trademark-Blacklist).
+- **Einheitlicher Source-Plattform-Smoke (`tests/source_platform_smoke.py`, `tests/test_source_platform_smoke.py`):**
+  - `tests/source_platform_smoke.py` mit 7 Kernprüfungen implementiert: Desktop-Target, App-Pfade & Sandbox, Workspace-Exchange Unicode-Roundtrip (ohne BOM, Geheimnisse redigiert), SQLite CRUD & Umlaut-Verarbeitung, OCR/PDF Graceful-Fallback, Tier-2 6-Sprachen-Auflösung und Übersetzungsparitätsprüfung.
+  - Integration in `tests/test_platform_smoke_contract.py` und separate Pytest-Adapter-Testsuite `tests/test_source_platform_smoke.py`.
+- **Multilinguale Dokumentation (Policy P-006 Tier-2):**
+  - 4 neue lokalisierte Dokumentationen erstellt: `README_es.md`, `README_zh.md`, `README_ja.md` und `README_ru.md`.
+  - Konsistenter 6-Sprachen-Header in `README.md`, `README_de.md` und allen 4 neuen READMEs verankert.
+- **Hermetische Vertragstests (`tests/test_store_materials.py`):**
+  - Vertragstests für 6-Sprachen-Metadaten, Staging-Dateien, Keyword-Policies und README-Screenshot-Referenzen erweitert; 286/286 Tests 100% grün.
+- **Eingefrorene Version 15.0.2:**
+  - Versionsnummer gemäß T-20260920-167562623 strikt unverändert gelassen (Store `15.0.2.0`).
+
 
 ### Geändert / Changed (2026-10-31 — Pfad B Discoverability, Test Badge Refresh & Documentation Polish)
 - **README & Badges Polish (README.md, README_de.md):**

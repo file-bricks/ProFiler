@@ -1,9 +1,21 @@
-"""Contract tests for macOS and Linux platform smoke suites."""
+"""Contract tests for desktop source, macOS, and Linux platform smoke suites."""
 
 from __future__ import annotations
 
 import tests.linux_platform_smoke as linux_smoke
 import tests.macos_platform_smoke as macos_smoke
+import tests.source_platform_smoke as source_smoke
+
+
+def test_source_platform_smoke_suite() -> None:
+    """Run full suite of source-level platform smoke checks."""
+    source_smoke.test_supported_desktop_target()
+    source_smoke.test_app_paths_and_sandbox()
+    source_smoke.test_workspace_exchange_unicode_roundtrip()
+    source_smoke.test_sqlite_and_umlaut_roundtrip()
+    source_smoke.test_ocr_and_pdf_fallback()
+    source_smoke.test_tier2_i18n_resolution()
+    source_smoke.test_translation_parity_check()
 
 
 def test_macos_platform_smoke_suite() -> None:
