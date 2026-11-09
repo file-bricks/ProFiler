@@ -14,7 +14,7 @@ Version: 15.0.2 (Previous: 15.0.1)
 - Target Audience: Privacy-conscious professionals, legal/compliance officers, academic/archival researchers, small-business operators, and data sovereignty advocates.
 - Core Positioning: The premier local-first desktop file & document manager. Unifies full-text indexing, Tesseract OCR, batch PDF utilities, SHA-256 deduplication, and automated PII privacy review (Datenschutzampel) in a responsive PySide6 desktop interface.
 - Distinct Value Proposition: Zero cloud upload, zero network telemetry, zero subscription fees. Operates 100% on-device with SQLite full-text search, session-only password handling, and redacted workspace exchange.
-- Licensing: GNU Affero General Public License v3.0 (AGPL-3.0-or-later), fully audited across direct and transitive dependencies in THIRD_PARTY_LICENSES.md.
+- Licensing: GNU Affero General Public License v3.0 (AGPL-3.0-only), fully audited across direct and transitive dependencies in THIRD_PARTY_LICENSES.md.
 
 ================================================================================
 2. TARGET PERSONAS & USER JOURNEYS
