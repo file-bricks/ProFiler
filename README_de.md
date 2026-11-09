@@ -360,7 +360,7 @@ Weitere Organisationsprojekte findest du unter [file-bricks](https://github.com/
 <a id="third-party-licenses--compliance"></a>
 ## Drittanbieter-Lizenzen
 
-ProFiler selbst ist unter **AGPL-3.0-only** lizenziert; maßgeblich ist [LICENSE](LICENSE).
+ProFiler selbst ist unter **AGPL-3.0-or-later** lizenziert; maßgeblich ist [LICENSE](LICENSE).
 
 [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) und [THIRD_PARTY_LICENSES.txt](THIRD_PARTY_LICENSES.txt) führen deklarierte direkte Laufzeit- und optionale Abhängigkeiten sowie ausgewählte Entwicklungs- und Build-Werkzeuge mit Verweisen auf Upstream-Lizenzquellen auf. Das ist kein vollständiges Verzeichnis transitiver Pakete oder gebündelter Binärdateien und keine Lizenzkompatibilitäts- oder Rechtsprüfung.
 

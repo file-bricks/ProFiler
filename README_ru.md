@@ -107,4 +107,4 @@ ProFiler Suite входит в линейку инструментов **file-br
 
 ## Лицензия
 
-Распространяется под лицензией [AGPL-3.0-only](LICENSE). См. [`NOTICE`](NOTICE) и [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md).
+Распространяется под лицензией [AGPL-3.0-or-later](LICENSE). См. [`NOTICE`](NOTICE) и [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md).

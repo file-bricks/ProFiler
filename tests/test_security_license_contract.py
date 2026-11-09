@@ -157,13 +157,13 @@ def test_no_hardcoded_user_paths_or_plaintext_secrets() -> None:
 
 
 def test_license_parity_across_manifests() -> None:
-    """Ensure the AGPL-3-only grant matches SPDX metadata and packaged license files."""
+    """Ensure the AGPL-3.0-or-later grant matches SPDX metadata and packaged license files."""
     license_text = (ROOT / "LICENSE").read_text(encoding="utf-8")
     assert "GNU AFFERO GENERAL PUBLIC LICENSE" in license_text
     assert "Version 3" in license_text
 
     pyproject_text = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
-    assert 'license = "AGPL-3.0-only"' in pyproject_text
+    assert 'license = "AGPL-3.0-or-later"' in pyproject_text
     assert 'license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_LICENSES.md", "THIRD_PARTY_LICENSES.txt"]' in pyproject_text
     for path in ("LICENSE", "NOTICE", "THIRD_PARTY_LICENSES.md", "THIRD_PARTY_LICENSES.txt"):
         assert (ROOT / path).is_file(), f"Declared license file is missing: {path}"
