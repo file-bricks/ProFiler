@@ -107,4 +107,4 @@ ProFiler Suite は、高品質なローカルデスクトップツール群を�
 
 ## ライセンス
 
-[AGPL-3.0-only](LICENSE) ライセンスの下で提供されています。サードパーティ製コンポーネントの詳細は [`NOTICE`](NOTICE) および [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md) をご確認ください。
+[AGPL-3.0-or-later](LICENSE) ライセンスの下で提供されています。サードパーティ製コンポーネントの詳細は [`NOTICE`](NOTICE) および [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md) をご確認ください。

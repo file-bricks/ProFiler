@@ -42,7 +42,7 @@ def test_store_package_matches_project_metadata() -> None:
     assert package["executable"] == "ProFiler.exe"
     assert package["capabilities"] == "runFullTrust"
     assert package["category"] == "Productivity"
-    assert package["license"] == "AGPL-3.0-only"
+    assert package["license"] == "AGPL-3.0-or-later"
     assert package["version"] == f"{_read_version_from_pyproject()}.0"
     assert package["privacy_url"].endswith("/PRIVACY_POLICY.md")
     assert package["support_url"].endswith("/SUPPORT.md")

@@ -107,4 +107,4 @@ ProFiler Suite 隶属于 **file-bricks** / **open-bricks** 本地生产力工具
 
 ## 开源许可证
 
-遵循 [AGPL-3.0-only](LICENSE) 协议发布。详情请查阅 [`NOTICE`](NOTICE) 及 [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md)。
+遵循 [AGPL-3.0-or-later](LICENSE) 协议发布。详情请查阅 [`NOTICE`](NOTICE) 及 [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md)。

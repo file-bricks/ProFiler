@@ -107,4 +107,4 @@ ProFiler Suite forma parte del ecosistema de herramientas de escritorio de alto 
 
 ## Licencia
 
-Distribuido bajo la licencia [AGPL-3.0-only](LICENSE). Consulte [`NOTICE`](NOTICE) y [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md) para más detalles sobre componentes de terceros.
+Distribuido bajo la licencia [AGPL-3.0-or-later](LICENSE). Consulte [`NOTICE`](NOTICE) y [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md) para más detalles sobre componentes de terceros.
