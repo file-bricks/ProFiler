@@ -7,6 +7,8 @@ import shlex
 import tomllib
 from pathlib import Path
 
+import pytest
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -59,7 +61,6 @@ def test_required_documentation_and_manifests_exist() -> None:
         "store_package.json",
         "pyproject.toml",
         "THIRD_PARTY_LICENSES.md",
-        "MARKETING-LOG.txt",
     ]
     for filename in required_files:
         path = PROJECT_ROOT / filename
@@ -306,7 +307,8 @@ def test_third_party_licenses_markdown_audit() -> None:
 def test_marketing_log_parity() -> None:
     """Keep the historical marketing record tied to the current project identity."""
     m_log = PROJECT_ROOT / "MARKETING-LOG.txt"
-    assert m_log.exists(), "MARKETING-LOG.txt missing"
+    if not m_log.exists():
+        pytest.skip("MARKETING-LOG.txt is a local-only file (gitignored, T-20260926-455218633)")
     content = m_log.read_text(encoding="utf-8")
 
     assert "file-bricks/ProFiler" in content
@@ -386,7 +388,7 @@ def test_pyproject_pep621_extended_urls() -> None:
     assert pyproj_path.exists(), "pyproject.toml missing"
     urls = tomllib.loads(pyproj_path.read_text(encoding="utf-8"))["project"]["urls"]
     assert urls["Third-Party Licenses"] == "https://github.com/file-bricks/ProFiler/blob/master/THIRD_PARTY_LICENSES.md"
-    assert urls["Marketing Log"] == "https://github.com/file-bricks/ProFiler/blob/master/MARKETING-LOG.txt"
+    assert "Marketing Log" not in urls, "MARKETING-LOG.txt is untracked; its URL would 404"
     assert urls["LLM Ready"] == "https://github.com/file-bricks/ProFiler/blob/master/llms.txt"
     assert urls["Notice"] == "https://github.com/file-bricks/ProFiler/blob/master/NOTICE"
 

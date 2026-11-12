@@ -8,6 +8,7 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ### Geändert / Changed (2026-11-05 — Software Pipeline Wartung, Git-Hygiene & Badges Parity)
 - **Git-Hygiene & Pattern Defense (`.gitignore`):**
   - `MARKETING-LOG.txt` aus Git-Tracking entfernt (`git rm --cached`) und `.gitignore` um Ausschlussregeln für interne Logdateien (`MARKETING-LOG.txt`, `CHECKS-LOG.txt`) gehärtet (T-20260926-455218633 / GITHUB-POLICY.md §4).
+  - Folgekorrektur: `tests/test_metadata.py` verlangt die nun lokale `MARKETING-LOG.txt` nicht mehr als Pflichtdatei (Paritätstest überspringt, wenn sie fehlt); der dadurch tote `Marketing Log`-Link wurde aus `[project.urls]` in `pyproject.toml` entfernt.
 - **Universal-Launcher (`START.bat`):**
   - Forwarding für CLI-Argumente (`%*`) hinzugefügt; Erkennung für `dist\ProFiler.exe` sowie `py -3` Launcher-Unterstützung implementiert.
 - **README & Badges Synchronisation (`README.md`, `README_de.md`):**
