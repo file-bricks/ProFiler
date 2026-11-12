@@ -16,7 +16,7 @@ The constraints below are from `pyproject.toml` and `requirements.txt`. The requ
 | PySide6 | `>=6.5.0` | Desktop UI | [Qt for Python](https://doc.qt.io/qtforpython-6/) |
 | pypdf | `>=6.14.2` | PDF reading and writing | [pypdf](https://github.com/py-pdf/pypdf) |
 | pikepdf | `>=8.0.0` | PDF structure and encryption workflows | [pikepdf](https://github.com/pikepdf/pikepdf) |
-| PyMuPDF | `>=1.23.0` | Optional PDF extraction and redaction paths | [PyMuPDF licensing and project](https://github.com/pymupdf/PyMuPDF) |
+| PyMuPDF | `>=1.23.0` | PDF extraction and redaction paths; declared as a regular dependency in `pyproject.toml` (the import is guarded in the source, but the dependency is not optional in the metadata) | [PyMuPDF licensing and project](https://github.com/pymupdf/PyMuPDF); AGPL-3.0 or Artifex commercial license, used here under AGPL-3.0 |
 | pdf2image | `>=1.16.0` | PDF page rendering through host tools | [pdf2image](https://github.com/Belval/pdf2image) |
 | python-docx | `>=1.0.0` | DOCX reading | [python-docx](https://github.com/python-openxml/python-docx) |
 | pytesseract | `>=0.3.10` | Tesseract OCR interface | [pytesseract](https://github.com/madmaze/pytesseract) |

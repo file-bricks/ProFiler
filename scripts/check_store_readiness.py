@@ -7,11 +7,12 @@ runtime components, sign a package, execute WACK, submit to the Store, or establ
 Store readiness or approval.
 
 Validates:
-1. store_package.json metadata and schema
+1. store_package.json metadata and schema (6 Tier-2 languages, descriptions <= 100 chars, keywords <= 7)
 2. store_package/ProFiler/AppxManifest.xml syntax, identities, capabilities, and visual elements
 3. Tile icons presence, PNG signature, and exact dimensions in store_package and store_assets
-4. STORE_LISTING.md, PRIVACY_POLICY.md, SUPPORT.md, WINDOWS_STORE_PREP.md and keyword guidelines
+4. STORE_LISTING.md, PRIVACY_POLICY.md, SUPPORT.md, WINDOWS_STORE_PREP.md and keyword guidelines (6 languages)
 5. Staged screenshot assets and 1920x1080 dimensions
+6. releases/windowsstore staging completeness (6 store listings, store_settings.json, WACK_PROTOCOL.md, BUILD.md)
 """
 
 from __future__ import annotations
@@ -38,6 +39,8 @@ EXPECTED_VERSION = f"{APP_VERSION}.0"
 DISALLOWED_KEYWORD_TRADEMARKS = [
     "gmail", "google", "netflix", "spotify", "adobe", "microsoft", "apple", "amazon"
 ]
+
+TIER2_LANGUAGES = ("de", "en", "es", "zh", "ja", "ru")
 
 REQUIRED_TILE_ICONS = {
     "icon_44x44.png": (44, 44),
@@ -113,6 +116,30 @@ def check_store_package_json(results: dict) -> None:
     if data.get("logo") != "store_assets/StoreLogo.png":
         results["errors"].append(f"store_package.json: logo '{data.get('logo')}' != 'store_assets/StoreLogo.png'")
 
+    # Tier-2 6-Languages Descriptions & Keywords Checks
+    for lang in TIER2_LANGUAGES:
+        desc_key = f"description_{lang}"
+        if desc_key in data:
+            desc_val = data[desc_key]
+            if not isinstance(desc_val, str) or not desc_val.strip():
+                results["errors"].append(f"store_package.json: '{desc_key}' ist leer.")
+            elif len(desc_val) > 100:
+                results["errors"].append(f"store_package.json: '{desc_key}' überschreitet 100 Zeichen ({len(desc_val)} Zeichen).")
+
+        kw_key = f"keywords_{lang}"
+        if kw_key in data:
+            kw_list = data[kw_key]
+            if not isinstance(kw_list, list) or len(kw_list) == 0:
+                results["errors"].append(f"store_package.json: '{kw_key}' muss eine nicht-leere Liste sein.")
+            elif len(kw_list) > 7:
+                results["errors"].append(f"store_package.json: '{kw_key}' enthält mehr als 7 Suchbegriffe ({len(kw_list)}).")
+            else:
+                for kw in kw_list:
+                    if len(kw) > 30:
+                        results["errors"].append(f"store_package.json: Keyword '{kw}' in '{kw_key}' ist länger als 30 Zeichen.")
+                    if any(tm in kw.lower() for tm in DISALLOWED_KEYWORD_TRADEMARKS):
+                        results["errors"].append(f"store_package.json: Keyword '{kw}' enthält geschützte Drittmarken.")
+
     expected_data_dir = str(
         app_data_dir(platform="nt", env={"LOCALAPPDATA": r"C:\Users\User\AppData\Local"})
     )
@@ -174,6 +201,22 @@ def check_appx_manifest(results: dict) -> None:
     else:
         results["errors"].append("AppxManifest.xml: <Properties> Tag nicht gefunden.")
 
+    # Check 6 languages declared in Resources
+    resources = root.find("def:Resources", ns)
+    if resources is None:
+        resources = root.find("{http://schemas.microsoft.com/appx/manifest/foundation/windows10}Resources")
+    if resources is not None:
+        resource_langs = [
+            elem.get("{http://schemas.microsoft.com/appx/manifest/foundation/windows10}Language", elem.get("Language", "")).lower()
+            for elem in resources
+        ]
+        expected_langs = ["de-de", "en-us", "es-es", "zh-cn", "ja-jp", "ru-ru"]
+        for el in expected_langs:
+            if el not in resource_langs:
+                results["errors"].append(f"AppxManifest.xml: <Resource Language='{el}' /> fehlt im <Resources>-Block.")
+    else:
+        results["errors"].append("AppxManifest.xml: <Resources> Tag nicht gefunden.")
+
     results["ok"].append("AppxManifest.xml ist syntaktisch korrekt, Identity/Version stimmen überein und Properties Logo ist StoreLogo.png.")
 
 
@@ -224,6 +267,19 @@ def check_store_listing_and_docs(results: dict) -> None:
     for doc in ["PRIVACY_POLICY.md", "SUPPORT.md", "WINDOWS_STORE_PREP.md", "THIRD_PARTY_LICENSES.txt"]:
         if not (PROJECT_ROOT / doc).exists():
             results["errors"].append(f"Pflichtdokument fehlt: {doc}")
+
+    # Check Tier-2 6 language sections
+    lang_headers = [
+        "## Deutsch",
+        "## English",
+        "## Español",
+        "## 简体中文",
+        "## 日本語",
+        "## Русский",
+    ]
+    for header in lang_headers:
+        if header not in content:
+            results["errors"].append(f"STORE_LISTING.md: Sprachabschnitt '{header}' fehlt.")
 
     # Check German keywords
     match_de = re.search(r"### Schlüsselwörter\s*\n([^\n#]+)", content)
@@ -300,6 +356,10 @@ def check_windowsstore_release_staging(results: dict) -> None:
         "store_settings.json",
         "store_listing_de.md",
         "store_listing_en.md",
+        "store_listing_es.md",
+        "store_listing_zh.md",
+        "store_listing_ja.md",
+        "store_listing_ru.md",
         "StoreLogo.png",
     ]
     for rf in required_files:

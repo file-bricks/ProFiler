@@ -2,7 +2,7 @@
 
 # ProFiler Suite
 
-[English](README.md) | **[Deutsch](README_de.md)** | [GitHub](https://github.com/file-bricks/ProFiler)
+[English](README.md) | **[Deutsch](README_de.md)** | [Español](README_es.md) | [简体中文](README_zh.md) | [日本語](README_ja.md) | [Русский](README_ru.md) | [GitHub](https://github.com/file-bricks/ProFiler)
 
 [![Version: 15.0.2](https://img.shields.io/badge/version-15.0.2-blue.svg)](CHANGELOG.md)
 [![Org: file-bricks](https://img.shields.io/badge/Org-file--bricks-blue)](https://github.com/file-bricks)
@@ -360,7 +360,7 @@ Weitere Organisationsprojekte findest du unter [file-bricks](https://github.com/
 <a id="third-party-licenses--compliance"></a>
 ## Drittanbieter-Lizenzen
 
-ProFiler selbst ist unter **AGPL-3.0-only** lizenziert; maßgeblich ist [LICENSE](LICENSE).
+ProFiler selbst ist unter **AGPL-3.0-or-later** lizenziert; maßgeblich ist [LICENSE](LICENSE).
 
 [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) und [THIRD_PARTY_LICENSES.txt](THIRD_PARTY_LICENSES.txt) führen deklarierte direkte Laufzeit- und optionale Abhängigkeiten sowie ausgewählte Entwicklungs- und Build-Werkzeuge mit Verweisen auf Upstream-Lizenzquellen auf. Das ist kein vollständiges Verzeichnis transitiver Pakete oder gebündelter Binärdateien und keine Lizenzkompatibilitäts- oder Rechtsprüfung.
 

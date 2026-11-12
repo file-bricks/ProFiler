@@ -36,7 +36,7 @@ Application settings and indexes use local paths whose exact locations depend on
 
 The Python wheel packages Python runtime modules, locale data, and selected icons; it is not a standalone native executable. The reviewed checkout lacks the Tesseract and Poppler files required by `build_exe.bat`, so the native executable build is currently blocked. No signed MSIX, current WACK result on a built package, or Store submission is evidenced. Staging files do not establish release approval.
 
-The project is licensed under AGPL-3.0-only; see `LICENSE`. Review the exact artifact contents and included license texts before any binary redistribution. The dependency notes do not determine license compatibility.
+The project is licensed under AGPL-3.0-or-later; see `LICENSE`. Review the exact artifact contents and included license texts before any binary redistribution. The dependency notes do not determine license compatibility.
 
 ## Search phrases
 
