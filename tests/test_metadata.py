@@ -7,6 +7,8 @@ import shlex
 import tomllib
 from pathlib import Path
 
+import pytest
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -59,7 +61,6 @@ def test_required_documentation_and_manifests_exist() -> None:
         "store_package.json",
         "pyproject.toml",
         "THIRD_PARTY_LICENSES.md",
-        "MARKETING-LOG.txt",
     ]
     for filename in required_files:
         path = PROJECT_ROOT / filename
@@ -306,7 +307,8 @@ def test_third_party_licenses_markdown_audit() -> None:
 def test_marketing_log_parity() -> None:
     """Keep the historical marketing record tied to the current project identity."""
     m_log = PROJECT_ROOT / "MARKETING-LOG.txt"
-    assert m_log.exists(), "MARKETING-LOG.txt missing"
+    if not m_log.exists():
+        pytest.skip("MARKETING-LOG.txt is a local-only file (gitignored, T-20260926-455218633)")
     content = m_log.read_text(encoding="utf-8")
 
     assert "file-bricks/ProFiler" in content
@@ -386,7 +388,7 @@ def test_pyproject_pep621_extended_urls() -> None:
     assert pyproj_path.exists(), "pyproject.toml missing"
     urls = tomllib.loads(pyproj_path.read_text(encoding="utf-8"))["project"]["urls"]
     assert urls["Third-Party Licenses"] == "https://github.com/file-bricks/ProFiler/blob/master/THIRD_PARTY_LICENSES.md"
-    assert urls["Marketing Log"] == "https://github.com/file-bricks/ProFiler/blob/master/MARKETING-LOG.txt"
+    assert "Marketing Log" not in urls, "MARKETING-LOG.txt is untracked; its URL would 404"
     assert urls["LLM Ready"] == "https://github.com/file-bricks/ProFiler/blob/master/llms.txt"
     assert urls["Notice"] == "https://github.com/file-bricks/ProFiler/blob/master/NOTICE"
 
@@ -573,7 +575,7 @@ def test_third_party_licenses_plain_text_companion_structure() -> None:
     for package in packages:
         assert package in text and package in md_text
 
-def test_pfad_b_discoverability_parity_and_recency_20261031() -> None:
+def test_pfad_b_discoverability_parity_and_recency_20261105() -> None:
     """Verify Pfad B test badge currency, recency stamps, and bilingual parity."""
     readme_en = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
     readme_de = (PROJECT_ROOT / "README_de.md").read_text(encoding="utf-8")
@@ -581,15 +583,31 @@ def test_pfad_b_discoverability_parity_and_recency_20261031() -> None:
     cl_text = (PROJECT_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
 
     # Real measured test count badge
-    assert "tests-294%20passed%20%7C%20100%25-brightgreen.svg" in readme_en
-    assert "tests-294%20bestanden%20%7C%20100%25-brightgreen.svg" in readme_de
+    assert "tests-330%20passed%20%7C%20100%25-brightgreen.svg" in readme_en
+    assert "tests-330%20bestanden%20%7C%20100%25-brightgreen.svg" in readme_de
 
     # Recency badges
-    assert "Last--Checked-2026--10--31-blue.svg" in readme_en
-    assert "Zuletzt--Gepr%C3%BCft-2026--10--31-blue.svg" in readme_de
+    assert "Last--Checked-2026--11--05-blue.svg" in readme_en
+    assert "Zuletzt--Gepr%C3%BCft-2026--11--05-blue.svg" in readme_de
 
     # LLM Context recency
-    assert "2026-10-31" in llms_text
+    assert "2026-11-05" in llms_text
 
     # Changelog entry under unreleased
-    assert "Pfad B Discoverability, Test Badge Refresh" in cl_text
+    assert "Software Pipeline Wartung, Git-Hygiene & Badges Parity" in cl_text
+
+
+def test_internal_logs_not_tracked() -> None:
+    """Ensure internal log files are in .gitignore and not tracked in git (T-20260926-455218633)."""
+    gitignore = (PROJECT_ROOT / ".gitignore").read_text(encoding="utf-8")
+    assert "MARKETING-LOG.txt" in gitignore
+    assert "CHECKS-LOG.txt" in gitignore
+
+
+def test_start_bat_launcher() -> None:
+    """Verify START.bat launcher exists and forwards arguments."""
+    start_bat = PROJECT_ROOT / "START.bat"
+    assert start_bat.is_file(), "START.bat must exist"
+    content = start_bat.read_text(encoding="utf-8", errors="replace")
+    assert "%*" in content
+    assert "Profiler_Suite_V15.py" in content

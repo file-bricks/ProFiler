@@ -8,7 +8,7 @@
 [![组织: file-bricks](https://img.shields.io/badge/Org-file--bricks-blue)](https://github.com/file-bricks)
 [![许可证: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 [![CI: Source and platform smoke](https://github.com/file-bricks/ProFiler/actions/workflows/source-platform-smoke.yml/badge.svg?branch=master)](https://github.com/file-bricks/ProFiler/actions/workflows/source-platform-smoke.yml)
-[![测试: 294项全部通过](https://img.shields.io/badge/tests-294%20passed%20%7C%20100%25-brightgreen.svg)](CHANGELOG.md)
+[![测试: 330项全部通过](https://img.shields.io/badge/tests-330%20passed%20%7C%20100%25-brightgreen.svg)](CHANGELOG.md)
 [![代码风格: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![贡献指南](https://img.shields.io/badge/Contributing-Guide-blue.svg)](CONTRIBUTING.md)
 [![归属说明: NOTICE](https://img.shields.io/badge/Attribution-NOTICE-blue.svg)](NOTICE)

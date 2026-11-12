@@ -172,3 +172,7 @@ TASKPLAN_STATUS_*.md
 
 # Internal platform planning; public contract lives in PLATFORM_SUPPORT.md
 /PORTIERUNGSPLAN.md
+
+# Interne Logdateien (T-20260926-455218633, GITHUB-POLICY.md §4)
+MARKETING-LOG.txt
+CHECKS-LOG.txt
