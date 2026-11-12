@@ -28,6 +28,7 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - **Git-Hygiene & Pattern Defense (`.gitignore`):**
   - `MARKETING-LOG.txt` aus Git-Tracking entfernt (`git rm --cached`) und `.gitignore` um Ausschlussregeln für interne Logdateien (`MARKETING-LOG.txt`, `CHECKS-LOG.txt`) gehärtet (T-20260926-455218633 / GITHUB-POLICY.md §4).
   - Folgekorrektur: `tests/test_metadata.py` verlangt die nun lokale `MARKETING-LOG.txt` nicht mehr als Pflichtdatei (Paritätstest überspringt, wenn sie fehlt); der dadurch tote `Marketing Log`-Link wurde aus `[project.urls]` in `pyproject.toml` entfernt.
+  - Test-Badge nach dem Merge von `master` in allen sechs README-Sprachfassungen auf den gemessenen Stand gebracht (330 bestanden, 4 übersprungen; zuvor 326 in EN/DE und 294 in ES/ZH/JA/RU).
 - **Universal-Launcher (`START.bat`):**
   - Forwarding für CLI-Argumente (`%*`) hinzugefügt; Erkennung für `dist\ProFiler.exe` sowie `py -3` Launcher-Unterstützung implementiert.
 - **README & Badges Synchronisation (`README.md`, `README_de.md`):**

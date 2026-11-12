@@ -583,8 +583,8 @@ def test_pfad_b_discoverability_parity_and_recency_20261105() -> None:
     cl_text = (PROJECT_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
 
     # Real measured test count badge
-    assert "tests-326%20passed%20%7C%20100%25-brightgreen.svg" in readme_en
-    assert "tests-326%20bestanden%20%7C%20100%25-brightgreen.svg" in readme_de
+    assert "tests-330%20passed%20%7C%20100%25-brightgreen.svg" in readme_en
+    assert "tests-330%20bestanden%20%7C%20100%25-brightgreen.svg" in readme_de
 
     # Recency badges
     assert "Last--Checked-2026--11--05-blue.svg" in readme_en
