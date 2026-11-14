@@ -8,7 +8,7 @@
 [![Организация: file-bricks](https://img.shields.io/badge/Org-file--bricks-blue)](https://github.com/file-bricks)
 [![Лицензия: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 [![CI: Source and platform smoke](https://github.com/file-bricks/ProFiler/actions/workflows/source-platform-smoke.yml/badge.svg?branch=master)](https://github.com/file-bricks/ProFiler/actions/workflows/source-platform-smoke.yml)
-[![Тесты: 294 пройдено](https://img.shields.io/badge/tests-294%20passed%20%7C%20100%25-brightgreen.svg)](CHANGELOG.md)
+[![Тесты: 330 пройдено](https://img.shields.io/badge/tests-330%20passed%20%7C%20100%25-brightgreen.svg)](CHANGELOG.md)
 [![Стиль кода: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![Руководство по участию](https://img.shields.io/badge/Contributing-Guide-blue.svg)](CONTRIBUTING.md)
 [![Атрибуция: NOTICE](https://img.shields.io/badge/Attribution-NOTICE-blue.svg)](NOTICE)
