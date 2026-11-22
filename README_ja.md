@@ -8,7 +8,7 @@
 [![組織: file-bricks](https://img.shields.io/badge/Org-file--bricks-blue)](https://github.com/file-bricks)
 [![ライセンス: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 [![CI: Source and platform smoke](https://github.com/file-bricks/ProFiler/actions/workflows/source-platform-smoke.yml/badge.svg?branch=master)](https://github.com/file-bricks/ProFiler/actions/workflows/source-platform-smoke.yml)
-[![テスト: 294件合格](https://img.shields.io/badge/tests-294%20passed%20%7C%20100%25-brightgreen.svg)](CHANGELOG.md)
+[![テスト: 330件合格](https://img.shields.io/badge/tests-330%20passed%20%7C%20100%25-brightgreen.svg)](CHANGELOG.md)
 [![コードスタイル: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![コントリビューションガイド](https://img.shields.io/badge/Contributing-Guide-blue.svg)](CONTRIBUTING.md)
 [![帰属表記: NOTICE](https://img.shields.io/badge/Attribution-NOTICE-blue.svg)](NOTICE)
