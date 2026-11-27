@@ -176,3 +176,4 @@ TASKPLAN_STATUS_*.md
 # Interne Logdateien (T-20260926-455218633, GITHUB-POLICY.md §4)
 MARKETING-LOG.txt
 CHECKS-LOG.txt
+/REPO.pointer.json
